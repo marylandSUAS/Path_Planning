@@ -21,9 +21,11 @@ typedef struct{
 	Node **heap_arr;
 } Heap;
 
-typedef struct{
+typedef struct obstacle{
 	double location[3];
 	double radius;
+	int mark;
+	struct obstacle *next;
 } Obstacle;
 
 void copy_node(Node *dst, Node *src);

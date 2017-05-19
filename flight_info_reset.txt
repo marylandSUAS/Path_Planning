@@ -1,4 +1,4 @@
-Updated_Obstacles 0
+Updated_Obstacles 1
 Goal 20.0 150.0 30.0
 Start 0.0 0.0 20.0
 Current 0.0 0.0 20.0

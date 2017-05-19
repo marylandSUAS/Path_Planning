@@ -1,5 +1,5 @@
 FLAGS = -g
-PROGS = test main
+PROGS = main test reset
 CLEANUP = rmobj rmhd rmother
 RMALL = rmexec rmobj rmhd rmother
 
@@ -23,11 +23,14 @@ minheap.o: minheap.c minheap.h structures.h
 structures.o: structures.c structures.h
 	gcc $(FLAGS) -c structures.c
 
-drmem_dl: main
+drmem_m: main
 	drmemory main.exe
 
 drmem_t: test
 	drmemory.exe test.exe
+
+reset: flight_information.txt
+	ruby reset.rb
 
 rmall: $(RMALL)
 clean: $(CLEANUP)
