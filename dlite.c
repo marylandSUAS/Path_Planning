@@ -13,9 +13,9 @@
 #include "minheap.h"
 #include <time.h>
 
-#define RESOLUTION_X 40
-#define RESOLUTION_Y 40
-#define RESOLUTION_VERTICAL 10
+#define RESOLUTION_X 70 //keep square for 2d interpolation
+#define RESOLUTION_Y 70 //keep square for 2d interpolation
+#define RESOLUTION_VERTICAL 1 //keep unit for 2d interpolation
 #define CSP 0
 #define UPDATE 1
 #define DISP 2
@@ -41,6 +41,8 @@ double current_location[3];
 double x_loc_increment;
 double y_loc_increment;
 double z_loc_increment;
+double altitude_delta;
+double current_altitude;
 
 double key_modifier;
 
@@ -78,6 +80,13 @@ double get_rhs(int *cell){
 
 double get_g(int *cell){
 	return grid[cell[0]][cell[1]][cell[2]].g;
+}
+
+double interpolate_height(int *current_coord){
+	double height = 0;
+	height += altitude_delta*current_coord[0]/(2*RESOLUTION_X);
+	height += altitude_delta*current_coord[1]/(2*RESOLUTION_Y);
+	return height;
 }
 
 double compute_heuristic(int *curr, int *goal){
@@ -577,7 +586,7 @@ void extract_path(){
 		}
 		remove_expanded(step_node);
 		step_node = &(grid[smallest_rhs[0]][smallest_rhs[1]][smallest_rhs[2]]);
-		sprintf(buff,"%lf %lf %lf\n",smallest_rhs[0]*x_loc_increment+current_location[0],smallest_rhs[1]*y_loc_increment+current_location[1],smallest_rhs[2]*z_loc_increment+current_location[2]);
+		sprintf(buff,"%lf %lf %lf\n",smallest_rhs[0]*x_loc_increment+current_location[0],smallest_rhs[1]*y_loc_increment+current_location[1],interpolate_height(step_node->cell));
 		fputs(buff,sp_temp);
 		clear(buff,size);
 	}
@@ -599,7 +608,7 @@ void extract_path(){
 
 	while(fgets(line,256,sp_temp)){
 		fputs(line,sp);
-	}
+ 	}
 
 	fclose(sp);
 	fclose(sp_temp);
@@ -1109,6 +1118,14 @@ void print_current_state(){
 	times[DISP] += msec;
 }
 
+int prepare_2D_loc(double *coord_3D){
+	coord_3D[2] = 0.0;
+}
+
+int prepare_2D_cell(int *coord_3D){
+	coord_3D[2] = 0;
+}
+
 int main(){
 	printf("Start\n");
 
@@ -1129,6 +1146,9 @@ int main(){
 	fscanf(information,"%s %lf %lf %lf", junk, &start_location[0], &start_location[1], &start_location[2]);
 	fscanf(information,"%s %lf %lf %lf", junk, &current_location[0], &current_location[1], &current_location[2]);
 	fgets(junk,256,information); // need this to swich inbetween using fscanf to fgets in order to move to next line
+	altitude_delta = goal_location[2] - start_location[2];
+	current_altitude = current_location[2] - start_location[2];
+	prepare_2D_loc(goal_location); prepare_2D_loc(start_location); prepare_2D_loc(current_location);
 
 	// Need to initialize before inserting objects
 	x_loc_increment = (RESOLUTION_X > 1) ? (goal_location[0]-start_location[0])/(RESOLUTION_X-1) : (goal_location[0]-start_location[0]);
@@ -1139,6 +1159,7 @@ int main(){
 	mark_obstacles(root_obstacle);
 	while(fgets(line,256,information)){
 		sscanf(line,"%s %lf %lf %lf %lf", junk, &object[0], &object[1], &object[2], &object[3]);
+		prepare_2D_loc(object);
 		update_obstacle_list(&root_obstacle,object[0],object[1],object[2],object[3]);
 	}
 	cet = (clock()-current_time)* 1000 / CLOCKS_PER_SEC; current_time = clock();
@@ -1202,6 +1223,13 @@ int main(){
 		fscanf(information,"%s %lf %lf %lf", junk, &start_location_temp[0], &start_location_temp[1], &start_location_temp[2]);
 		fscanf(information,"%s %lf %lf %lf", junk, &current_location[0], &current_location[1], &current_location[2]);
 		fgets(junk,256,information); // need this to swich inbetween using fscanf to fgets in order to move to next line
+		altitude_delta = goal_location[2] - start_location[2];
+		current_altitude = current_location[2] - start_location[2];
+		prepare_2D_loc(goal_location); prepare_2D_loc(start_location); prepare_2D_loc(current_location);
+
+		if(updated_obstacles == 2){
+			return;
+		}
 
 		if(!((start_location_temp[0] == start_location[0]) && (start_location_temp[1] == start_location[1]) && (start_location_temp[2] == start_location[2]) && 
 			(goal_location_temp[0] == goal_location[0]) && (goal_location_temp[1] == goal_location[1]) && (goal_location_temp[2] == goal_location[2]))){
@@ -1211,6 +1239,7 @@ int main(){
 		mark_obstacles(root_obstacle);
 		while(fgets(line,256,information) && updated_obstacles){
 			sscanf(line,"%s %lf %lf %lf %lf", junk, &object[0], &object[1], &object[2], &object[3]);
+			prepare_2D_loc(object);
 			update_obstacle_list(&root_obstacle,object[0],object[1],object[2],object[3]);
 		}
 
