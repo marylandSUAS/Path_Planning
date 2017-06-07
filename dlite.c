@@ -13,9 +13,9 @@
 #include "minheap.h"
 #include <time.h>
 
-#define RESOLUTION_X 70 //keep square for 2d interpolation
-#define RESOLUTION_Y 70 //keep square for 2d interpolation
-#define RESOLUTION_VERTICAL 1 //keep unit for 2d interpolation
+#define RESOLUTION_X 30 //keep square for 2d interpolation
+#define RESOLUTION_Y 30 //keep square for 2d interpolation
+#define RESOLUTION_VERTICAL 15 //keep unit for 2d interpolation
 #define CSP 0
 #define UPDATE 1
 #define DISP 2
@@ -167,9 +167,9 @@ int is_expanded(Node *node){
 void add_expanded(Node *node){
 	clock_t other = clock(),diff;
 
-	printf("Expanding node: {%d,%d,%d} at location {%lf,%lf,%lf} with key_value: {%lf, %lf}\n",node->cell[0],node->cell[1],node->cell[2],
-		node->cell[0]*x_loc_increment+start_location[0],node->cell[1]*y_loc_increment+start_location[1],
-		node->cell[2]*z_loc_increment+start_location[2],node->k[0],node->k[1]);
+	// printf("Expanding node: {%d,%d,%d} at location {%lf,%lf,%lf} with key_value: {%lf, %lf}\n",node->cell[0],node->cell[1],node->cell[2],
+	// 	node->cell[0]*x_loc_increment+start_location[0],node->cell[1]*y_loc_increment+start_location[1],
+	// 	node->cell[2]*z_loc_increment+start_location[2],node->k[0],node->k[1]);
 	push_node(&expanded,node);
 	num_expanded++;
 	// if(num_expanded == 0){
@@ -400,7 +400,7 @@ void compute_shortest_path(){
 
 	csp = clock();
 	while(compare_keys(top_key(&minheap),current_key) <= 0 || current_node->rhs > current_node->g){
-		printf("Num Expanded: %d\n", num_expanded);
+		// printf("Num Expanded: %d\n", num_expanded);
 		// diff += clock() - csp;
 		// print_current_state();
 		// csp = clock();
@@ -586,7 +586,8 @@ void extract_path(){
 		}
 		remove_expanded(step_node);
 		step_node = &(grid[smallest_rhs[0]][smallest_rhs[1]][smallest_rhs[2]]);
-		sprintf(buff,"%lf %lf %lf\n",smallest_rhs[0]*x_loc_increment+current_location[0],smallest_rhs[1]*y_loc_increment+current_location[1],interpolate_height(step_node->cell));
+		// sprintf(buff,"%lf %lf %lf\n",smallest_rhs[0]*x_loc_increment+current_location[0],smallest_rhs[1]*y_loc_increment+current_location[1],interpolate_height(step_node->cell));
+		sprintf(buff,"%lf %lf %lf\n",smallest_rhs[0]*x_loc_increment+current_location[0],smallest_rhs[1]*y_loc_increment+current_location[1],smallest_rhs[2]*z_loc_increment+current_location[0]);
 		fputs(buff,sp_temp);
 		clear(buff,size);
 	}
@@ -745,7 +746,7 @@ void block_or_unblock(double *object,int infinite){
 									  pow((z_trans - k*z_loc_increment),2));
 				miss = current_radius - rad;
 				if(miss <= diag/4){
-					printf("Blocking: [%d,%d,%d] at loc [%lf,%lf,%lf]\n",i,j,k,(i+start_x),(j+start_y),(k+start_z));
+					// printf("Blocking: [%d,%d,%d] at loc [%lf,%lf,%lf]\n",i,j,k,(i+start_x),(j+start_y),(k+start_z));
 					grid[i][j][k].infinite += infinite;
 					path[i][j][k] = (grid[i][j][k].infinite >= 1) ? 2 : 0;
 				}
@@ -854,6 +855,8 @@ void confirm_updated_obstacles(){
 
 	fclose(information);
 	fclose(information_temp);
+	remove("information_temp.txt");
+
 
 	diff = clock() - filewrite;
 	int msec = diff * 1000 / CLOCKS_PER_SEC;
@@ -1146,9 +1149,9 @@ int main(){
 	fscanf(information,"%s %lf %lf %lf", junk, &start_location[0], &start_location[1], &start_location[2]);
 	fscanf(information,"%s %lf %lf %lf", junk, &current_location[0], &current_location[1], &current_location[2]);
 	fgets(junk,256,information); // need this to swich inbetween using fscanf to fgets in order to move to next line
-	altitude_delta = goal_location[2] - start_location[2];
-	current_altitude = current_location[2] - start_location[2];
-	prepare_2D_loc(goal_location); prepare_2D_loc(start_location); prepare_2D_loc(current_location);
+	// altitude_delta = goal_location[2] - start_location[2];
+	// current_altitude = current_location[2] - start_location[2];
+	// prepare_2D_loc(goal_location); prepare_2D_loc(start_location); prepare_2D_loc(current_location);
 
 	// Need to initialize before inserting objects
 	x_loc_increment = (RESOLUTION_X > 1) ? (goal_location[0]-start_location[0])/(RESOLUTION_X-1) : (goal_location[0]-start_location[0]);
@@ -1159,7 +1162,7 @@ int main(){
 	mark_obstacles(root_obstacle);
 	while(fgets(line,256,information)){
 		sscanf(line,"%s %lf %lf %lf %lf", junk, &object[0], &object[1], &object[2], &object[3]);
-		prepare_2D_loc(object);
+		// prepare_2D_loc(object);
 		update_obstacle_list(&root_obstacle,object[0],object[1],object[2],object[3]);
 	}
 	cet = (clock()-current_time)* 1000 / CLOCKS_PER_SEC; current_time = clock();
@@ -1214,6 +1217,7 @@ int main(){
 			printf("Other Time taken %d seconds %d milliseconds\n", times[OTHER]/1000, times[OTHER]%1000);
 			times[0] = 0; times[1] = 0; times[2] = 0; times[3] = 0; times[4] = 0; times[5] = 0; times[6] = 0; times[7] = 0;
 		}
+		return;
 		start_time = clock();
 		if (current_node->rhs == max_val) return -1;
 		information = fopen("flight_information.txt","r");
@@ -1223,9 +1227,9 @@ int main(){
 		fscanf(information,"%s %lf %lf %lf", junk, &start_location_temp[0], &start_location_temp[1], &start_location_temp[2]);
 		fscanf(information,"%s %lf %lf %lf", junk, &current_location[0], &current_location[1], &current_location[2]);
 		fgets(junk,256,information); // need this to swich inbetween using fscanf to fgets in order to move to next line
-		altitude_delta = goal_location[2] - start_location[2];
-		current_altitude = current_location[2] - start_location[2];
-		prepare_2D_loc(goal_location); prepare_2D_loc(start_location); prepare_2D_loc(current_location);
+		// altitude_delta = goal_location[2] - start_location[2];
+		// current_altitude = current_location[2] - start_location[2];
+		// prepare_2D_loc(goal_location); prepare_2D_loc(start_location); prepare_2D_loc(current_location);
 
 		if(updated_obstacles == 2){
 			return;
@@ -1239,7 +1243,7 @@ int main(){
 		mark_obstacles(root_obstacle);
 		while(fgets(line,256,information) && updated_obstacles){
 			sscanf(line,"%s %lf %lf %lf %lf", junk, &object[0], &object[1], &object[2], &object[3]);
-			prepare_2D_loc(object);
+			// prepare_2D_loc(object);
 			update_obstacle_list(&root_obstacle,object[0],object[1],object[2],object[3]);
 		}
 

@@ -1,18 +1,12 @@
 FLAGS = -g
-PROGS = main test reset
+PROGS = main reset
 CLEANUP = rmobj rmhd rmother
 RMALL = rmexec rmobj rmhd rmother
 
 all: $(PROGS)
 
-test: test.o minheap.o structures.o
-	gcc -o test test.o minheap.o structures.o
-
 main: dlite.o minheap.o structures.o
 	gcc -o main dlite.o minheap.o structures.o
-
-test.o: test.c minheap.h structures.h
-	gcc $(FLAGS) -c test.c
 
 dlite.o: dlite.c minheap.h structures.h
 	gcc $(FLAGS) -c dlite.c

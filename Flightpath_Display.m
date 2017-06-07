@@ -52,7 +52,7 @@ function Flightpath_Display_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to Flightpath_Display (see VARARGIN)
 
 % Set up mission variables
-handles.missionDirectory = 'C:\Users\mvaug\Documents\SUAS\Competition_17\DLite-17';
+handles.missionDirectory = 'C:\Users\imaging2.0\Documents\MUAS-17\Flight_Path';
 
 % Choose default command line output for Flightpath_Display
 handles.output = hObject;
@@ -109,7 +109,7 @@ mode = handles.mode_list.Value;
 if(mode ~= 2)
     return
 end
-!make 
+!make
 !main.exe
 % ... doing stuff ...
 
@@ -144,6 +144,7 @@ if(changed == '1')
         obstacle_index = obstacle_index + 1;
         line = textscan(line,'%s %f %f %f %f');
         obstacles(obstacle_index,:) = [line{2},line{3},line{4},line{5}];
+        obstacle_type(obstacle_index,:) = line{1};
         line = fgets(flight_information_handle);
     end
     
@@ -157,12 +158,18 @@ if(changed == '1')
     z_min = min(start(3),goal(3));
     z_max = max(start(3),goal(3));
     for i = [1:1:obstacle_index]
-        [x,y,z] = cylinder(obstacles(i,4),10);
-        surf(x+obstacles(i,1),y+obstacles(i,2),z+z_min,'FaceColor',[0.85 0.6 0]);
-        for z_inc = [z_min+1:1:z_max-1]
-            surf(x+obstacles(i,1),y+obstacles(i,2),z+z_inc,'FaceColor','none','EdgeColor',[0.8 0.8 0.8]);
+        switch obstacle_type{i,1}
+            case 'static'
+                [x,y,z] = cylinder(obstacles(i,4),10);
+                surf(x+obstacles(i,1),y+obstacles(i,2),z+z_min,'FaceColor',[0.85 0.6 0]);
+                for z_inc = [z_min+1:1:z_max-1]
+                    surf(x+obstacles(i,1),y+obstacles(i,2),z+z_inc,'FaceColor','none','EdgeColor',[0.8 0.8 0.8]);
+                end
+                surf(x+obstacles(i,1),y+obstacles(i,2),z+z_max,'FaceColor',[0.85 0.6 0]);
+            case 'dynamic'
+                [x,y,z] = sphere(10);
+                surf(x*obstacles(i,4)+obstacles(i,1),y*obstacles(i,4)+obstacles(i,2),z*obstacles(i,4)+obstacles(i,3),'FaceColor','none','EdgeColor',[0.8 0.8 0.8]);
         end
-        surf(x+obstacles(i,1),y+obstacles(i,2),z+z_max,'FaceColor',[0.85 0.6 0]);
     end
     view(-(0.5-handles.az_slider.Value)*180,-(0.5-handles.elev_slider.Value)*180);
     % Plot start, goal, current nodes.
