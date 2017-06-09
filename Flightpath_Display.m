@@ -22,7 +22,7 @@ function varargout = Flightpath_Display(varargin)
 
 % Edit the above text to modify the response to help Flightpath_Display
 
-% Last Modified by GUIDE v2.5 05-Jun-2017 16:02:18
+% Last Modified by GUIDE v2.5 08-Jun-2017 12:59:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,8 +51,11 @@ function Flightpath_Display_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Flightpath_Display (see VARARGIN)
 
-% Set up mission variables
+% Set up path variables
 handles.missionDirectory = 'C:\Users\imaging2.0\Documents\MUAS-17\Flight_Path';
+handles.shortest_path_path = strcat(handles.missionDirectory,'\shortest_path.txt');
+handles.flight_information_path = strcat(handles.missionDirectory,'\flight_information.txt');
+handles.intermediate_waypoints_path = strcat(handles.missionDirectory,'intermediate_waypoints.txt');
 
 % Choose default command line output for Flightpath_Display
 handles.output = hObject;
@@ -73,7 +76,6 @@ function varargout = Flightpath_Display_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
 
 % --- Executes on selection change in obstacle_gps_locations.
 function obstacle_gps_locations_Callback(hObject, eventdata, handles)
@@ -97,6 +99,10 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+function format_coord(handle)
+if(~contains(handle.String,'.'))
+    set(handle,'String',[handle.String '.0']);
+end
 
 % --- Executes on button press in start_button.
 function start_button_Callback(hObject, eventdata, handles)
@@ -113,16 +119,10 @@ end
 !main.exe
 % ... doing stuff ...
 
-% plot data here
-% Create path variables
-shortest_path_path = strcat(handles.missionDirectory,'\shortest_path.txt');
-flight_information_path = strcat(handles.missionDirectory,'\flight_information.txt');
-intermediate_waypoints_path = strcat(handles.missionDirectory,'intermediate_waypoints.txt');
-
 % Create file handles
-shortest_path_handle = fopen(shortest_path_path);
-flight_information_handle = fopen(flight_information_path);
-waypoints_handle = fopen(intermediate_waypoints_path);
+flight_information_handle = fopen(handles.flight_information_path);
+shortest_path_handle = fopen(handles.shortest_path_path);
+waypoints_handle = fopen(handles.intermediate_waypoints_path);
 
 % Only update graph if shortest path is different than before
 changed = sscanf(fgets(shortest_path_handle),'Changed %s');
@@ -183,7 +183,9 @@ if(changed == '1')
     grid on;
     hold off;
 end
-
+fclose(flight_information_handle);
+fclose(shortest_path_handle);
+fclose(intermediate_waypoints_handle);
 
 % --- Executes on selection change in mode_list.
 function mode_list_Callback(hObject, eventdata, handles)
@@ -195,8 +197,7 @@ function mode_list_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from mode_list
 mode = handles.mode_list.Value;
 if(mode == 2)
-    flight_information_path = strcat(handles.missionDirectory,'\flight_information.txt');
-    flight_information_handle = fopen(flight_information_path);
+    flight_information_handle = fopen(handles.flight_information_path);
     updated = textscan(fgets(flight_information_handle),'%s %d');
     updated = updated{2};
     goal = textscan(fgets(flight_information_handle),'%s %f %f %f');
@@ -216,23 +217,20 @@ if(mode == 2)
     set(handles.glat,'String',goal(1)); set(handles.glon,'String',goal(2)); set(handles.galt,'String',goal(3));
     set(handles.slat,'String',start(1)); set(handles.slon,'String',start(2)); set(handles.salt,'String',start(3));
     set(handles.clat,'String',current(1)); set(handles.clon,'String',current(2)); set(handles.calt,'String',current(3));
-    coordinate_length = 12;
+    current_list = '';
     for i = [1:1:obstacle_index]
         data = handles.obstacle_gps_locations;
-        current_list = data.String;
-        current_obstacle = '';
+        current_obstacle = [num2str(i) ') ['];
         for k = [1:1:3]
             coord = num2str(obstacles(i,k),11);
-            length = numel(coord);
             current_obstacle = [current_obstacle coord];
-            for j = [0:1:(coordinate_length-length-1)*2]
-                current_obstacle = [current_obstacle ' '];
-            end
+            current_obstacle = [current_obstacle ', '];
         end
-        current_obstacle = [current_obstacle num2str(obstacles(i,4),11)];
+        current_obstacle = [current_obstacle num2str(obstacles(i,4),11) ']'];
         current_list = strvcat(current_list,current_obstacle);
         data.String = current_list;
     end
+    fclose(flight_information_handle);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -323,7 +321,33 @@ function set_start_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-flight_information_handle = fopen(strcat(handles.missionDirectory,'\flight_information.txt'));
+flight_information_handle = fopen(handles.flight_information_path,'r');
+updated = fgets(flight_information_handle);
+goal = fgets(flight_information_handle);
+start = fgets(flight_information_handle);
+current = fgets(flight_information_handle);
+obstacle_index = 0;
+line = fgets(flight_information_handle);
+while line ~= -1
+    obstacle_index = obstacle_index + 1;
+    obstacles{obstacle_index} = line;
+    line = fgets(flight_information_handle);
+end
+fclose(flight_information_handle);
+flight_information_handle = fopen(handles.flight_information_path,'w');
+start_x = handles.test_start_x.String;
+start_y = handles.test_start_y.String;
+start_z = handles.test_start_z.String;
+set_start = ['start ' start_x ' ' start_y ' ' start_z '\n'];
+fprintf(flight_information_handle,updated);
+fprintf(flight_information_handle,goal);
+fprintf(flight_information_handle,set_start);
+fprintf(flight_information_handle,current);
+for i = [1:1:obstacle_index]
+    fprintf(flight_information_handle,obstacles{i});
+end
+fclose(flight_information_handle);
+mode_list_Callback(handles.mode_list,eventdata,handles);
 
 
 % --- Executes on button press in set_goal_button.
@@ -331,22 +355,85 @@ function set_goal_button_Callback(hObject, eventdata, handles)
 % hObject    handle to set_goal_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+flight_information_handle = fopen(handles.flight_information_path,'r');
+updated = fgets(flight_information_handle);
+goal = fgets(flight_information_handle);
+start = fgets(flight_information_handle);
+current = fgets(flight_information_handle);
+obstacle_index = 0;
+line = fgets(flight_information_handle);
+while line ~= -1
+    obstacle_index = obstacle_index + 1;
+    obstacles{obstacle_index} = line;
+    line = fgets(flight_information_handle);
+end
+fclose(flight_information_handle);
+flight_information_handle = fopen(handles.flight_information_path,'w');
+goal_x = handles.test_goal_x.String;
+goal_y = handles.test_goal_y.String;
+goal_z = handles.test_goal_z.String;
+set_goal = ['goal ' goal_x ' ' goal_y ' ' goal_z '\n'];
+fprintf(flight_information_handle,updated);
+fprintf(flight_information_handle,set_goal);
+fprintf(flight_information_handle,start);
+fprintf(flight_information_handle,current);
+for i = [1:1:obstacle_index]
+    fprintf(flight_information_handle,obstacles{i});
+end
+fclose(flight_information_handle);
+mode_list_Callback(handles.mode_list,eventdata,handles);
 
 % --- Executes on button press in set_current_button.
 function set_current_button_Callback(hObject, eventdata, handles)
 % hObject    handle to set_current_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+flight_information_handle = fopen(handles.flight_information_path,'r');
+updated = fgets(flight_information_handle);
+goal = fgets(flight_information_handle);
+start = fgets(flight_information_handle);
+current = fgets(flight_information_handle);
+obstacle_index = 0;
+line = fgets(flight_information_handle);
+while line ~= -1
+    obstacle_index = obstacle_index + 1;
+    obstacles{obstacle_index} = line;
+    line = fgets(flight_information_handle);
+end
+fclose(flight_information_handle);
+flight_information_handle = fopen(handles.flight_information_path,'w');
+current_x = handles.test_current_x.String;
+current_y = handles.test_current_y.String;
+current_z = handles.test_current_z.String;
+set_current = ['current ' current_x ' ' current_y ' ' current_z '\n'];
+fprintf(flight_information_handle,updated);
+fprintf(flight_information_handle,goal);
+fprintf(flight_information_handle,start);
+fprintf(flight_information_handle,set_current);
+for i = [1:1:obstacle_index]
+    fprintf(flight_information_handle,obstacles{i});
+end
+fclose(flight_information_handle);
+mode_list_Callback(handles.mode_list,eventdata,handles);
 
 % --- Executes on button press in reset_test_button.
 function reset_test_button_Callback(hObject, eventdata, handles)
 % hObject    handle to reset_test_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
+flight_information_handle = fopen(handles.flight_information_path,'w');
+set_updated = ['updated_obstacles 1\n'];
+set_goal = ['goal 25.0 25.0 25.0\n'];
+set_start = ['start 0.0 0.0 0.0\n'];
+set_current = ['current 0.0 0.0 0.0\n'];
+add_obstacle = ['static 12.5 12.5 12.5 2.5\n'];
+fprintf(flight_information_handle,set_updated);
+fprintf(flight_information_handle,set_goal);
+fprintf(flight_information_handle,set_start);
+fprintf(flight_information_handle,set_current);
+fprintf(flight_information_handle,add_obstacle);
+fclose(flight_information_handle);
+mode_list_Callback(handles.mode_list,eventdata,handles);
 
 function test_start_x_Callback(hObject, eventdata, handles)
 % hObject    handle to test_start_x (see GCBO)
@@ -355,6 +442,7 @@ function test_start_x_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_start_x as text
 %        str2double(get(hObject,'String')) returns contents of test_start_x as a double
+format_coord(handles.test_start_x)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -378,6 +466,7 @@ function test_start_y_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_start_y as text
 %        str2double(get(hObject,'String')) returns contents of test_start_y as a double
+format_coord(handles.test_start_y)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -401,6 +490,7 @@ function test_start_z_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_start_z as text
 %        str2double(get(hObject,'String')) returns contents of test_start_z as a double
+format_coord(handles.test_start_z)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -424,6 +514,9 @@ function test_goal_x_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_goal_x as text
 %        str2double(get(hObject,'String')) returns contents of test_goal_x as a double
+format_coord(handles.test_goal_x)
+
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -447,6 +540,7 @@ function test_goal_y_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_goal_y as text
 %        str2double(get(hObject,'String')) returns contents of test_goal_y as a double
+format_coord(handles.test_goal_y)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -470,6 +564,7 @@ function test_goal_z_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_goal_z as text
 %        str2double(get(hObject,'String')) returns contents of test_goal_z as a double
+format_coord(handles.test_goal_z)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -493,6 +588,7 @@ function test_current_x_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_current_x as text
 %        str2double(get(hObject,'String')) returns contents of test_current_x as a double
+format_coord(handles.test_current_x)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -516,6 +612,7 @@ function test_current_y_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_current_y as text
 %        str2double(get(hObject,'String')) returns contents of test_current_y as a double
+format_coord(handles.test_current_y)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -539,6 +636,7 @@ function test_current_z_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of test_current_z as text
 %        str2double(get(hObject,'String')) returns contents of test_current_z as a double
+format_coord(handles.test_current_z)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -552,3 +650,200 @@ function test_current_z_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function add_obstacle_x_Callback(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_x (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of add_obstacle_x as text
+%        str2double(get(hObject,'String')) returns contents of add_obstacle_x as a double
+format_coord(handles.add_obstacle_x)
+
+
+% --- Executes during object creation, after setting all properties.
+function add_obstacle_x_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_x (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function add_obstacle_y_Callback(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of add_obstacle_y as text
+%        str2double(get(hObject,'String')) returns contents of add_obstacle_y as a double
+format_coord(handles.add_obstacle_y)
+
+
+% --- Executes during object creation, after setting all properties.
+function add_obstacle_y_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function add_obstacle_z_Callback(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_z (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of add_obstacle_z as text
+%        str2double(get(hObject,'String')) returns contents of add_obstacle_z as a double
+format_coord(handles.add_obstacle_z)
+
+
+% --- Executes during object creation, after setting all properties.
+function add_obstacle_z_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_z (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function add_obstacle_r_Callback(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_r (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of add_obstacle_r as text
+%        str2double(get(hObject,'String')) returns contents of add_obstacle_r as a double
+format_coord(handles.add_obstacle_r)
+
+
+% --- Executes during object creation, after setting all properties.
+function add_obstacle_r_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_r (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in add_obstacle_button.
+function add_obstacle_button_Callback(hObject, eventdata, handles)
+% hObject    handle to add_obstacle_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+flight_information_handle = fopen(handles.flight_information_path,'r');
+updated = fgets(flight_information_handle);
+goal = fgets(flight_information_handle);
+start = fgets(flight_information_handle);
+current = fgets(flight_information_handle);
+obstacle_index = 0;
+line = fgets(flight_information_handle);
+while line ~= -1
+    obstacle_index = obstacle_index + 1;
+    obstacles{obstacle_index} = line;
+    line = fgets(flight_information_handle);
+end
+fclose(flight_information_handle);
+flight_information_handle = fopen(handles.flight_information_path,'w');
+obstacle_x = handles.add_obstacle_x.String;
+obstacle_y = handles.add_obstacle_y.String;
+obstacle_z = handles.add_obstacle_z.String;
+obstacle_r = handles.add_obstacle_r.String;
+if(handles.static_button.Value == 1)
+    obstacle_type = 'static';
+else
+    obstacle_type = 'dynamic';
+end
+obstacle_index = obstacle_index + 1;
+new_obstacle = [obstacle_type ' ' obstacle_x ' ' obstacle_y ' ' obstacle_z ' ' obstacle_r '\n'];
+obstacles{obstacle_index} = new_obstacle;
+fprintf(flight_information_handle,updated);
+fprintf(flight_information_handle,goal);
+fprintf(flight_information_handle,start);
+fprintf(flight_information_handle,current);
+for i = [1:1:obstacle_index]
+    fprintf(flight_information_handle,obstacles{i});
+end
+fclose(flight_information_handle);
+mode_list_Callback(handles.mode_list,eventdata,handles);
+
+% --- Executes on selection change in delete_obstacle_list.
+function delete_obstacle_list_Callback(hObject, eventdata, handles)
+% hObject    handle to delete_obstacle_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns delete_obstacle_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from delete_obstacle_list
+
+
+% --- Executes during object creation, after setting all properties.
+function delete_obstacle_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to delete_obstacle_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+current_obstacle_list_size = handles.obstacle_gps_locations.String;
+current_obstacle_list_size = current_obstacle_list_size.size;
+for i = [1:1:current_obstacle_list_size]
+    set(handles.delete_obstacle_list,'String',[handles.delete_obstacle_list num2str(i)]);
+end
+
+
+% --- Executes on button press in delete_obstacle_button.
+function delete_obstacle_button_Callback(hObject, eventdata, handles)
+% hObject    handle to delete_obstacle_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+delete_num = handles.delete_obstacle_list.String;
+flight_information_handle = fopen(handles.flight_information_path,'r');
+updated = fgets(flight_information_handle);
+goal = fgets(flight_information_handle);
+start = fgets(flight_information_handle);
+current = fgets(flight_information_handle);
+obstacle_index = 0;
+line = fgets(flight_information_handle);
+while line ~= -1
+    if(num2str(obstacle_index+1) ~= delete_num)
+        obstacle_index = obstacle_index + 1;
+        obstacles{obstacle_index} = line;
+    end
+    line = fgets(flight_information_handle);
+end
+fclose(flight_information_handle);
+flight_information_handle = fopen(handles.flight_information_path,'w');
+fprintf(flight_information_handle,updated);
+fprintf(flight_information_handle,goal);
+fprintf(flight_information_handle,start);
+fprintf(flight_information_handle,current);
+for i = [1:1:obstacle_index]
+    fprintf(flight_information_handle,obstacles{i});
+end
+fclose(flight_information_handle);
+mode_list_Callback(handles.mode_list,eventdata,handles);
