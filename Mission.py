@@ -6,9 +6,12 @@ import time
 import System
 from System import Byte
 
+sys.path.append('C:\Program Files\IronPython 2.7\lib')
+#import os
+#import threading
 
 #from System import Threading
-#rom System.Threading import Thread, ThreadStart
+#from System.Threading import Thread, ThreadStart
 #import threading
 #import os
 
@@ -22,24 +25,43 @@ MissionPlanner.MainV2.speechEnable = True
 
 
 global groundBearing
-global Home
 global givenTime
+global loiterRadius
 global Dstar
+global bounds
+global staticObstacles
+global OffAxisLtoR
 
 global delLat
 global delLng
 
-delLat = .00000899
-delLng = .0000116
+OffAxisLtoR = 1
+delLat = .00000898
+delLng = .0000115
 givenTime = 2
-Dstar = Dstar()
+loiterRadius = 40
+#setparam loiter radius to loiterRadius
 
 def gps_distanceCS(lat, lng):
-	dist = ((lat-cs.lat)**2+(lng-cs.lng)**2)
+	dist = (((lat-cs.lat)*delLat)**2+((lng-cs.lng)*delLng)**2)
 	return (dist**(1/2.0))
+
+def dist_CS(loc):
+	dlat = (loc.lat-cs.lat)/delLat
+	dlng = (loc.lng-cs.lng)/delLng
+	dalt = loc.alt-cs.alt
+	dist = ((dlat)**2+(dlng)**2+(dalt)**2)**.5
+	return dist
 
 def gps_distance(lat1,lng1,lat2,lng2):
 	dist = (((lat2-lat1)/delLat)**2+((lng2-lng1)/delLng)**2)**.5
+	return dist
+
+def dist_loc(loc1,loc2):
+	dlat = (loc2.lat-loc1.lat)/delLat
+	dlng = (loc2.lng-loc1.lng)/delLng
+	dalt = loc2.alt-loc1.alt
+	dist = ((dlat)**2+(dlng)**2+(dalt)**2)**.5
 	return dist
 
 def gpsDist(m):
@@ -68,21 +90,21 @@ def file_len_Loc(fileLoc):
     return i
 
 def defineHome():
-	global Home
-	Home = Locationwp().Set(cs.lat,cs.lng,0, 16)
+	global Dstar
+	Dstar = Dstar()
 	global groundBearing
 	groundBearing = cs.nav_bearing*(3.1415/180)
-	print "ground bearing is ",groundBearing, " at location ",Home.lat,", ", Home.lng
+	print "ground bearing is ",groundBearing, " at location ",Dstar.Home.lat,", ", Dstar.Home.lng
 
 def setHome(num):
 	MAV.setWPTotal(num)	
-	MAV.setWP(Home,0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
+	MAV.setWP(Dstar.Home,0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
 
 def closestPoint(gl, st, ob):
 	#gl = [goal.lat,goal.lng,goal.alt]
 	#st = [start.lat,start.lng,goal.alt]
 	lin = [gl[0]-st[0],gl[1]-st[1],gl[2]-st[2]]
-	length = ((lin[0])**2+(lin[1])**2+(lin[2])**2)*.5
+	length = ((lin[0])**2+(lin[1])**2+(lin[2])**2)**.5
 	ln = [lin[0]/length,lin[1]/length,lin[2]/length]
 	t = (((ob[0]-st[0])*ln[0])+((ob[1]-st[1])*ln[1])+(ln[2]*(ob[2]-st[2])))/(ln[0]**2+ln[1]**2+ln[2]**2)
 	if (t < 0):
@@ -98,15 +120,15 @@ def distFromPath(gl, st, ob):
 	d = ((ob[0]-cp[0])**2+(ob[1]-cp[1])**2+(ob[2]-cp[2])**2)**.5
 	return d
 
-def speak(str):
-	MissionPlanner.MainV2.speechEngine.SpeakAsync(str)
-	pass
+def speak(strin):
+	print strin
+	MissionPlanner.MainV2.speechEngine.SpeakAsync(strin)
 
 def readWpFile(wpfilename):
 	globallist = open(wpfilename,"r")
 	lngth = file_len(wpfilename)
 	lst = []
-	if (globallist.readline().split()[1] == "WPL"):
+	if (globallist.readline().split(" ")[1] == "WPL"):
 		globallist.readline()
 		for wpnum in range(lngth-2):
 			dat = globallist.readline().split("	")
@@ -125,23 +147,6 @@ def readWpFile(wpfilename):
 	globallist.close()
 	return lst
 
-def readInteropWpFile(wpfileLoc):
-	lngth = file_len(wpfileLoc)
-	with open(wpfileLoc,"r") as globallist:
-		lst = []
-		if (lngth != 0):
-			for wpnum in range(lngth):
-				dat = globallist.readline().split("	")
-				cam = Locationwp()
-				Locationwp.id.SetValue(cam, 16)
-				Locationwp.lat.SetValue(cam, float(dat[1]))
-				Locationwp.lng.SetValue(cam, float(dat[2]))
-				Locationwp.alt.SetValue(cam, float(dat[3]))
-				lst.append(cam)  #append cam trig
-		else:
-			print "Nothing found"
-		return lst
-
 def readNodeFile(nodefilename):
 	Nodelist = open(nodefilename,"r")
 	lngth = file_len(nodefilename)
@@ -155,24 +160,11 @@ def readNodeFile(nodefilename):
 	globallist.close()
 	return lst
 
-def getCameraGridStart(wpfilename):
-	globallist = open(wpfilename,"r")
-	lngth = file_len(wpfilename)
-	lst = []
-	if (globallist.readline().split()[1] != "WPL"):
-		print "Nothing found"
-		return None
-	else:
-		globallist.readline()
-		dat = globallist.readline().split("	")
-	
-	return Locationwp().Set(dat[8],dat[9],dat[10], 16)
-
 def cameraGrid(wpfileLoc):
 	lngth = file_len_Loc(wpfileLoc)
 	with open(wpfileLoc,"r") as globallist:
 		lst = []
-		if (globallist.readline().split()[1] != "WPL"):
+		if (globallist.readline().split(" ")[1] != "WPL"):
 			print "Nothing found"
 		else:
 			globallist.readline()
@@ -230,48 +222,58 @@ def cameraGrid(wpfileLoc):
 		
 	#return None
 
+def getBear(loc,lastloc):
+	dlat = (loc.lat-lastloc.lat)/delLat
+	dlng = (loc.lng-lastloc.lng)/delLng
+	return atan2(dlng,dlat)
+
+def writePhotoLocations(lst):
+	# file_loc = 'C:\Users\derek_000\Documents\Documents\MUAS\Imaging\Picture_Info.txt';
+	file_loc = 'D:\MUAS\Imaging\Picture_Info.txt';
+
+	locList = []
+	lastLoc = lst[0]
+	lastlastLoc = None
+	for i in range(len(lst)):
+		print i
+		if (lst[i].id == 203 or lst[i].id == 206):
+			loca = [lst[i-1].lat,lst[i-1].lng]
+			loca.append(getBear(lastLoc,lastlastLoc))
+			locList.append(loca)
+		elif(lst[i].id == 16):
+			lastlastLoc = lastLoc
+			lastLoc = lst[i]
+
+	with open(file_loc,"w") as locFile:
+		for j in range(len(locList)):
+			locFile.write(str(j+1))
+			locFile.write(str('	'))
+			locFile.write(str(loca[0]))
+			locFile.write(str('	'))
+			locFile.write(str(loca[1]))
+			locFile.write(str('	'))
+			locFile.write(str(loca[2]))
+			locFile.write('\n')
+	print 'done writing photo locations file'
+
 def takeoff():
 	to = Locationwp()
 	Locationwp.id.SetValue(to, int(MAVLink.MAV_CMD.TAKEOFF))
 	Locationwp.p1.SetValue(to, 15)
 	Locationwp.alt.SetValue(to, 40)
+	return [to]
 
-	dist = gpsDist(310)
-	lat1 = cs.lat + dist*sin(groundBearing)
-	lng1 = cs.lng + dist*cos(groundBearing)
+def getTakeoffLoc(loc,bear):
+	dist = 310
+	lat1 = loc.lat + delLat*dist*sin(bear)
+	lng1 = loc.lng + delLng*dist*cos(bear)
  
 	loc = Locationwp().Set(lat1,lng1,50, 16)
 
-	#setHome(20)
-	#MAV.setWP(to,1,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	#MAV.setWP(loc,2,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-
-	return to
-
-	#tempalt = cs.alt
-	#speak("Taking off")
-	#Script.Sleep(2000)
-	#MAV.setMode("Auto")
-	#while(True):
-	#	Script.Sleep(100)
-	#	if (cs.wpno == 2):#.5*(cs.alt+tempalt) > 40):
-	#		break
-	#		print "finished taking off "
-		#tempalt = cs.alt
-
-def getLandingStart():
-	descent_ratio = 20.0/150.0 #20 meter descent for every 150 meters traveled
-	alt1 = 50
-	dist1 = gpsDist(alt1/descent_ratio)
-	lat1 = loc.lat - dist1*sin(bear)
-	lng1 = loc.lng - dist1*cos(bear)
-	return Locationwp().Set(lat1,lng1,alt1, 16)
-
-#rework
 def landLoc(loc,bear):
 	descent_ratio = 20.0/150.0 #20 meter descent for every 150 meters traveled
-	alt1 = 50
-	alt2 = 20
+	alt1 = 60
+	alt2 = 50
 	dist1 = gpsDist(alt1/descent_ratio)
 	dist2 = gpsDist(alt2/descent_ratio)
 	lat1 = loc.lat - dist1*sin(bear)
@@ -279,51 +281,23 @@ def landLoc(loc,bear):
 	lat2 = loc.lat - dist2*sin(bear)
 	lng2 = loc.lng - dist2*cos(bear)
 
-	setHome(20)
-	MAV.setWP(Locationwp().Set(lat1,lng1,alt1, 16),1,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWP(Locationwp().Set(lat2,lng2,alt1, 16),2,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWP(Locationwp().Set(loc.lat,loc.lng,0,21),3,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
+	loc1 = Locationwp().Set(lat1,lng1,alt1, 16)
+	loc2 = Locationwp().Set(lat2,lng2,alt1, 16)
+	loc3 = Locationwp().Set(loc.lat,loc.lng,0,21)
+	return [loc1, loc2, loc3]
 
-#rework
 def land():
 	descent_ratio = 20.0/150.0 #20 meter descent for every 150 meters traveled
-	alt1 = 50
-	alt2 = 20
+	alt1 = 60
+	alt2 = 50
 	dist1 = gpsDist(alt1/descent_ratio)
 	dist2 = gpsDist(alt2/descent_ratio)
-	lat1 = Home.lat - dist1*sin(groundBearing)
-	lng1 = Home.lng - dist1*cos(groundBearing)
-	lat2 = Home.lat - dist2*sin(groundBearing)
-	lng2 = Home.lng - dist2*cos(groundBearing)
+	lat1 = Dstar.Home.lat - dist1*sin(groundBearing)
+	lng1 = Dstar.Home.lng - dist1*cos(groundBearing)
+	lat2 = Dstar.Home.lat - dist2*sin(groundBearing)
+	lng2 = Dstar.Home.lng - dist2*cos(groundBearing)
 
-	setHome(20)
-	MAV.setWP(Locationwp().Set(lat1,lng1,alt1, 16),1,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWPCurrent(1)
-	MAV.setWP(Locationwp().Set(lat2,lng2,alt1, 16),2,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWP(Locationwp().Set(Home.lat,Home.lng,0,21),3,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-
-#has to be able to stop if cant get to 
-def uploadGlobal(globalWp,globalWpNum,intWp):
-	setHome(50)
-	numInt = 0
-	MAV.setWP(globalWp[globalWpNum-1],1,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-	if (intWp != None):
-		numInt += len(intWp)
-		for i in range(len(intWP)):
-			MAV.setWP(intWP[i],2+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-	MAV.setWPCurrent(2)
-	MAV.setWP(globalWp[globalWpNum],2+numInt,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-	if (globalWpNum+1 < len(globalWp)):
-		MAV.setWP(globalWp[globalWpNum]+1,3+numInt,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-
-def getpayloadstart(loc, bear):
-	distprevious1 = gpsDist(180)
-	prelat1 = loc.lat - distprevious1*sin(bear)
-	prelng1 = loc.lng - distprevious1*cos(bear)
-
-	MAV.setWP(Locationwp().Set(prelat1,prelng1,50, 16),1,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-
-	return None
+	return [Locationwp().Set(lat1,lng1,alt1, 16), Locationwp().Set(lat2,lng2,alt1, 16), Locationwp().Set(Dstar.Home.lat,Dstar.Home.lng,0,21)]
 
 def payloaddrop(loc, bear):
 	
@@ -353,21 +327,23 @@ def payloaddrop(loc, bear):
 	postlat = loc.lat + distafter*sin(bear) - wind*sin(windbearing)
 	postlng = loc.lng + distafter*cos(bear) -  wind*cos(windbearing)
 
-	speak("setting up payload drop")
-	setHome(50)
-	MAV.setWP(Locationwp().Set(prelat1,prelng1,50, 16),1,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWPCurrent(1)
-	MAV.setWP(Locationwp().Set(prelat2,prelng2,50, 16),2,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWP(Locationwp().Set(droplat,droplng,50, 16),3,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
+	#speak("setting up payload drop")
+	#setHome(50)
+	
+	loc1 = Locationwp().Set(prelat1,prelng1,50, 16)
+	#MAV.setWPCurrent(1)
+	loc2 = Locationwp().Set(prelat2,prelng2,50, 16)
+	loc3 = Locationwp().Set(droplat,droplng,50, 16)
 
 	dropWP = Locationwp()
 	Locationwp.id.SetValue(dropWP, 183)
-	Locationwp.p1.SetValue(dropWP, 13)
-	Locationwp.p2.SetValue(dropWP, 1900)
+	Locationwp.p1.SetValue(dropWP, 5)
+	Locationwp.p2.SetValue(dropWP, 1100)
 
-	MAV.setWP(dropWP,4,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
-	MAV.setWP(Locationwp().Set(postlat,postlng,55, 16),5,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT);
+	loc5 = Locationwp().Set(postlat,postlng,50, 16)
 
+	return [loc1, loc2, loc3, dropWP, loc5]
+	'''
 	while (cs.wpno < 3):
 		print "dist to drop point is ",meters(gps_distanceCS(dropspot.lat,dropspot.lng))
 		Script.Sleep(100)
@@ -375,100 +351,31 @@ def payloaddrop(loc, bear):
 	while (cs.wpno < 5):
 		pass
 		Script.Sleep(100)		
+	'''
 
-#figure this out in the future
-def uploadWp(lst):
-	setHome(50)
+def uploadWp(lst,start):
 	if (len(lst) != 0):
-		for i in range(len(lst)):
-			MAV.setWP(lst[i],1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-			if (i+1 == 1):
-				MAV.setWPCurrent(1)
-	#MAV.setMode("Auto")
-
-def travel(loc,loc2):
-	if (cs.wpno != None):
-		start = MAV.getWP(cs.wpno)
-		if(loc2 == None):
-			uploadWp([start,loc])
+		if (start == 1):
+			setHome(len(lst)+1)
+			for i in range(len(lst)):
+				MAV.setWP(lst[i],1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
+				if (i+1 == 1):
+					MAV.setWPCurrent(1)
 		else:
-			uploadWp([start,loc,loc2])
-		MAV.setWPCurrent(1)
-	else:
-		start = Locationwp().Set(cs.lat,cs.lng,cs.alt, 16)
-		if(loc2 == None):
-			uploadWp([start,loc])
-		else:
-			uploadWp([start,loc,loc2])
-		MAV.setWPCurrent(2)
-		
+			for i in range(len(lst)):
+				MAV.setWP(lst[i],start+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 
-	#dstar = Dstar(start,loc,[])
-	#dstar.replan()
-	if(loc2 == None):
-		uploadWp([start,loc])
-	else:
-		uploadWp([start,loc,loc2])
+	MAV.setMode("Auto")
 
-	
-	notArrived = True
-	while(notArrived):		#waiting for dstar result
-		Script.Sleep(100)
-		print cs.wpno
-		if (True):#dstar.isDone()):
-			IntWp = []#dstar.getInt()
-			if (len(IntWp) > 0):
-				speak("Intermidiate waypoints needed")
-				lst = [start]
-				for wp in IntWp:
-					lst.append(wp)
-				lst.append(loc)
-				if(loc2 != None):
-					lst.append(loc2)
-				uploadWp(lst)
-			break
 
-		if (gps_distanceCS(loc.lat, loc.lng) < gpsDist(16*givenTime)):
-			notArrived = False 
-			#dstar.kill()
-
-	#Transversing towards  WP
-	while (notArrived):
-		Script.Sleep(100)
-		print cs.alt
-		if (needReplan()):
-			pass
-			#what to do here
-
-		if (gps_distanceCS(loc.lat, loc.lng) < gpsDist(16*givenTime)):
-			notArrived = False
-
-		Script.Sleep(5000)
-		notArrived = False
-
-#total rework of this
-def WpMission(InteropFileLoc):
-	GlobalUpdate = False
-	GlobalWpNum = 0
-	#GlobalWp = readInteropWpFile(InteropFileLoc)
-	GlobalWp = readWpFile("TestWPMission.txt")
-	while (GlobalWpNum < len(GlobalWp)):
-		
-		if (GlobalWpNum+1 < len(GlobalWp)):
-			travel(GlobalWp[GlobalWpNum],GlobalWp[GlobalWpNum+1])
-		else:
-			travel(GlobalWp[GlobalWpNum],None)
-		speak("Starting Next Waypoint")
-		print "Starting Next Waypoint"
-		GlobalWpNum += 1
-	print "done with waypoints"
+##### Getting Mission Stuff
 
 def getMissionData(missionFileLoc):
 	with open(missionFileLoc,"r") as missionFile:
-		airdropData = missionFile.readline().split("	")
-		homeData = missionFile.readline().split("	")
-		offaxisData = missionFile.readline().split("	")
-		emergentData = missionFile.readline().split("	")
+		airdropData = missionFile.readline().split(" ")
+		homeData = missionFile.readline().split(" ")
+		offaxisData = missionFile.readline().split(" ")
+		emergentData = missionFile.readline().split(" ")
 		
 		airdropLoc = Locationwp().Set(float(airdropData[1]),float(airdropData[2]),0, 16)
 		homeLoc = Locationwp().Set(float(homeData[1]),float(homeData[2]),0, 16)
@@ -480,8 +387,8 @@ def getWPData(WPFileLoc):
 	length = file_len_Loc(WPFileLoc)
 	WPs = []
 	with open(WPFileLoc,"r") as WPFile:
-		for i in range(length)
-			WPdat = WPFile.readline().split("	")
+		for i in range(length):
+			WPdat = WPFile.readline().split(" ")
 			WPs.append(Locationwp().Set(float(WPdat[1]),float(WPdat[2]),float(WPdat[3]), 16))
 	return WPs
 
@@ -491,19 +398,12 @@ def getBoundryData(BoundFileLoc):
 	with open(WPFileLoc,"r") as BoundFile:
 		BoundFile.readline()
 		BoundFile.readline()
-		for i in range(length-2)
-			WPdat = BoundFile.readline().split("	")
+		for i in range(length-2):
+			WPdat = BoundFile.readline().split(" ")
 			bounds.append(Locationwp().Set(float(WPdat[1]),float(WPdat[2]),float(WPdat[3]), 16))
 	return bounds
 
-def getBoundryData(ObSFileLoc):
-	length = file_len_Loc(ObSFileLoc)
-	Obstas = []
-	with open(WPFileLoc,"r") as ObSFile:
-		for i in range(length)
-			Obdat = ObSFile.readline().split("	")
-			Obstas.append(obStatic(float(Obdat[1]),float(Obdat[2]),float(Obdat[3]),float(Obdat[4])))
-	return bounds
+##### off axis stuff
 
 def findclosestboundries(loc, bnd):
 	ob = [loc.lng, loc.lat, 0]
@@ -540,16 +440,17 @@ def findSafeOffAxisLoc(boundry1,boundry2,loc):
 	safeloc = Locationwp().Set(lat,lng,height, 16)
 	return safeloc
 
-def offaxistarget(loc,bounds):
+def offaxistarget(loc):
 	boundry1,boundry2 = findclosestboundries(loc,bounds)
-	print 'made it through findclosestboundies'
+
 	safeloc = findSafeOffAxisLoc(boundry1,boundry2,loc)
 	
 	#negative 1 if want to go RtoL
-	LtoR = 1
+	LtoR = OffAxisLtoR
 
 	dist = (((safeloc.lat-loc.lat)/delLat)**2 + ((safeloc.lng-loc.lng)/delLng)**2)**.5
-	height = safeloc.alt
+	#height = safeloc.alt
+	height = 50
 	print height
 	print 'dist = ',dist,' height = ',height
 	angle = atan(dist/height)
@@ -565,346 +466,731 @@ def offaxistarget(loc,bounds):
 	latPre1 = safeloc.lat + (predist1*sin(direc))*delLat
 	lngPre1 = safeloc.lng + (predist1*cos(direc))*delLng
 	preOff1 = Locationwp().Set(latPre1,lngPre1,height, 16)
+	
 	print 'setting gimbal to ',angle*180/pi
-	#move gimbal to angle
+	setangle = Locationwp()
+	Locationwp.id.SetValue(setangle, 205)
+	Locationwp.p2.SetValue(setangle, angle)
+
 
 	predist2 = -80
 	latPre2 = safeloc.lat + (predist2*sin(direc))*delLat
 	lngPre2 = safeloc.lng + (predist2*cos(direc))*delLng
 	preOff2 = Locationwp().Set(latPre2,lngPre2,height, 16)
+	
 	print 'camera trigger'
-	#camtrig once
+	takephoto = Locationwp()
+	Locationwp.id.SetValue(takephoto, 206)
 
 	afterDist = 40
 	lataft = safeloc.lat + (afterDist*sin(direc))*delLat
 	lngaft = safeloc.lng + (afterDist*cos(direc))*delLng
 	afterOff = Locationwp().Set(lataft,lngaft,height, 16)
+	
 	print 'reseting gimbal'
-	#move gimbal back to reg
+	resetangle = Locationwp()
+	Locationwp.id.SetValue(resetangle, 205)
+	Locationwp.p2.SetValue(resetangle, 0)
+	
 
-	return [preOff1,preOff2,safeloc,afterOff]
+	return [preOff1,preOff2,setangle,safeloc,takephoto,afterOff,resetangle]
+
+##### path definition
+
+# need to know if intwps returns the goalwp too
+def getPath(loc,loc2,Moving,timeout):
+	if (Moving == False):
+
+
+		Dstar.startSenario(loc,loc2,Moving)
+		timestart = time.clock()
+		done = False
+		while((time.clock()-timeStart) < timeout):
+			Script.Sleep(50)
+			if(Dstar.isDone):
+				done = True
+				break
+
+		if (done):
+			return Dstar.getInt()
+
+		else:
+			return [loc,loc2]
+
+	else:
+		movingresult = Dstar.startSenario(loc,loc2,Moving)
+		if (movingresult):
+			done = False
+			while((time.clock()-timeStart) < timeout):
+				Script.Sleep(50)
+				if(Dstar.isDone):
+					done = True
+					break
+
+			if (done):
+				return Dstar.getInt()
+			else:
+				return False
+		else:
+			return False
+
+def intercept(st,gl,b1,b2):
+	dbx = b2[0]-b1[0]
+	dby = b2[1]-b1[1]
+	dpx = gl[0]-st[0]
+	dpy = gl[1]-st[1]
+
+	t1 = (st[1]-b1[1]-(dby/dbx)*(st[0]-b1[0]))/(dby*dpx/dbx-dpy)
+	t2 = (st[0] - b1[0] + dpx*t1)/dbx
+	intercept = [st[0]+dpx*t1, st[1]+dpy*t1]
+	if (t1 < 0 or t1 > 1 or t2 < 0 or t2 > 1):
+		return False
+	else:
+		return [st[0]+dpx*t1, st[1]+dpy*t1]
+
 
 #
 #	Should be good to go
 #
 
-#put inside of Dstar
-def NodestoInt(nodes,ObSList,ObMList):
-	#just needs to filter the list to take out unnecessary one
-	waypoints = []
-	cansee = True
-	onNode = 1
-	lastNode = 0
-	previousNode = 0
-	for on in range(1,len(nodes)):
+#probably throw this into wpMission/Travel
+#loiterunlimited change altitude
+#have to change for new gps_distance function
 
-		cansee = True
+def checkaltitudechange(loc1,loc2):#,loiterLoc):
+	wps = []
+	for i in range(len(lst)-1):
+		dist = gps_distance(loc1.lat,loc1.lng,loc2.lat,loc2.lng)
+		height = loc2.alt-loc1.alt
+		slope = height/dist
 
-		for i in range(len(ObSList)):
-			if (distFromPath(nodes[on], nodes[lastNode],ObSList[i]) < ObSList[i].rad*.00001):
-				cansee = False
-	        
-	    #for i in range(len(ObMList)):
-		#	if (distFromPath(nodes[on], nodes[lastNode],ObSList[i]) < ObSList[i].rad*.00001):
-		#		cansee = False
+		if(slope <= .48 or slope >= -.48):
+			return False
+		else:
+			return Locationwp().Set((loc2.lat+loc1.lat)/2,(loc2.lng+loc1.lng)/2,loc2.alt, 31)
+			# return Locationwp().Set(loiterloc.lat,loiterLoc.lng,loc2.alt, 31)
 
-		if (cansee == False):
-			waypoints.append(nodes[previousNode])
-			lastNode = previousNode
+def WpMission(GlobalWp):
 
-		previousNode += 1
-	
-	return waypoints
+	GlobalPath = []
+
+	templist = []
+
+	for i in range(len(GlobalWp)-1):
+
+		templist = getPath(GlobalWp[i], GlobalWp[i+1],False,10)
+
+		# templist.append(GlobalWp[i+1])
+
+		GlobalPath.append(templist)
+
+	return GlobalPath
+
+def addStaticObstacles(StaticObstacleLoc):
+	Length = file_len_Loc(StaticObstacleLoc)
+	with open(StaticObstacleLoc,"r") as ObSFile:
+		for i in range(length):
+			Obdat = ObSFile.readline().split(" ")
+			staticObstacles.append([Obdat[1],Obdat[2],Obdat[3],Obdat[4]])
 
 
 #
 #	Working on these
 #
 
+def writeTel():
+	with open('C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/telemetry.txt',"w") as Telfile:
+		Telfile.write(str(cs.lat))
+		Telfile.write(str(cs.lng))
+		Telfile.write(str(cs.alt))
+		Telfile.write(str(cs.nav_bearing))
 
-#turns out this doesnt work
-def writePhotoLocations(lst):
-	print "writing locations to file"
-	locList = []
-	for i in range(len(lst)):
-		print i
-		if (lst[i].id == 203 or lst[i].id == 206):
-			if (lst[i].p1 == 0):
-				locList.append(lst[i-1])
-			else:
-				alt = lst[i-1].alt
-				lat1 = lst[i-1].lat
-				lat2 = lst[i+1].lat
-				lng1 = lst[i-1].lng
-				lng2 = lst[i+1].lng
+def timeAtClosestApproach(Pos1,Vel1,Pos2,Vel2):
+	p1 = Pos2[0]-Pos1[0]
+	p2 = Pos2[1]-Pos1[1]
+	p3 = Pos2[2]-Pos1[2]
 
-				phi = atan2((lat2-lat1),-(lng2-lng1))
+	v1 = Vel2[0]-Vel1[0]
+	v2 = Vel2[1]-Vel1[1]
+	v3 = Vel2[2]-Vel1[2]
 
-				lat = lat1 + gpsDist(lst[i].p1)*sin(phi)
-				lng = lng1 - gpsDist(lst[i].p1)*cos(phi)
+	t = -(p1*v1+p2*v2+p3*v3)/(v1**2+v2**2+v3**2)
+	return t
 
-				locList.append(Locationwp().Set(lat,lng,alt, 16))
+def dca(Pos1,Vel1,Pos2,Vel2):
+	t = timeAtClosestApproach(Pos1,Vel1,Pos2,Vel2)
 
-	print "actually writing now", len(locList)
-	locFile = open("PhotoLocations.txt","w")
-	for j in range(len(locList)):
-		locFile.write(str(j+1))
-		locFile.write(str('	'))
-		locFile.write(str(locList[j].lat))
-		locFile.write(str('	'))
-		locFile.write(str(locList[j].lng))
-		locFile.write(str('	'))
-		locFile.write(str(locList[j].alt))
-		locFile.write('\n')
-		print j
-	print 'done writing file'
-	locFile.close()
+	x1 = Pos1[0]+t*Vel1[0]
+	y1 = Pos1[1]+t*Vel1[1]
+	z1 = Pos1[2]+t*Vel1[2]
 
-#should probably be deleted
-def needReplan():#ob,WPlen):
-	objectsInPath = False
-	'''
-	for i in range(WPlen):
-		for j in range(len(ob))
-			if (distFromPath(MAV.getWP(cs.wpno-1+i,cs.wpno+i,ob[j])) < ob[j][3]+safety):
-				objectsInPath = True
-	'''
-	if (objectsInPath):
-		return True
-	else:
-		return False
+	x2 = Pos2[0]+t*Vel2[0]
+	y2 = Pos2[1]+t*Vel2[1]
+	z2 = Pos2[2]+t*Vel2[2]
+	
+	loc = [x2,y2,z2]
 
-#probably throw this into wpMission/Travel
-#loiterunlimited change altitude
-#have to change for new gps_distance function
-def checkaltitudechange(lst):
-	wps = []
-	for i in range(len(lst)-1):
-		dist = meters(gps_distance(lst[i].lat,lst[i].lng,lst[i+1].lat,lst[i+1].lng))
-		height = lst[i+1].alt-lst[i].alt
-		slope = height/dist
-		wps.append(lst[i])
-		if(slope >= .48 or slope <= -.48):
-			halflat = (lst[i].lat + lst[i+1].lat)/2
-			halflng = (lst[i].lng + lst[i+1].lng)/2
-			wps.append(Locationwp().Set(halflat,halflat,lst[i+1].alt, 31))
-			#print "need waypoint in between"
-	wps.append(lst[len(lst)])
+	dist = ((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)**.5
+	return dist,loc
+
+def dcaAddtime(Pos1,Vel1,Pos2,Vel2,time):
+	
+	x1 = Pos1[0]-time*Vel1[0]
+	y1 = Pos1[1]-time*Vel1[1]
+	z1 = Pos1[2]-time*Vel1[2]
+
+	x2 = Pos2[0]-time*Vel2[0]
+	y2 = Pos2[1]-time*Vel2[1]
+	z2 = Pos2[2]-time*Vel2[2]
+
+	dc,loc = dca([x1,y1,z1],Vel1,[x2,y2,z2],Vel2)
+	return dc,loc
 
 
+
+def missiontype(lst,strng):
+	upload(lst,1)
+	wp = 1
+	while(cs.wpno < len(lst)-1)
+		Script.Sleep(50)
+		if (cs.wpno != wp)
+			wp = cs.wpno
+			print strng, " Wp number ",wp
+
+def travel(previousWps,start,goal):
+	wp = cs.wpno
+	temp = [start]
+	temp.extend(previousWps)
+	temp.append(goal)
+	upload(temp,1)
+
+	while (cs.wpno == wp):
+		Script.Sleep(10)
+
+	path = getPath(start,goal,True,4)
+
+	actualpath = temp
+	if (path != False):
+		if (cs.wpno == wp):
+			temp2 = [start]
+		else:
+			temp2 = []
+		temp2.extend(path)
+		temp2.append(goal)
+		actualpath = temp2
+		upload(temp2,1)
+
+	wp = 1
+	while(cs.wpno < len(actualpath)-1):
+		Script.Sleep(50)
+		if (cs.wpno != wp)
+			wp = cs.wpno
+			print strng, " Wp number ",wp
 #
-#	Mission Objects
+#	DSTAR
 #
-class obStatic():
-	def __init__(self,longitude,latitude,altitude,radius):
-		self.lng = longitude
-		self.lat = latitude
-		self.alt = altitude
-		self.rad = radius
 
-class obMoving():
-	def __init__(self,longitude,latitude,altitude,radius):
-		self.lng = longitude
-		self.lat = latitude
-		self.alt = altitude
-		self.rad = radius
-		self.vel = [0,0,0]
-
-	def getloc(time):
-		x = self.lng + (time*self.vel[0])
-		y = self.lat + (time*self.vel[1])
-		x = self.alt + (time*self.vel[2])
-		return [x,y,z]
-
-	def update(self,FileLoc):
-		self.lng = 0
-		self.lat = 0
-		self.alt = 0
-
-
-#find away to enter a route
 class Dstar:
-	def __init__(self):
-		self.obM = []
-		self.obS = []
-		self.dataPath = 'D:/muas/Autopilot/Dstar/senario.txt'
-		self.intPath = 'D:/muas/Autopilot/Dstar/IntWp.txt'
-		self.scale = 0
-		self.start = None
-		self.obstacleList = []
-
-	def addObS(self,lst):
-		for ob in lst:
-			self.obS.append(ob)
-
-	def addObM(self,lst):
-		for ob in lst:
-			self.obM.append(ob)
-
-	def updateMoving():
-		#do something here
-		return None
 	
-	def startSenario(self,st,gl):
-		if (self.scale != 0):
-			self.kill()
-		self.start = st
-		dlat = gl.lat - st.lat
-		dlng = gl.lng - st.lng
+	def __init__(self,start):
+		#self.dataPath = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/flight_information.txt'
+		#self.intPath = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/shortest_path.txt'
+		#self.MovingObstacleLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/moving_obstacle_data.txt'
 
-		latMeter = dlat / (delLat)
-		lngMeter = dlng / (delLng)
+		self.dataPath = 'C:/Users/derek_000/Documents/Documents/MUAS/Python/Test/flight_information.txt'
+		self.intPath = 'C:/Users/derek_000/Documents/Documents/MUAS/Python/Test/shortest_path.txt'
+		self.MovingObstacleLoc = 'C:/Users/derek_000/Documents/Documents/MUAS/Python/Test/moving_obstacle_data.txt'
+		self.Safety = 6
+		self.cruise = 16
 
-		self.scale = 100/(((latMeter**2)+(lngMeter**2))**.5)
-		self.obstacleList = []
-		for ob in self.obS:
-			Y = dlat*self.scale/delLat
-			X = dlng*self.scale/delLng
-			Z = dalt*self.scale
-			R = 1.25*ob.radius*self.scale
-			obstacleList.append([X,Y,Z,R])
+		if(start == None):
+			self.Home = Locationwp().Set(cs.lat,cs.lng,0, 16)
+		else:
+			self.Home = start
 
-		#find which file and how to write to it
-		with open(self.dataPath,"w") as senarioFile:
-			senarioFile.write("Changed 1")
+		# self.Bounds = []
+		#self.addBounds()
+		#self.printBounds()
 
-			senarioFile.write(str('\n'))
-			senarioFile.write("start")
-			senarioFile.write(str('	'))
-			senarioFile.write(str(0))
-			senarioFile.write(str('	'))
-			senarioFile.write(str(0))
-			senarioFile.write(str('	'))
-			senarioFile.write(str(0))
+		self.StaticObstacles = [[0,0,100,20],[0,20,200,20]]
+		#self.addStaticObstacles()
+		print "finished Dstar"
 
-			senarioFile.write(str('\n'))
-			senarioFile.write("goal")
-			senarioFile.write(str('	'))
-			senarioFile.write(str(lngMeter*scale))
-			senarioFile.write(str('	'))
-			senarioFile.write(str(latMeter*scale))
-			senarioFile.write(str('	'))
-			senarioFile.write(str(dalt*altScale))
+	def addBounds(self):
+		for i in range(len(bounds)):
+			locat = self.toPoint(bounds[i])
+			bond = [locat[0],locat[1]]
+			self.Bounds.append(bond)
 
-			for ob in obstacleList:
+	def printBounds(self):
+		with open(BoundsLoc,"w") as boundryFile:
+			#boundryFile.write(str(len(self.Bounds)))
+			for i in range(len(self.Bounds)):
+				if (i != 0):
+					boundryFile.write('\n')
+				boundryFile.write(str(Bounds[i][0]))
+				boundryFile.write(str('	'))
+				boundryFile.write(str(Bounds[i][1]))
+
+	def addStaticObstacles(self):
+		for i in range(len(staticObstacles)):
+			locat = self.toPoint2(staticObstacles[i][0],staticObstacles[i][1],staticObstacles[i][2])
+			locat.append(staticObstacles[i][3])
+			self.StaticObstacles.append(locat)
+	
+	def readMovingObstacles(self):
+		movingobstas = []
+		length = file_len_Loc(self.MovingObstacleLoc)
+		with open(self.MovingObstacleLoc,"r") as movingFile:
+			for i in range(length):
+				movingdat = movingFile.readline().split(" ")
+				pos = toPoint2(movingdat[1],movingdat[2],movingdat[3])
+				xpos = pos[0]
+				ypos = pos[1]
+				zpos = pos[2]
+
+				#testing
+				# xpos = float(movingdat[1])
+				# ypos = float(movingdat[2])
+				# zpos = float(movingdat[3])
+				
+				rad = float(movingdat[4])
+				xvel = float(movingdat[5])#/delLat 		#not sure if ill need these
+				yvel = float(movingdat[6])#/delLng
+				zvel = float(movingdat[7])
+				movingobstas.append([xpos,ypos,zpos,rad,xvel,yvel,zvel])
+		return movingobstas
+
+	#fix right after if statement to save the obstacle 
+	def getMovingObstacles(self,WPlst,TimeToStart):		
+		Time = 0#TimeToStart#dist_CS(lst[0])
+		
+		movObs = self.readMovingObstacles()
+
+		ImportantmovObs = []
+		for i in range(len(WPlst)-1):
+			Pos1 = WPlst[i]
+			dx = WPlst[i+1][0]-WPlst[i][0]
+			dy = WPlst[i+1][1]-WPlst[i][1]
+			dz = WPlst[i+1][2]-WPlst[i][2]
+			dis = (dx**2+dy**2+dz**2)**.5
+
+			Vel1 = [dx*self.cruise/dis,dy*self.cruise/dis,dz*self.cruise/dis]
+
+			for j in range(len(movObs)):
+				Pos2 = [movObs[j][0],movObs[j][1],movObs[j][2]]
+				Vel2 = [movObs[j][4],movObs[j][5],movObs[j][6]]
+
+				closest,loc = dcaAddtime(Pos1,Vel1,Pos2,Vel2,Time)
+				print closest,'	',loc,'	',movObs[j][3]+5
+				if (closest < movObs[j][3]+self.Safety):
+					loc.append(movObs[j][3]+self.Safety)
+
+					ImportantmovObs.append(loc)
+
+		Time = Time + dist_loc(lst[i],lst[i+1])/self.cruise
+
+
+
+		return ImportantmovObs
+		
+
+
+		#probably return a list of location, radius, and velocity
+
+	def toPoint2(self,lat,lng,alt):
+		dlat = (lat - self.Home.lat)/delLat
+		dlng = (lng - self.Home.lng)/delLng
+		alt = alt
+		return [dlat,dlng,alt]
+
+	def toPoint(self,loc):
+		dlat = (loc.lat - self.Home.lat)/delLat
+		dlng = (loc.lng - self.Home.lng)/delLng
+		alt = loc.alt
+		return [dlat,dlng,alt]
+
+	def toGPS(self,loc):
+		dlat = (loc[0])*delLat + self.Home.lat
+		dlng = (loc[1])*delLng + self.Home.lng
+		alt = loc[2]
+		return Locationwp().Set(dlat,dlng,alt, 16)
+
+	def startSenario(self,wps,moving):
+		self.kill()
+		if (moving == False):
+			Script.Sleep(.05)
+
+		#testing
+		# lst = wps
+
+		lst = []
+		for pnt in wps:
+			lst.append(toPoint(pnt))
+		start = lst[0]
+		goal = lst[len(lst)-1]
+
+		TimeToStart = 0
+
+		movingobstas = self.getMovingObstacles([WPlst],TimeToStart)
+
+		if (moving == True and len(movingobstas) == 0):
+			return False
+			print 'No moving obstacles needed'
+		else:
+
+			#find which file and how to write to it
+			with open(self.dataPath,"w") as senarioFile:
+				senarioFile.write("Changed 1")
+
 				senarioFile.write(str('\n'))
-				senarioFile.write("Obstacle")
+				senarioFile.write("start")
 				senarioFile.write(str('	'))
-				senarioFile.write(str(ob[0]))
+				senarioFile.write(str(start[0]))
 				senarioFile.write(str('	'))
-				senarioFile.write(str(ob[1]))
+				senarioFile.write(str(start[1]))
 				senarioFile.write(str('	'))
-				senarioFile.write(str(ob[2]))
+				senarioFile.write(str(start[2]))
+
+				senarioFile.write(str('\n'))
+				senarioFile.write("goal")
 				senarioFile.write(str('	'))
-				senarioFile.write(str(ob[3]))
-		#write in files to start the dstar process
-	
+				senarioFile.write(str(goal[0]))
+				senarioFile.write(str('	'))
+				senarioFile.write(str(goal[1]))
+				senarioFile.write(str('	'))
+				senarioFile.write(str(goal[2]))
+
+				for ob in self.StaticObstacles:
+					senarioFile.write(str('\n'))
+					senarioFile.write("static")
+					senarioFile.write(str('	'))
+					senarioFile.write(str(ob[0]))
+					senarioFile.write(str('	'))
+					senarioFile.write(str(ob[1]))
+					senarioFile.write(str('	'))
+					senarioFile.write(str(ob[2]))
+					senarioFile.write(str('	'))
+					senarioFile.write(str(ob[3]))
+
+				if (moving):
+					print 'Moving obstacles found'
+					for ob in self.getMovingObstacles([WPlst],TimeToStart):
+						senarioFile.write(str('\n'))
+						senarioFile.write("dynamic")
+						senarioFile.write(str(' '))
+						senarioFile.write(str(ob[0]))
+						senarioFile.write(str(' '))
+						senarioFile.write(str(ob[1]))
+						senarioFile.write(str(' '))
+						senarioFile.write(str(ob[2]))
+						senarioFile.write(str(' '))
+						senarioFile.write(str(ob[3]))
+			return True
+
 	def getInt():
 		lngth = file_len_Loc(self.intPath)
 		nodes = []
+
 		with open(self.intPath,"r") as intFile:
 			intFile.readline()
-			for i in range():
-				dat = intFile.readline().split("	")
+
+			for i in range(lngth-1):
+				dat = intFile.readline().split(" ")
 				nodes.append([dat[0],dat[1],dat[2]])
-		WP = NodestoInt(nodes,self.obstacleList,[])
+
+		#not sure how to node to WP with moving obstacles
+		#WP = NodestoInt(nodes,self.staticObstacles,self.)
 		IntWP = []
+
 		for wp in WP:
-			lat = (wp[1]/scale)*delLat
-			lng = (wp[0]/scale)*delLng
-			alt = (wp[2])/scale
-			IntWP.append(Locationwp().Set(lat,lng,alt, 16))
+			IntWP.append(self.toGPS(wp))
 		return IntWP
 
 	def isDone():
 		done = False
 		with open(self.intPath,"r") as intFile:
-			if (intFile.readline() == "1"):
+			if (dataFile.readline() == "Changed 1"):
 				 done = True
 		return done
 
-	def kill():
+	def kill(self):
 		with open(self.dataPath,"w") as senarioFile:
-			senarioFile.write("Changed 0")
+			senarioFile.write("Changed 2")
 		with open(self.intPath,"w") as senarioFile:
-			senarioFile.write(str(0))
-		self.start = None
-		self.scale = 0
-		self.obstacleList = []
+			senarioFile.write("Changed 0")
 
+	#probably kill all of these
+	def SafetoLoiter(self, loc):
+		Safe = True
+		loca = toPoint(loc)
+		if (distFromPath([self.Bounds[1][1],self.Bounds[1][2],0],[self.Bounds[len(self.Bounds)][1], self.Bounds[len(self.Bounds)][2], 0],[loca[1],loca[2],0]) <= loiterRadius*1.15):
+			Safe = False
+		for i in range(len(bounds)-1):
+			if (distFromPath([self.Bounds[i][1],self.Bounds[i][2],0],[self.Bounds[i+1][1], self.Bounds[i+1][2], 0],[loca[1],loca[2],0]) <= loiterRadius*1.3):
+				Safe = False
+
+
+		for i in range(len(StaticObstacles)):		
+			if (((StaticObstacles[i][1]-loca[1])**2+(StaticObstacles[i][2]-loca[2])**2)*.5 <= (1.3*loiterRadius+StaticObstacles[i][4])):
+				Safe = False
+		return Safe
+
+	#probably dont need
+	def PathClear(lst):
+		path = []
+		for loc in lst:
+			path.append(toPoint(loc))
+
+		Safe = True
+		for j in range(len(path)-1):
+			if (intercept([self.Bounds[1][1],self.Bounds[1][2]],[self.Bounds[len(self.Bounds)][1], self.Bounds[len(self.Bounds)][2]],[path[j][1],path[j][2]],[path[j+1][1],path[j+1][2]]) != False):
+				Safe = False
+			for i in range(len(bounds)-1):
+				if (intercept([self.Bounds[i][1],self.Bounds[i][2]],[self.Bounds[i+1][1], self.Bounds[i+1][2]],[path[j][1],path[j][2]],[path[j+1][1],path[j+1][2]]) != False):
+					Safe = False
+			#see if were going to go above it
+			for i in range(len(StaticObstacles)):		
+				if (distFromPath([path[j][1],path[j][2]],[path[j+1][1],path[j+1][2]],[self.StaticObstacles[i][1],self.StaticObstacles[i][2],0]) <= (10+StaticObstacles[i][4])):
+					Safe = False
+		return Safe
+
+	#finish this
+	def findSafeLoiter(lst):
+		dist = dist_loc(lst[0],lst[1])
+		dlat = (lst[1].lat-lst[0].lat)/int(dist/10)
+		dlng = (lst[1].lng-lst[0].lng)/int(dist/10)
+		for j in range(int(dist/10)):
+			loc = Locationwp().Set(lst[0].lat+j*dlat,lst[0].lng+j*dlat,alt, 16)
+			if (SafetoLoiter(loc)):
+				return loc
+
+		#not sure how to find better point
+		print "no point found that is safe to loiter"
+		return lst[0]
+
+#
+#	Testing parameters
+#
+
+
+dropspot = Locationwp().Set(38.3652711,-76.5366065,50, 16)
+'''
+bounds = [Locationwp().Set(38.3650585,-76.5367001,0, 16)]
+bounds.append(Locationwp().Set(38.3652015,-76.5390927,0, 16))
+bounds.append(Locationwp().Set(38.3659207,-76.5388942,0, 16))
+bounds.append(Locationwp().Set(38.3658198,-76.5372419,0, 16))
+bounds.append(Locationwp().Set(38.3669806,-76.5368342,0, 16))
+bounds.append(Locationwp().Set(38.3666441,-76.5348816,0, 16))
+bounds.append(Locationwp().Set(38.3659375,-76.5350318,0, 16))
+bounds.append(Locationwp().Set(38.3652309,-76.5335298,0, 16))
+bounds.append(Locationwp().Set(38.3647766,-76.5338302,0, 16))
+
+offaxisloc = Locationwp().Set(38.3646505,-76.5376335,0, 16)
+'''
+wp1 = Locationwp().Set(38.3656641,-76.5385830,0, 16)
+wp2 = Locationwp().Set(38.3652225,-76.5342271,0, 16)
+GlobalWp = [wp1,wp2]
+
+OB1 = [38.3654833,-76.5365821,100,40]
+staticObstacles = [OB1]
+
+
+#StartPoint = Locationwp().Set(38.3652730,-76.5367323,0, 16)
+# Dstar = Dstar(None)
+# Dstar.startSenario(wp1,wp2,True)
+
+FarLeft = Locationwp().Set(38.3661731,-76.5402782,50, 16)
+FarRight = Locationwp().Set(38.3650543,-76.5328163,50, 16)
 
 
 #
 #	Mission Parameters
 #
 
-#pathName = 'D:/muas/Autopilot/Mission_Data/'
 
+#dropspot,homeLoc,offaxisloc,emergentLoc = getMissionData(missionFileLoc)
 
-#missionFileLoc = os.path.join(pathName,'Mission_data.txt')
-#dropspot,homeLoc,offaxistarget,emergentLoc = getMissionData(missionFileLoc)
-
-
-#WPFileLoc = os.path.join(pathName,'Mission_WP.txt')
 #MissionWp = getMissionData(missionFileLoc)
 
+#bounds = getBoundryData(BoundLoc)
 
-#BoundFileLoc = os.path.join(pathName,'fly_zones.txt')
-#Bounds = getBoundryData(BoundFileLoc)
-
-
-#ObSFileLoc = os.path.join(pathName,'Mission_WP.txt')
-#staticObstacles = getObSData(ObSFileLoc)
-#Dstar.addObS(staticObstacles)
+#staticObstacles = getStaticObData(StaticObstacleLoc)
 
 #upload geofence
-
-#upload search grid points and save file
-#search
-
-#maybe moving obstacles
-
-#
-#	needed for testing
-#
-#dropspot = Locationwp().Set(39.0829473,-76.9045366,50, 16)
-#testOb = obStatic(-76.9053805,39.0837427,200,40)
+#upload search grid points and save search grid to readable file
 
 
 #
-#	change during mission
+#	Programable changes
 #
-#homebear = 194*(pi/180)
-#dropbear = 15*(pi/180)
 
+homebear = -6.5*(pi/180)
+dropbear = -6.5*(pi/180)
+
+
+#
+#	Mission Setup
+#
+
+
+#global pathName
+#global StaticObstacleLoc
+#global MovingObstacleLoc
+#global BoundsLoc
+#global WPFileLoc
+#global missionFileLoc
+#global SearchfileLoc
+
+'''
+pathName = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/'
+StaticObstacleLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/static_obstacle_data.txt'
+MovingObstacleLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/moving_obstacle_data.txt'
+BoundsLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/boundry.txt'
+WPFileLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/Mission_WP.txt'
+missionFileLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/Mission_data.txt'
+
+SearchfileLoc = 'C:/Users/imaging2.0/Documents/MUAS-17/Flight_Path/searchGrid.waypoints'
+'''
+SearchfileLoc = 'D:/MUAS/Imaging/CameraGrid.waypoints';
+
+
+#cameragridWP = cameraGrid(SearchfileLoc)
+#totalwps = takeoffWps
+#totalWps.extend([FarRight])1
+#totalWps.extend(cameragridWP)
+#totalWps.extend([FarLeft]) 
+#totalWps.extend(landingWP)
+
+#print "starting"
+
+Dstar = Dstar(None)
+
+groundBearing = homebear
+print "Ground bearing is ",groundBearing
+
+takeoffWps = takeoff()
+
+GlobalWp = readInteropWpFile(InteropFileLoc)
+MissionWP = WpMission(GlobalWp)
+
+payloadWp = payloaddrop(dropspot,dropbear)
+
+searchGridWp = cameraGrid(SearchfileLoc)
+
+offAxisWP = offaxistarget(offaxisloc)
+
+median = checkaltitudechange(FarRight,searchGridWp[0])
+median2 = checkaltitudechange(searchGridWp[len(searchGridWp)-1],FarLeft)
+
+landingWP = landLoc(Dstar.Home,groundBearing)
+
+
+takeoffToWPMissionWP = getPath(getTakeoffLoc(Dstar.Home,homebear),MissionWP[0],False,10)
+
+missionWPtoPayload = getPath(MissionWP[len(MissionWP)-1],payloadWp[0],False,10)
+
+payloadToCamera = getPath(payloadWp[len(payloadWp)-1],searchGridWp[0],False,10)
+
+CameraToOffAxis = getPath(searchGridWp[len(searchGridWp)-1],offAxisWP[0],False,10)
+
+OffAxisToLanding = getPath(offAxisWP[len(offAxisWP)-1],landingWP[0],False,10)
 
 #
 #	Mission Execution
 #
-'''
-print "starting"
-defineHome()
-print "Home Defined"
-if (groundBearing == 0.0):
-	groundBearing = homebear
-	print "New ground bearing is ",groundBearing
 
-takeoff()
+def missiontype(lst,strng):
+	upload(lst,1)
+	wp = 1
+	while(cs.wpno < len(lst)-1)
+		Script.Sleep(50)
+		if (cs.wpno != wp)
+			wp = cs.wpno
+			print strng, " Wp number ",wp
 
-WPFileLoc = os.path.join(pathName,'Mission_WP.txt')
-WpMission(WPFileLoc)
+def travel(previousWps,start,goal):
+	wp = cs.wpno
+	temp = []
+	if (start != None):
+		temp.append(start)
 
-travel(getpayloadstart(dropspot,dropbear))
-payloaddrop(dropspot,dropbear)
+	temp.extend(previousWps)
+	temp.append(goal)
+	upload(temp,1)
 
-#fix this to read the correct place
-travel(getCameraGridStart())
-cameraGrid('D:/muas/Autopilot/MissionData/PhotoGrid.txt')
-#cameraGrid("TestPhotoGridTrigg.txt")
+	if (start != None):
+		st = start
+		while (cs.wpno == wp):
+			Script.Sleep(10)
+	else
+		st = Locationwp().Set(cs.lat,cs.lng,cs.alt, 16)
 
-#travel()
-#offaxistarget()
 
-travel(getLandingStart(Home,homebear))
-landLoc(Home,homebear)
-'''
+	path = getPath(st,goal,True,4)
+
+	actualpath = temp
+	if (path != False):
+		path.append(goal)
+		actualpath = path
+		upload(path,1)
+
+	wp = 1
+	while(cs.wpno < len(actualpath)-1):
+		Script.Sleep(50)
+		if (cs.wpno != wp)
+			wp = cs.wpno
+			print strng, " Wp number ",wp
+
+
+
+
+
+
+takeoffWps.extend(takeoffToWPMissionWP)
+upload(takeoffWps)
+
+
+uploadWp(totalWps,1)
+print "uploaded"
+
+speak("Starting Mission")
+Script.Sleep(3000)
+
+MAV.doARM(True)
+speak("Armed")
+Script.Sleep(2000)
+speak("Taking Off")
+MAV.setMode("Auto")
+
+
+
+while(cs.wpno == 1):
+	Script.Sleep(5):
+
+
+travel(takeoffToWPMissionWP,None,GlobalWp[0])
+
+
+
+
+for i in range(len(GlobalWp-1))
+	travel(MissionWP[i],GlobalWp[i],GlobalWp[i])
+
+
+travel(missionWPtoPayload,MissionWP[len(MissionWP)-1],payloadWp[0])
+
+missiontype(payloadWp,'Payload Drop')
+
+travel(payloadToCamera,payloadWp[len(payloadWp)-1],searchGridWp[0])
+
+missiontype(searchGridWp,'Grid Search')
+
+travel(CameraToOffAxis,searchGridWp[len(searchGridWp)-1],offAxisWP[0])
+
+missiontype(offAxisWP,'Off Axis')
+
+travel(OffAxisToLanding,offAxisWP[len(offAxisWP)-1],landingWP[0])
+
+upload(landingWP,1)
+
