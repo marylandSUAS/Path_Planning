@@ -1,11 +1,11 @@
 import re
 
 smoothPathFile = open('smooth_path.txt', 'r')
-rawPathFile = open('raw_path.txt', 'r')
 newFlightInformationFile = open('flight_information_new.txt', 'w')
 flightInformationFile = open('flight_information.txt', 'r')
 
 collisions = []
+waypointList = smoothPathFile.readlines()
 
 coordSearch = re.compile('\w\b\.\w*')
 tagSearch = re.compile('^[a-z]*')
@@ -55,14 +55,14 @@ for waypoint in smoothPathFile:
                 collisions.append(obstacle)
 
 #Check to see if the line connecting smooth path waypoints is too close to obstacle
-for waypoint in smoothPathFile:
+for n in range(len(waypointList) - 1):
     for obstacle in obstaclesFile:
         if re.finall(obstacle, tagSearch)[0] == 'static':
             if '''distance from line connecting waypoint and waypoint +1 and vertical
             line at (obstacle.x, obstacle.y)''' < re.findall(coordSearch, obstacle)[4]:
                 collisions.append(obstacle)
         if re.findall(tagSearch, obstacle)[0] == 'dynamic':
-            if distLineLine(obstalce, waypoint, waypoint + 1) < re.findall(coordSearch, obstacle)[6]:               #Find a way to reference waypoint + 1
+            if distLineLine(obstalce, waypointList[n], waypointList[n+1]) < re.findall(coordSearch, obstacle)[6]:               #Find a way to reference waypoint + 1
                 collisions.append(obstacle)
 
 if len(collisions) == 0:
