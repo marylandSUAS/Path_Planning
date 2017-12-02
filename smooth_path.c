@@ -7,7 +7,7 @@
 
 /* Define constants */
 #define K_MAX 1
-#define BETA PI/4
+#define BETA (PI/4) /* makes an isosceles triangle for curve*/
 #define C_1 (2/5 * sqrt(6-1))
 #define C_2 (7.2364)
 #define C_3 ((C_1 + 4)/(C_2 + 6));
@@ -32,6 +32,7 @@ float norm(Point* vector);
 float angle_between(Point* a, Point* b);
 float dot_product(Point* a, Point* b);
 void bezier_curve(Point* a, Point* b, Point* c);
+void print_point(Point* a);
 
 
 
@@ -85,15 +86,46 @@ void bezier_curve(Point* a, Point* b, Point* c) {
   /* B and E will be points on the bezier curve and u will be unit vectors
    * that will be used in the calculaiton of the bezier curve
    */
-  Point B_0, B_1, B_2, B_3, E_0, E_1, E_2, E_3, u_1, u_2, u_d;
+  Point b_0, b_1, b_2, b_3, e_0, e_1, e_2, e_3, u_1, u_2, u_d;
+  /* Calulate the unit vectors for future calculations */
+  u_1 = sub_vectors(a,b) / norm(sub_vectors(a,b));
+  u_2 = sub_vectors(c,b) / norm(sub_vectors(c,b));
 
-  /*calulate the unit vectors */
+  /* Calculate b_0, b_1, b_2, e_0, e_1, e_2 with equations in paper */
+  b_0 = add_vectors(a,scale_vector(D,u_1));
+  b_1 = sub_vectors(b_0,scale_vector(G,u_1));
+  b_2 = sub_vectors(b_1,scale_vector(H,u_1));
 
-  /*
+  e_0 = add_vectors(b,scale_vector(D,u_2));
+  e_1 = sub_vectors(e_0,scale_vector(G,u_2));
+  e_2 = sub_vectors(e_1,scale_vector(H,u_2));
 
+  /* Calculate u_d as unit vector from b_2 to e_2 */
+  u_d = sub_vectors(e_2,b_2) / norm(sub_vectors(e_2,b_2));
+
+  /* Calulate e_3 and b_3 with equations in paper */
+  b_3 = add_vectors(b_2,scale_vector(K,u_d));
+  e_3 = sub_vectors(e_2,scale_vector(K,u_d));
+
+  /* Print the points that are used which are
+   * b_0, b_1, b_3 [or e_3], e_0, e_1
+   */
+   print_point(&b_0);
+   print_point(&b_1);
+   print_point(&b_2);
+   print_point(&b_3);
+   print_point(&e_0);
+   print_point(&e_1);
 
 }
 
+/* Print a point to the output file of the smoothed path (smooth_path.txt) */
+void print_point(Point* a) {
+  /* Create and open file to write to */
+  FILE* data_write = fopen("smooth_path.txt","a");
+  fprintf(data_write, "%f %f %f\n", a->x, a->y, a->z);
+  fclose(data_write);
+}
 
 int main(void) {
   /* Open file to read waypoints from */
@@ -103,11 +135,8 @@ int main(void) {
   Point waypoints_in[3];
   Point waypoints_out[3];
 
-  /* remove file if it exists */
+  /* Remove file if it exists */
   remove("smooth_path.txt");
-
-  /* Create and open file to write to */
-  FILE* data_write = fopen("smooth_path.txt","a");
 
   /* Read in first 3 waypoints */
   for (int i = 0; i < 3; i ++) {
@@ -115,35 +144,34 @@ int main(void) {
                                       &(waypoints_in[i].y),
                                       &(waypoints_in[i].z));
   }
-  /* print first point (starting position)*/
-  fprintf(data_write, "%f %f %f\n", waypoints_in[0].x,
-                                    waypoints_in[0].y,
-                                    waypoints_in[0].z);
+  /* Print first point (starting position), no calculations necessary */
+  print_point(waypoints_in[0]);
 
-  /* Calculations for first three waypoints (middle point) */
+  /* Calculations for first three waypoints (middle point)
+   * the function will print to output file
+   */
 
 
 
-  /* print stuff for the special first case */
 
-  fprintf(data_write, "%f %f %f\n", waypoints_in[0].x,
-                                    waypoints_in[0].y,
-                                    waypoints_in[0].z);
   /* Read in one line and shift the array so that it is three points */
   while (feof(data_read) == 0) {
-    /* shift array */
+    /* Shift array */
     waypoints_in[0] = waypoints_in[1];
     waypoints_in[1] = waypoints_in[2];
-    /* read in one line */
+    /* Read in one line */
     fscanf(data_read, "%f %f %f\n", &(waypoints_in[2].x),
                                     &(waypoints_in[2].y),
                                     &(waypoints_in[2].z));
-    /* calculations here */
-    fprintf(data_write, "%f %f %f\n", waypoints_in[0].x,
-                                      waypoints_in[0].y,
-                                      waypoints_in[0].z);
+
+    /* Calculations for first three waypoints (middle point)
+     * the function will print to output file
+     */
+
+
   }
 
-  /* print ending point */
+  /* Print ending point (finish point), no calulations necessary */
+  print_point(waypoints_in[2]);
 
 }
