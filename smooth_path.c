@@ -1,13 +1,15 @@
 /* Paper for reference on calculations:
  * http://www.tandfonline.com/doi/pdf/10.1080/01691864.2013.755246
+ * Possible typo on page 248: B_0 = W_1 + d * u_1
+ * Correction: B_0 = W_2 + d * u_1
  */
 
 #include <math.h>
 #include <stdio.h>
 
 /* Define constants */
-#define K_MAX 1
-#define BETA (PI/4) /* makes an isosceles triangle for curve*/
+#define K_MAX (1/1) /* K = 1/(radius) */
+#define BETA (PI/4) /* makes an isosceles triangle for curve, make it into (180 - angle) /2*/
 #define C_1 (2/5 * sqrt(6-1))
 #define C_2 (7.2364)
 #define C_3 ((C_1 + 4)/(C_2 + 6));
@@ -92,7 +94,7 @@ void bezier_curve(Point* a, Point* b, Point* c) {
   u_2 = sub_vectors(c,b) / norm(sub_vectors(c,b));
 
   /* Calculate b_0, b_1, b_2, e_0, e_1, e_2 with equations in paper */
-  b_0 = add_vectors(a,scale_vector(D,u_1));
+  b_0 = add_vectors(b,scale_vector(D,u_1));
   b_1 = sub_vectors(b_0,scale_vector(G,u_1));
   b_2 = sub_vectors(b_1,scale_vector(H,u_1));
 
@@ -122,7 +124,7 @@ void bezier_curve(Point* a, Point* b, Point* c) {
 /* Print a point to the output file of the smoothed path (smooth_path.txt) */
 void print_point(Point* a) {
   /* Create and open file to write to */
-  FILE* data_write = fopen("smooth_path.txt","a");
+  FILE* data_writes = fopen("smooth_path.txt","a");
   fprintf(data_write, "%f %f %f\n", a->x, a->y, a->z);
   fclose(data_write);
 }
