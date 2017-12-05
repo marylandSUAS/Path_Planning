@@ -44,6 +44,20 @@ def distLineLine(obstacle, waypoint1, waypoint2):
 
     return(((((p1x - p2x)*(q1y - q2y) - (p1y - p2y)*(q1x - q2x))*(p1z - q1z) - ((p1x - p2x)*(q1z - q2z) - (p1z - p2z)*(q1x - q2x))*(p1y - q1y) + ((p1y - p2y)*(q1z - q2z) - (p1z - p2z)*(q1y - q2y))*(p1x - q1x))^2)^(1/2)/(((p1x - p2x)*(q1y - q2y) - (p1y - p2y)*(q1x - q2x))^2 + ((p1x - p2x)*(q1z - q2z) - (p1z - p2z)*(q1x - q2x))^2 + ((p1y - p2y)*(q1z - q2z) - (p1z - p2z)*(q1y - q2y))^2)^(1/2))
 
+def distLineVerticalLine(obstacleX, obstacleY, waypoint1, waypoint2):
+    p1x = re.findall(coordSearch, waypoint1)[0]
+    p1y = re.findall(coordSearch, waypoint1)[1]
+    p1z = re.findall(coordSearch, waypoint1)[2]
+
+    p2x = re.findall(coordSearch, waypoint2)[0]
+    p2y = re.findall(coordSearch, waypoint2)[1]
+    p2z = re.findall(coordSearch, waypoint2)[2]
+
+    q1x = obstacleX
+    q2x = obstacleY
+
+    return((((p1x - p2x)*(p1y - q1y) - (p1y - p2y)*(p1x - q1x))^2)^(1/2)/((p1x - p2x)^2 + (p1y - p2y)^2)^(1/2))
+
 #Check to see if any smooth path waypoint is in an obstacle
 for waypoint in smoothPathFile:
     for obstacle in flightInformationFile:
@@ -58,11 +72,10 @@ for waypoint in smoothPathFile:
 for n in range(len(waypointList) - 1):
     for obstacle in obstaclesFile:
         if re.finall(obstacle, tagSearch)[0] == 'static':
-            if '''distance from line connecting waypoint and waypoint +1 and vertical
-            line at (obstacle.x, obstacle.y)''' < re.findall(coordSearch, obstacle)[4]:
+            if distLineVerticalLine(re.findall(coordSearch, obstacle)[0], re.findall(coordSearch, obstacle)[1], waypointList[n], waypointList[n + 1]) < re.findall(coordSearch, obstacle)[4]:
                 collisions.append(obstacle)
         if re.findall(tagSearch, obstacle)[0] == 'dynamic':
-            if distLineLine(obstalce, waypointList[n], waypointList[n+1]) < re.findall(coordSearch, obstacle)[6]:               #Find a way to reference waypoint + 1
+            if distLineLine(obstacle, waypointList[n], waypointList[n+1]) < re.findall(coordSearch, obstacle)[6]:
                 collisions.append(obstacle)
 
 if len(collisions) == 0:
