@@ -60,7 +60,7 @@ def distLineLine(obstacle, waypoint1, waypoint2):
 #Check to see if any smooth path waypoint is in an obstacle
 for waypoint in smoothPathFile:
     for obstacle in flightInformationFile:
-        if re.findall(obstacle, tagSearch)[0] == 'static':
+        if re.findall(tagSearch, obstacle)[0] == 'static':
             distance = sqrt((re.findall(coordSearch, waypoint)[0] - re.findall(coordSearch, obstacle)[0])**2 + (re.findall(coordSearch, waypoint)[1] - re.findall(coordSearch, obstacle)[1])**2)
             if distance < re.findall(coordsearch, obstacle)[4] and re.findall(coordsearch, waypoint)[3] < re.findall(coordsearch, obstacle)[3]:
                 collisions[obstacle] = distance
@@ -71,7 +71,7 @@ for waypoint in smoothPathFile:
 #Check to see if the line connecting smooth path waypoints is too close to obstacle
 for n in range(len(waypointList) - 1):
     for obstacle in obstaclesFile:
-        if re.findall(obstacle, tagSearch)[0] == 'static':
+        if re.findall(tagSearch, obstacle)[0] == 'static':
             distance = distLineVerticalLine(re.findall(coordSearch, obstacle)[0], re.findall(coordSearch, obstacle)[1], waypointList[n], waypointList[n + 1])
             if  distance < re.findall(coordSearch, obstacle)[4]:
                 collisions[obstacle] = distance
@@ -84,9 +84,9 @@ if len(collisions) == 0:
 
 elif len(collisions) > 0:
     for obstacle in collisions:
-        if obstacle == static:
+        if re.findall(tagsearch, obstacle)[0] == 'static':
             newFlightInformationFile.write("static " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3])
-        if obstacle == dynamic:
+        if re.findall(tagsearch, obstacle)[0] == dynamic:
             newFlightInformationFile.write("dynamic " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3])
 
 
