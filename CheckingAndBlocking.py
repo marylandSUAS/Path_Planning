@@ -85,8 +85,11 @@ if len(collisions) == 0:
 elif len(collisions) > 0:
     for obstacle in collisions:
         if re.findall(tagsearch, obstacle)[0] == 'static':
-            newFlightInformationFile.write("static " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3])
+            newFlightInformationFile.write("static " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + ((2*re.findall(coordSearch, obstacle)[3]) - collisions[obstacle]))
         if re.findall(tagsearch, obstacle)[0] == dynamic:
-            newFlightInformationFile.write("dynamic " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3])
+            newFlightInformationFile.write("dynamic " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3] + " " + re.findall(coordSearch, obstacle)[4] + " " + ((2*re.findall(coordSearch, obstacle)[5]) - collsions[obstacle]))
 
+smoothPathFile.close()
+oldFlightInformationFile.close()
+newFlightInformationFile.close()
 
