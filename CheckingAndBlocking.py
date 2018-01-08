@@ -72,10 +72,11 @@ for waypoint in smoothPathFile:
 for n in range(len(waypointList) - 1):
     for obstacle in obstaclesFile:
         if re.findall(obstacle, tagSearch)[0] == 'static':
-            if distLineVerticalLine(re.findall(coordSearch, obstacle)[0], re.findall(coordSearch, obstacle)[1], waypointList[n], waypointList[n + 1]) < re.findall(coordSearch, obstacle)[4]:
-                collisions.append(obstacle)
+            distance = distLineVerticalLine(re.findall(coordSearch, obstacle)[0], re.findall(coordSearch, obstacle)[1], waypointList[n], waypointList[n + 1])
+            if  distance < re.findall(coordSearch, obstacle)[4]:
+                collisions[obstacle] = distance
         if re.findall(tagSearch, obstacle)[0] == 'dynamic':
-            if distLineLine(obstacle, waypointList[n], waypointList[n+1]) < re.findall(coordSearch, obstacle)[6]:               #Find a way to reference waypoint + 1
+            if distLineLine(obstacle, waypointList[n], waypointList[n+1]) < re.findall(coordSearch, obstacle)[6]:
                 collisions[obstacle] = distLineLine(obstacle, waypointList[n], waypointList[n+1])
 
 if len(collisions) == 0:
