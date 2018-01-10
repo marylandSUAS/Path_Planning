@@ -79,15 +79,12 @@ for n in range(len(waypointList) - 1):
             if distLineLine(obstacle, waypointList[n], waypointList[n+1]) < re.findall(coordSearch, obstacle)[6]:
                 collisions[obstacle] = distLineLine(obstacle, waypointList[n], waypointList[n+1])
 
-if len(collisions) == 0:
-    newFlightInformationFile.write('We\'re A okay, boss')
-
-elif len(collisions) > 0:
+if len(collisions) > 0:
     for obstacle in collisions:
-        if re.findall(tagsearch, obstacle)[0] == 'static':
-            newFlightInformationFile.write("static " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + ((2*re.findall(coordSearch, obstacle)[3]) - collisions[obstacle]))
-        if re.findall(tagsearch, obstacle)[0] == dynamic:
-            newFlightInformationFile.write("dynamic " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3] + " " + re.findall(coordSearch, obstacle)[4] + " " + ((2*re.findall(coordSearch, obstacle)[5]) - collsions[obstacle]))
+        if re.findall(tagSearch, obstacle)[0] == 'static':
+            newFlightInformationFile.write("stati" + re.findall('c\d', obstacle)[0] + " " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + ((2*int(re.findall(coordSearch, obstacle)[3])) - collisions[obstacle]))
+        if re.findall(tagSearch, obstacle)[0] == dynamic:
+            newFlightInformationFile.write("dynami" + re.findall('c\d', obstacle)[0] + " " + re.findall(coordSearch, obstacle)[0] + " " + re.findall(coordSearch, obstacle)[1] + " " + re.findall(coordSearch, obstacle)[2] + " " + re.findall(coordSearch, obstacle)[3] + " " + re.findall(coordSearch, obstacle)[4] + " " + ((2*int(re.findall(coordSearch, obstacle)[5])) - collsions[obstacle]))
 
 smoothPathFile.close()
 oldFlightInformationFile.close()
