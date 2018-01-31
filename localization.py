@@ -29,6 +29,8 @@ class movingObs:
 	def stop():
 		self.Reading = False
 
+
+	# fix this
 	def run():
 		while(self.Reading):
 			with open(self.fileLoc,"r") as ob_File:

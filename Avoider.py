@@ -1,31 +1,45 @@
-import sys
-import math
-from math import pi,sin,cos,atan,atan2
-import clr
-import time
-import System
-from System import Byte
+# CLASS AVOIDER
 
-clr.AddReference("MissionPlanner")
-import MissionPlanner
-clr.AddReference("MissionPlanner.Utilities") #includes the Utilities class
-from MissionPlanner.Utilities import Locationwp
-clr.AddReference("MAVLink") # includes the Utilities class
-import MAVLink
-MissionPlanner.MainV2.speechEnable = True
+class Avoidance:
+		
+
+	def __init__(self,start,cs,MAV):
+		
+		Safety = 6
+		cruise = 16	
+		dataPath = 'dlite/flight_information.txt'
+		
+		self.localizer = movingObs('moving_obstacle_file.txt')
 
 
-sys.path.append('C:\Users\derek_000\Documents\Python27\Lib')
+		
 
 
-class Avoider:
-	
-	def __init__(self,start):
-		self.dataPath = 'dstar/flight_information.txt'		
 
-		self.Safety = 6
-		self.cruise = 16
+		if(start == None):
+			self.Home = Locationwp().Set(cs.lat,cs.lng,0, 16)
+		else:
+			self.Home = start
 
+		self.Bounds = []
+		self.addBounds()
+		self.printBounds()
+
+		self.StaticObstacles = []
+		self.addStaticObstacles()
+
+	def addStaticObstacles(self):
+		lngth = file_len_Loc(self.StaticObstacleLoc)
+		print lngth
+		with open(self.StaticObstacleLoc,"r") as ObSFile:
+			for i in range(lngth):
+				Obdat = ObSFile.readline().split(" ")
+				print Obdat
+				temp = self.toPoint2(float(Obdat[1]),float(Obdat[2]),float(Obdat[3]))
+				temp.append(float(Obdat[4]))
+				self.StaticObstacles.append(temp)
+
+		print self.StaticObstacles
 
 
 	def getPath(loc,loc2,Moving,timeout):
@@ -36,39 +50,25 @@ class Avoider:
 
 
 	def getMovingObstacles(self,WPlst,TimeToStart):
-		Time = 0	#dist_CS(lst[0])/self.cruise 
-		timeError = 1
+		Time = 0	# dist_to_first_wp/self.cruise 
+
 		movObs = self.readMovingObstacles()
 
-		ImportantmovObs = []
+		Important_moving_Obs = []
 		for i in range(len(WPlst)-1):
-			Pos1 = WPlst[i]
+			Pos = WPlst[i]
 			dx = WPlst[i+1][0]-WPlst[i][0]
 			dy = WPlst[i+1][1]-WPlst[i][1]
 			dz = WPlst[i+1][2]-WPlst[i][2]
 			dis = (dx**2+dy**2+dz**2)**.5
 
-			Vel1 = [dx*self.cruise/dis,dy*self.cruise/dis,dz*self.cruise/dis]
+			Vel = [dx*self.cruise/dis,dy*self.cruise/dis,dz*self.cruise/dis]
 
-			for j in range(len(movObs)):
-				Pos2 = [movObs[j][0],movObs[j][1],movObs[j][2]]
-				Vel2 = [movObs[j][4],movObs[j][5],movObs[j][6]]
-
-				closest,loc = dcaAddtime(Pos1,Vel1,Pos2,Vel2,Time)
-				closestplus,locplus = dcaAddtime(Pos1,Vel1,Pos2,Vel2,Time+timeError)
-				closestmin,locmin = dcaAddtime(Pos1,Vel1,Pos2,Vel2,Time-timeError)
-
-				print closest,'	',loc,'	',movObs[j][3]+self.Safety
-				if (closest < movObs[j][3]+self.Safety or closestplus < movObs[j][3]+self.Safety or closestmin < movObs[j][3]+self.Safety):
-					loc.append(movObs[j][3]+self.Safety)
-					locplus.append(movObs[j][3]+self.Safety)
-					locmin.append(movObs[j][3]+self.Safety)
-
-					ImportantmovObs.append(loc)
-					ImportantmovObs.append(locplus)
-					ImportantmovObs.append(locmin)
+			Important_moving_Obs.append(self.localizer.closestApproach(Pos,Vel,Time))
 
 		Time = Time + dist_list(WPlst[i],WPlst[i+1])/self.cruise
+		# add time based off angle and time it takes turn
+		# could be like turn radius/cruise_speed time sin angle
 
 		return ImportantmovObs
 
