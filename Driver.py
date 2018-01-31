@@ -1,9 +1,31 @@
+import sys
+import math
+from math import pi,sin,cos,atan,atan2
+import clr
+import time
+import System
+from System import Byte
+
+clr.AddReference("MissionPlanner")
+import MissionPlanner
+clr.AddReference("MissionPlanner.Utilities") #includes the Utilities class
+from MissionPlanner.Utilities import Locationwp
+clr.AddReference("MAVLink") # includes the Utilities class
+import MAVLink
+MissionPlanner.MainV2.speechEnable = True
+
+import Localization
+import Mission_Testing
+import Avoider
+
+
+
 # Driver
 
-Lst0 = Mission tasks breakdown
-Lst1 = main waypoints
-Lst2 = lawnmower waypoints
-Lst3 = [lst1 lst2]	
+Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Target','Landing']
+
+
+
 
 def run(avoider object):
 	Start avoider object
