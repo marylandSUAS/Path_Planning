@@ -43,14 +43,14 @@ typedef struct {
 // 3-D Vector functions used on the 3-D waypoints and unit vectors
 Vector add_vectors(Vector* a, Vector* b);
 Vector sub_vectors(Vector* a, Vector* b);
-Vector* scale_vector(float scale, Vector* a);
+Vector scale_vector(float scale, Vector* a);
 float norm_vector(Vector* a);
 Vector unit_vector(Vector* a, Vector* b);
 
 Point add_points(Point* a, Point* b);
 Point sub_points(Point* a, Point* b);
 Point* scale_point(float scale, Point* a);
-float norm(Point* a);
+float norm_pointm(Point* a);
 float angle_point(Point* a, Point* b);
 float dot_product_point(Point* a, Point* b);
 Point unit_point(Point* a, Point* b);
@@ -62,8 +62,10 @@ void print_waypoint(Vector* a);
 // Matrix operations needed to convert from 3-D waypoints to 2-D points and vice-versa
 float** inverse(float mat[4][4]);
 float determinant(float mat[3][3]);
-float** mult_vector(float mat[4][4], float mat2[4][4]);
-float** mult_vector_col(float mat[4][4], float mat2[4][1]);
+
+float** mult_mat(int row1, int share_dim ,int col2, float mat1[row1][share_dim],
+                                                    float mat2[share_dim][col2]);
+
 
 //////////////////////////////////////////////////////////////////////////////////////
 /// BASIC OPERATIONS NECESSARY TO COMPLETE MATH AS IN PAPER //////////////////////////
@@ -72,41 +74,41 @@ float** mult_vector_col(float mat[4][4], float mat2[4][1]);
 // Add two 3-D Vectors
 Vector add_vectors(Vector* a, Vector* b) {
     Vector ans;
-    ans->x = a->x + b->x;
-    ans->y = a->y + b->y;
-    ans->z = a->z + b->z;
+    ans.x = a->x + b->x;
+    ans.y = a->y + b->y;
+    ans.z = a->z + b->z;
     return ans;
 }
 
 // Subtract two 3-D Vectors
 Vector sub_vectors(Vector* a, Vector* b) {
     Vector ans;
-    ans->x = a->x - b->x;
-    ans->y = a->y - b->y;
-    ans->z = a->z - b->z;
+    ans.x = a->x - b->x;
+    ans.y = a->y - b->y;
+    ans.z = a->z - b->z;
     return ans;
 }
 
 // Scale a 3-D vector
-Vector* scale_vector(float scale, Vector* a) {
+Vector scale_vector(float scale, Vector* a) {
     Vector ans;
-    ans->x = a->x * scale;
-    ans->y = a->y * scale;
-    ans->z = a->z * scale;
+    ans.x = a->x * scale;
+    ans.y = a->y * scale;
+    ans.z = a->z * scale;
     return ans;
 }
 
 // Find the norm of a 3-D vector
 float norm_vector(Vector* a) {
-    return (float)sqrt(pow(a->x,2) + pow(a->y,2) + pow(a->z,2);
+    return (float)sqrt(pow(a->x,2) + pow(a->y,2) + pow(a->z,2));
 }
 
 // Create a unit vector from a to b
 Vector unit_vector(Vector* a, Vector* b) {
-    Point ans;
-    ans.x = (b.x - a.x);
-    ans.y = (b.y - a.y);
-    ans.y = (z.y - a.z);
+    Vector ans;
+    ans.x = (b->x - a->x);
+    ans.y = (b->y - a->y);
+    ans.y = (b->y - a->z);
     float mag = norm_vector(&ans);
     ans.x /= mag;
     ans.y /= mag;
@@ -115,6 +117,7 @@ Vector unit_vector(Vector* a, Vector* b) {
 
 // Add two 2-D points, note the second argument is assumed to be dynamically allocated
 Point add_points(Point* a, Point* b) {
+  Point ans;
   ans.x = a->x + b->x;
   ans.y = a->y + b->y;
   free(b);
@@ -126,7 +129,7 @@ Point sub_points(Point* a, Point* b) {
   Point ans;
   ans.x = a->x - b->x;
   ans.y = a->y - b->y;
-  freee(b);
+  free(b);
   return ans;
 }
 
@@ -147,7 +150,7 @@ float norm_point(Point* a) {
 
 // Find the angle between two Points
 float angle_point(Point* a, Point* b) {
-  return acos((dot_product_point(a,b))/(norm(a) * norm(b)));
+  return acos((dot_product_point(a,b))/(norm_point(a) * norm_point(b)));
 }
 
 // Calculate the dot product between two Points
@@ -158,8 +161,8 @@ float dot_product_point(Point* a, Point* b) {
 // Calcuate a unit vector from a to b
 Point unit_point(Point* a, Point* b) {
     Point ans;
-    ans.x = (b.x - a.x);
-    ans.y = (b.y - a.y);
+    ans.x = (b->x - a->x);
+    ans.y = (b->y - a->y);
     float mag = norm_point(&ans);
     ans.x /= mag;
     ans.y /= mag;
@@ -227,6 +230,29 @@ float determinant(float mat[3][3]){
             + mat[0][2] * (mat[1][0] * mat[2][1] - mat[2][0] * mat[1][1]));
 }
 
+// Multiply two matrix of any dimensions
+float** mult_mat(int row1, int share_dim ,int col2, float mat1[row1][share_dim],
+                                                    float mat2[share_dim][col2]) {
+
+  float** ans;
+  // dynamically allocate the answer (THIS MUST BE FREED)
+  ans = malloc(sizeof(float *) * row1);
+  for (int i = 0; i < row1; i++) {
+    ans[i] = malloc(sizeof(float) * col2);
+  }
+
+   // Loop through all dimensions of output matrix
+  for(int i = 0; i < row1; i++){
+    for(int j = 0; j < col2; j++){
+      // Calcuate the element for the output matrix
+	    for(int z = 0; z < share_dim; z++){
+	      ans[i][j] += (mat1[i][z] * mat2[z][j]);
+	    }
+    }
+  }
+
+  return ans;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// BEZIER CURVE MATH AS DESCRIBED IN ACADEMIC PAPER ///////////////////////////
@@ -244,7 +270,7 @@ void smooth(Vector* a, Vector* b, Vector* c) {
 /* Calucate the curve and print the five points to the output file that parameterize
  * the curve
  */
-void bezier_curve_smooth(Point* a, Point* b, Point* c) {
+void bezier_curve_smooth(Point* w_1, Point* w_2, Point* w_3) {
 
   /* B and E will be points on the two bezier curves and u_? will be unit vectors
    * that will be used in the calculaiton of the bezier curve, which is stored
@@ -253,8 +279,8 @@ void bezier_curve_smooth(Point* a, Point* b, Point* c) {
   Point b_0, b_1, b_2, b_3, e_0, e_1, e_2, e_3, u_1, u_2, u_d;
 
   // Calculate variables necessary to formulate the bezier curves
-  u_1 = unit_point(b,a);
-  u_2 = unit_point(b,c));
+  u_1 = unit_point(w_2,w_1);
+  u_2 = unit_point(w_2,w_3);
   float gamma = M_PI - angle_point(&u_1, &u_2);
   float beta = gamma / 2;
   float d = C_4 * sin(beta) / (K_MAX * pow(cos(beta),2));
@@ -263,29 +289,30 @@ void bezier_curve_smooth(Point* a, Point* b, Point* c) {
   float k = ((6 * C_3 * cos(beta))/(C_2 + 4)) * d;
 
   // Calculate b_0, b_1, b_2, e_0, e_1, e_2 with equations from paper
-  b_0 = add_vectors(&b,&scale_vector(d,u_1));
-  b_1 = sub_vectors(&b_0,&scale_vector(g,u_1));
-  b_2 = sub_vectors(&b_1,&scale_vector(h,u_1));
 
-  e_0 = add_vectors(&b,&scale_vector(d,u_2));
-  e_1 = sub_vectors(&e_0,&scale_vector(g,u_2));
-  e_2 = sub_vectors(&e_1,&scale_vector(h,u_2));
+  b_0 = add_points(w_2,scale_point(d,&u_1));
+  b_1 = sub_points(&b_0,scale_point(g,&u_1));
+  b_2 = sub_points(&b_1,scale_point(h,&u_1));
 
-  // Calculate u_d as unit vector from b_2 to e_2
-  u_d = unit_point(b_2,e_2);
+  e_0 = add_points(w_2,scale_point(d,&u_2));
+  e_1 = sub_points(&e_0,scale_point(g,&u_2));
+  e_2 = sub_points(&e_1,scale_point(h,&u_2));
+
+  // Calculate u_d as unit point from b_2 to e_2
+  u_d = unit_point(&b_2,&e_2);
 
   // Calulate e_3 and b_3 with equations in paper
-  b_3 = add_vectors(&b_2,&scale_vector(k,u_d));
-  e_3 = sub_vectors(&e_2,&scale_vector(k,u_d));
+  b_3 = add_points(&b_2,scale_point(k,&u_d));
+  e_3 = sub_points(&e_2,scale_point(k,&u_d));
 
 }
 
 // Print a point to the output file of the smoothed path (smooth_path.txt)
-void print_waypoint(Vector* a);
+void print_waypoint(Vector* a) {
   // Create and open file to write to
   FILE* data_writes = fopen("smooth_path.txt","a");
-  fprintf(data_write, "%f %f %f\n", a->x, a->y, a->z);
-  fclose(data_write);
+  fprintf(data_writes, "%f %f %f\n", a->x, a->y, a->z);
+  fclose(data_writes);
 }
 
 int main(void) {
@@ -311,8 +338,7 @@ int main(void) {
   print_waypoint(&waypoints_in[0]);
 
   // Calculations for smoothing three waypoints
-  smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]))
-
+  smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]));
 
 
   // Read in one line and shift the array so that it is three points
@@ -326,7 +352,7 @@ int main(void) {
                                     &(waypoints_in[2].z));
 
     // Calculations for smoothing three waypoints
-    smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]))
+    smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]));
 
 
   }
