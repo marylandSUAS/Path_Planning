@@ -1,5 +1,9 @@
-/* Paper for reference on calculations:
- * http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5428840&tag=1
+/* Paper that was used for reference on bezier curve calculations:
+ * An analytical continuous-curvature path-smoothing algorithm
+ * Kwangjin Yang
+ * IEEE Transactions on Robotics 26(3):561
+ * IEEE 2010
+ * 1552-3098
  */
 
 #include <math.h>
@@ -7,81 +11,213 @@
 #include <stdlib.h>
 
 // Define constants as in the paper
-#define K_MAX (1/1) // K = 1/(radius), this will be defined for plane
+#define K_MAX (1/1) // K = 1/(radius), this will be defined for the specific UAV
 #define C_1 (7.2364)
-#define C_2 (.579796) // (2/5) * sqrt(6) - 1)
-#define C_3 (.346) // (C_1 + 4)/(C_2 + 6));
+#define C_2 (.579796) // Exact: (2/5) * (sqrt(6) - 1)
+#define C_3 (.346) // Exact: (C_2 + 4)/(C_1 + 6));
 #define C_4 (1.12259)
 
-// Structure for a 3D point/vector
+/* Structure for a 2D point and 3-D vector, the calcations will be done for 3-D waypoints
+ * by projecting the three 3-D waypoints (a Vector) onto a plane (to become a Point) and doing the
+ * calculations in two dimensions and then reconverting to 3-D using the plane
+ * shared by all three waypoints
+ */
+
+typedef struct {
+    float x;
+    float y;
+} Point;
+
 typedef struct {
     float x;
     float y;
     float z;
-} Point;
+} Vector;
 
-// Function prototypes
-Point add_vectors(Point* a, Point* b);
-Point sub_vectors(Point* a, Point* b);
-void scale_vector(float scale, Point* a);
-float norm(Point* vector);
-float angle(Point* a, Point* b);
-float dot_product(Point* a, Point* b);
-void bezier_curve(Point* a, Point* b, Point* c);
-void print_point(Point* a);
-float[4][4] inverse(float mat[4][4]);
 
-/* find inverse of 4x4 matrix
- * explained here: http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
- * free output to prevesnt memory leaks
- * this can defintely be optimized...*/
+/* Function prototypes for 2-D points and operations for 3-D vectors
+ * The waypoints are three dimensions; however, the calculations will be done in
+ * two dimensions by createing a plane that the three adjacent waypoints share
+ */
+// 2-D Point funtions used to create the 2-D curve in function bezier_curve_smooth
+// 3-D Vector functions used on the 3-D waypoints and unit vectors
+Vector add_vectors(Vector* a, Vector* b);
+Vector sub_vectors(Vector* a, Vector* b);
+Vector* scale_vector(float scale, Vector* a);
+float norm_vector(Vector* a);
+Vector unit_vector(Vector* a, Vector* b);
+
+Point add_points(Point* a, Point* b);
+Point sub_points(Point* a, Point* b);
+Point* scale_point(float scale, Point* a);
+float norm(Point* a);
+float angle_point(Point* a, Point* b);
+float dot_product_point(Point* a, Point* b);
+Point unit_point(Point* a, Point* b);
+
+void bezier_curve_smooth(Point* a, Point* b, Point* c);
+void smooth(Vector* a, Vector* b, Vector* c);
+void print_waypoint(Vector* a);
+
+// Matrix operations needed to convert from 3-D waypoints to 2-D points and vice-versa
+float** inverse(float mat[4][4]);
+float determinant(float mat[3][3]);
+float** mult_vector(float mat[4][4], float mat2[4][4]);
+float** mult_vector_col(float mat[4][4], float mat2[4][1]);
+
+//////////////////////////////////////////////////////////////////////////////////////
+/// BASIC OPERATIONS NECESSARY TO COMPLETE MATH AS IN PAPER //////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+
+// Add two 3-D Vectors
+Vector add_vectors(Vector* a, Vector* b) {
+    Vector ans;
+    ans->x = a->x + b->x;
+    ans->y = a->y + b->y;
+    ans->z = a->z + b->z;
+    return ans;
+}
+
+// Subtract two 3-D Vectors
+Vector sub_vectors(Vector* a, Vector* b) {
+    Vector ans;
+    ans->x = a->x - b->x;
+    ans->y = a->y - b->y;
+    ans->z = a->z - b->z;
+    return ans;
+}
+
+// Scale a 3-D vector
+Vector* scale_vector(float scale, Vector* a) {
+    Vector ans;
+    ans->x = a->x * scale;
+    ans->y = a->y * scale;
+    ans->z = a->z * scale;
+    return ans;
+}
+
+// Find the norm of a 3-D vector
+float norm_vector(Vector* a) {
+    return (float)sqrt(pow(a->x,2) + pow(a->y,2) + pow(a->z,2);
+}
+
+// Create a unit vector from a to b
+Vector unit_vector(Vector* a, Vector* b) {
+    Point ans;
+    ans.x = (b.x - a.x);
+    ans.y = (b.y - a.y);
+    ans.y = (z.y - a.z);
+    float mag = norm_vector(&ans);
+    ans.x /= mag;
+    ans.y /= mag;
+    ans.z /= mag;
+}
+
+// Add two 2-D points, note the second argument is assumed to be dynamically allocated
+Point add_points(Point* a, Point* b) {
+  ans.x = a->x + b->x;
+  ans.y = a->y + b->y;
+  free(b);
+  return ans;
+}
+
+// Subtract two 2-D points, note the second argument is assumed to be dynamically allocated
+Point sub_points(Point* a, Point* b) {
+  Point ans;
+  ans.x = a->x - b->x;
+  ans.y = a->y - b->y;
+  freee(b);
+  return ans;
+}
+
+/* Multiply point by scaling factor and free first argument since it will be
+ * a dynamically allocated point passed directly to another function (add/sub)
+ */
+Point* scale_point(float scale, Point* a) {
+  Point* ans = malloc(sizeof(Point *));
+  ans->x = a->x * scale;
+  ans->y = a->y * scale;
+  return ans;
+}
+
+// Calculate the norm of a Point
+float norm_point(Point* a) {
+  return sqrt(pow(a->x,2) + pow(a->y,2));
+}
+
+// Find the angle between two Points
+float angle_point(Point* a, Point* b) {
+  return acos((dot_product_point(a,b))/(norm(a) * norm(b)));
+}
+
+// Calculate the dot product between two Points
+float dot_product_point(Point* a, Point* b) {
+  return (a->x) * (b->x) + (a->y) * (b->y);
+}
+
+// Calcuate a unit vector from a to b
+Point unit_point(Point* a, Point* b) {
+    Point ans;
+    ans.x = (b.x - a.x);
+    ans.y = (b.y - a.y);
+    float mag = norm_point(&ans);
+    ans.x /= mag;
+    ans.y /= mag;
+}
+
+/* Find inverse of 4x4 matrix
+ * methodology explained here (for 3x3):
+ *          http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
+ */
 float** inverse(float mat[4][4]) {
-    // find determinant of matrix
-
-    // allocate the return matrix
-    float** ans = (int **)malloc(4 * 4 * sizeof(int *));
+    // Allocate the return matrix
+    float** ans = (float **)malloc(4 * 4 * sizeof(float *));
     for (int i = 0; i < 4; i++) {
-        ans[i] = (int *)malloc(4 * sizeof(int *);
+        ans[i] = (float *)malloc(4 * sizeof(float *));
     }
 
-    // find the cofactor and also find the determinant
+    // Find the cofactor and also find the determinant
     float det = 0;
-    float temp[4][4];
-    for (int col = 0; col < 3; i++) {
-        for (int row = 0; row < 3; row++) {
+    float temp_mat[3][3];
+    float temp;
+    for (int row = 0; row < 4; row++) {
+        for (int col = 0; col < 4; col++) {
             // create the minor matric
-            for (int col2 = 0; col2 < 3; col2++) {
-                for (int row2 = 0; row2 < 3; row2++) {
+            for (int row2 = 0; row2 < 4; row2++) {
+                for (int col2 = 0; col2 < 4; col2++) {
                     // skip the row and col of the element
                     if (col2 != col && row2 != row) {
-                        ans[col2 - (col1 > col)][row2 - (row2 > row)] = mat[row][col];
+                        temp_mat[row2 - (row2 > row)][col2 - (col2 > col)] = mat[row2][col2];
                     }
+
                 }
             }
-            float val = determinant(temp);
 
-            // relevant to determinant if row = 0
-            if (row == 0){
+            float val = determinant(temp_mat);
+
+            // Relevant to determinant if row = 0
+            if (row == 0) {
                 det +=  mat[row][col] * val;
             }
             // This is the cofactor  matrix
 
             ans[row][col] = val * pow(-1,col + row);
-        }
-        // find the adjoint matrix, by transpose and multiple by 1/det
-        for (int col = 0; col < 3; col++) {
-            for (int row = 0l row < 3; row++) {
-                if (row != col) {
-                    // transpose
-                    temp = ans[row][col];
-                    ans[row][col] = ans[col][row];
-                    ans[col][row] = temp;
-                }
 
-            }
+
         }
-        return ans;
     }
+    // find the adjoint matrix, by transpose and multiple by 1/det
+    for (int row = 0; row < 4; row++) {
+        for (int col = row; col < 4; col++) {
+            // transpose
+            temp =  1.0 / det * ans[row][col];
+            ans[row][col] = 1.0 / det * ans[col][row];
+            ans[col][row] = temp;
+
+        }
+    }
+        return ans;
+
 }
 
 // Find the determinant of a 3x3 matrix
@@ -92,101 +228,60 @@ float determinant(float mat[3][3]){
 }
 
 
-}
-// Add two vectors
-Point add_vectors(Point* a, Point* b) {
-  Point ans;
-  ans.x = (a->x) + (b->x);
-  ans.y = (a->y) + (b->y);
-  ans.z = (a->z) + (b->z);
-  return ans;
+////////////////////////////////////////////////////////////////////////////////
+/// BEZIER CURVE MATH AS DESCRIBED IN ACADEMIC PAPER ///////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+/* This will take in three vectors and convert to 2-D, do the bezier curve
+ * calculations, convert back to 3-D and then print to output file
+ */
+void smooth(Vector* a, Vector* b, Vector* c) {
+    // Calculate variables necessary to convert between 2-D and 3-D
+
+
 }
 
-// Subtract two vectors
-Point sub_vectors(Point* a, Point* b) {
-  Point ans;
-  ans.x = (a->x) - (b->x);
-  ans.y = (a->y) - (b->y);
-  ans.z = (a->z) - (b->z);
-  return ans;
-}
-
-// Multiple vector by scaling factor
-Point scale_vector(float scale, Point* a) {
-  Point ans;
-  ans.x = a->x * scale;
-  ans.y = a->y * scale;
-  ans.z = a->z * scale;
-  return ans;
-}
-
-// Calculate the norm of a vector
-float norm(Point* vector) {
-  return sqrt(pow(vector->x,2) + pow(vector->y,2) + pow(vector->z,2));
-}
-
-// Find the angle between two vector
-float angle(Point* a, Point* b) {
-  return acos((dot_product(a,b))/(norm(a) * norm(b)));
-}
-
-// Calculate the dot product between two vectors
-float dot_product(Point* a, Point* b) {
-  return (a->x)*(b->x) + (a->y)*(b->y) + (a->z)*(b->z);
-}
-
-// calucate the curve and print the five points to the output file
-void bezier_curve(Point* a, Point* b, Point* c) {
+/* Calucate the curve and print the five points to the output file that parameterize
+ * the curve
+ */
+void bezier_curve_smooth(Point* a, Point* b, Point* c) {
 
   /* B and E will be points on the two bezier curves and u_? will be unit vectors
    * that will be used in the calculaiton of the bezier curve, which is stored
    * as a point in 3 dimensions to prevent more structs
    */
-
   Point b_0, b_1, b_2, b_3, e_0, e_1, e_2, e_3, u_1, u_2, u_d;
 
-  // Calculate variables necessary to formulate bezier curves
-  float gamma = PI - angle(sub_vectors(a,b), sub_vectors(c,b));
+  // Calculate variables necessary to formulate the bezier curves
+  u_1 = unit_point(b,a);
+  u_2 = unit_point(b,c));
+  float gamma = M_PI - angle_point(&u_1, &u_2);
   float beta = gamma / 2;
   float d = C_4 * sin(beta) / (K_MAX * pow(cos(beta),2));
   float h = C_3 * d;
   float g = C_2 * C_3 * d;
   float k = ((6 * C_3 * cos(beta))/(C_2 + 4)) * d;
 
-  // Calulate the unit vectors for future calculations
-  u_1 = sub_vectors(a,b) / norm(sub_vectors(a,b));
-  u_2 = sub_vectors(c,b) / norm(sub_vectors(c,b));
+  // Calculate b_0, b_1, b_2, e_0, e_1, e_2 with equations from paper
+  b_0 = add_vectors(&b,&scale_vector(d,u_1));
+  b_1 = sub_vectors(&b_0,&scale_vector(g,u_1));
+  b_2 = sub_vectors(&b_1,&scale_vector(h,u_1));
 
-  // Calculate b_0, b_1, b_2, e_0, e_1, e_2 with equations in paper
-  b_0 = add_vectors(b,scale_vector(d,u_1));
-  b_1 = sub_vectors(b_0,scale_vector(g,u_1));
-  b_2 = sub_vectors(b_1,scale_vector(h,u_1));
-
-  e_0 = add_vectors(b,scale_vector(d,u_2));
-  e_1 = sub_vectors(e_0,scale_vector(g,u_2));
-  e_2 = sub_vectors(e_1,scale_vector(h,u_2));
+  e_0 = add_vectors(&b,&scale_vector(d,u_2));
+  e_1 = sub_vectors(&e_0,&scale_vector(g,u_2));
+  e_2 = sub_vectors(&e_1,&scale_vector(h,u_2));
 
   // Calculate u_d as unit vector from b_2 to e_2
-  u_d = sub_vectors(e_2,b_2) / norm(sub_vectors(e_2,b_2));
+  u_d = unit_point(b_2,e_2);
 
   // Calulate e_3 and b_3 with equations in paper
-  b_3 = add_vectors(b_2,scale_vector(k,u_d));
-  e_3 = sub_vectors(e_2,scale_vector(k,u_d));
-
-  /* Print the points that are used which are
-   * b_0, b_1, b_3 [or e_3], e_0, e_1
-   * note: b_3 should equal e_3
-   */
-   print_point(&b_0);
-   print_point(&b_1);
-   print_point(&b_3);
-   print_point(&e_0);
-   print_point(&e_1);
+  b_3 = add_vectors(&b_2,&scale_vector(k,u_d));
+  e_3 = sub_vectors(&e_2,&scale_vector(k,u_d));
 
 }
 
 // Print a point to the output file of the smoothed path (smooth_path.txt)
-void print_point(Point* a) {
+void print_waypoint(Vector* a);
   // Create and open file to write to
   FILE* data_writes = fopen("smooth_path.txt","a");
   fprintf(data_write, "%f %f %f\n", a->x, a->y, a->z);
@@ -197,26 +292,26 @@ int main(void) {
   // Open file to read waypoints from
   FILE* data_read = fopen("shortest_path.txt","r");
 
-  // Array for the three points currently being worked on
-  Point waypoints_in[3];
-  Point waypoints_out[3];
+  // Array for the three points currently being worked on as 3-D Vectors
+  Vector waypoints_in[3];
+  Vector waypoints_out[3];
 
-  // Remove file if it exists
+  // Remove existing file if it exists
   remove("smooth_path.txt");
 
-  // Read in first 3 waypoints
+  // NOTE: SKIP FIRST LINE if it contains no waypoints???????????????????????????????????????????????????????????? ask in meeting
+
+  // Read in first 3 waypoints (special case because must print waypoint 1)
   for (int i = 0; i < 3; i ++) {
       fscanf(data_read, "%f %f %f\n", &(waypoints_in[i].x),
                                       &(waypoints_in[i].y),
                                       &(waypoints_in[i].z));
   }
   // Print first point (starting position), no calculations necessary
-  print_point(waypoints_in[0]);
+  print_waypoint(&waypoints_in[0]);
 
-  /* Calculations for first three waypoints (middle point)
-   * the function will print to output file
-   */
-
+  // Calculations for smoothing three waypoints
+  smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]))
 
 
 
@@ -230,14 +325,13 @@ int main(void) {
                                     &(waypoints_in[2].y),
                                     &(waypoints_in[2].z));
 
-    /* Calculations for first three waypoints (middle point)
-     * the function will print to output file
-     */
+    // Calculations for smoothing three waypoints
+    smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]))
 
 
   }
 
   // Print ending point (finish point), no calulations necessary
-  print_point(waypoints_in[2]);
+  print_waypoint(&waypoints_in[2]);
 
 }
