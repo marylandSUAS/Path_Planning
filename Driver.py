@@ -17,6 +17,7 @@ MissionPlanner.MainV2.speechEnable = True
 import Localization
 import Mission_Testing
 import Avoider
+import Cord_System
 
 
 
@@ -29,6 +30,11 @@ Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Tar
 
 def run(avoider object):
 	Start avoider object
+	Localization object
+	Cord_System object
+	Mission_Testing object
+
+
 
 def monitor(avoider object)::
 	Access avoider.get_current_index
@@ -38,7 +44,6 @@ def main():
 	Moving_obstacles = new Moving Obstacles Object
 	run(Moving_obstacles)
 	Static_info = retrieve static info
-
 	
 	Arm -> record home coords -> take off ->
 	Avoider1 = new Avoider(lst3,Cs,Mav,Moving_obstacles,Static_info,home_coords)
@@ -46,6 +51,4 @@ def main():
 		run(Avoider1)
 		monitor(Avoider1)
 
-def GPS_Meter_converter methods():
 
-	
