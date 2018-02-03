@@ -109,7 +109,7 @@ Vector unit_vector(Vector* a, Vector* b) {
     Vector ans;
     ans.x = (b->x - a->x);
     ans.y = (b->y - a->y);
-    ans.y = (b->y - a->z);
+    ans.z = (b->z - a->z);
     float mag = norm_vector(&ans);
     ans.x /= mag;
     ans.y /= mag;
@@ -147,7 +147,7 @@ Point sub_points(Point* a, Point* b) {
  * a dynamically allocated point passed directly to another function (add/sub)
  */
 Point* scale_point(float scale, Point* a) {
-  Point* ans = malloc(sizeof(Point));
+  Point* ans = (Point *)malloc(sizeof(Point));
   ans->x = a->x * scale;
   ans->y = a->y * scale;
   return ans;
@@ -329,9 +329,15 @@ void smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
 
 
   // Must make the waypoints have an extra 0 to allow transformation
-  float** w_1_4;
-  float** w_2_4;
-  float** w_3_4;
+  float** w_1_4 = (float **)malloc(4 * sizeof(float *));
+  float** w_2_4 = (float **)malloc(4 * sizeof(float *));
+  float** w_3_4 = (float **)malloc(4 * sizeof(float *));
+  for (int i = 0; i < 4; i++) {
+    w_1_4[i] = (float *)malloc(sizeof(float *));
+    w_2_4[i] = (float *)malloc(sizeof(float *));
+    w_3_4[i] = (float *)malloc(sizeof(float *));
+  }
+
   w_1_4[0][1] = w_1->x;
   w_2_4[0][1] = w_2->x;
   w_3_4[0][1] = w_3->x;
@@ -350,8 +356,16 @@ void smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
 
   // inv_tm is dynamically allocated due to calling the inverse function
   for (int i = 0; i < 4; i++) {
+    free(w_1_4[i]);
+    free(w_2_4[i]);
+    free(w_3_4[i]);
+    free(tm[i]);
     free(inv_tm[i]);
   }
+  free(w_1_4);
+  free(w_2_4);
+  free(w_3_4);
+  free(tm);
   free(inv_tm);
 
   // Obtain the (x,y) from the previously calculated matrices (p_1,p_2.p_3)
@@ -390,10 +404,6 @@ void smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
   }
   free(output);
   free(points);
-
-
-
-
 }
 
 /* Calucate the curve and print the five points to the output file that parameterize
@@ -496,7 +506,11 @@ int main(void) {
   // Remove existing file if it exists
   remove("smooth_path.txt");
 
-  // NOTE: SKIP FIRST LINE if it contains no waypoints???????????????????????????????????????????????????????????? ask in meeting
+  // NOTE: SKIP FIRST LINE
+  char c;
+  do
+    c = fgetc(data_read);
+  while (c != '\n');
 
   // Read in first 3 waypoints (special case because must print waypoint 1)
   for (int i = 0; i < 3; i ++) {
