@@ -26,27 +26,11 @@ with open(ImageInfoLoc,"w") as file:
 missionFileName = "Mission_data.txt"
 missionFileLoc = os.path.join(pathName,missionFileName)
 
-missionWPFileName = 'Mission_WP.txt'
-missionWPFileLoc = os.path.join(pathName,missionWPFileName)
-
-searchGridFileName = 'search_grid.txt'
-searchGridFileLoc = os.path.join(pathName,searchGridFileName)
-
-searchGridPolyFileName = 'search_grid_Poly.poly'
-searchGridPolyFileName = os.path.join(pathName,searchGridPolyFileName)
-
-flyzoneFileName = 'fly_zones.txt'
-flyzoneFileLoc = os.path.join(pathName,flyzoneFileName)
-
-flyzoneFenFileName = 'fly_zones.fen'
-flyzoneFenFileLoc = os.path.join(pathName,flyzoneFenFileName)
-
 TelmFileName = 'current_state.txt'
 TelmFileLoc = os.path.join(pathName,TelmFileName)
 
 staticObjFileName = 'static_obstacle_data.txt'
 staticObjFileLoc = os.path.join(pathName,staticObjFileName)
-
 
 movingObjFileName = 'moving_obstacle_data.txt'
 movingObjFileLoc = os.path.join(pathName,movingObjFileName)
@@ -87,81 +71,7 @@ with open(missionFileLoc,"w") as missionFile:
 	missionFile.write(str('\n'))
 
 
-with open(missionWPFileLoc,"w") as MissionWPFile:
-	for j in range(len(missions[0].mission_waypoints)):
-		MissionWPFile.write(str(missions[0].mission_waypoints[j].order))
-		MissionWPFile.write(str(' '))
-		MissionWPFile.write(str(missions[0].mission_waypoints[j].latitude))
-		MissionWPFile.write(str(' '))
-		MissionWPFile.write(str(missions[0].mission_waypoints[j].longitude))
-		MissionWPFile.write(str(' '))
-		MissionWPFile.write(str(.3048*(missions[0].mission_waypoints[j].altitude_msl)))
-		MissionWPFile.write('\n')
-
-
-with open(searchGridFileLoc,"w") as searchGridFile:
-	for j in range(len(missions[0].search_grid_points)):
-		searchGridFile.write(str(missions[0].search_grid_points[j].order))
-		searchGridFile.write(str(' '))
-		searchGridFile.write(str(missions[0].search_grid_points[j].latitude))
-		searchGridFile.write(str(' '))
-		searchGridFile.write(str(missions[0].search_grid_points[j].longitude))
-		searchGridFile.write(str(' '))
-		searchGridFile.write(str(.3048*(missions[0].search_grid_points[j].altitude_msl)))
-		searchGridFile.write('\n')
-
-
-with open(searchGridPolyFileName,"w") as GridFile:
-	GridFile.write('#saved by Mission Planner 1.3.44')
-	GridFile.write('\n')
-	for j in range(len(missions[0].search_grid_points)):
-		GridFile.write(str(missions[0].search_grid_points[j].latitude))
-		GridFile.write(str(' '))
-		GridFile.write(str(missions[0].search_grid_points[j].longitude))
-		GridFile.write('\n')
-	GridFile.write(str(missions[0].search_grid_points[0].latitude))
-	GridFile.write(str(' '))
-	GridFile.write(str(missions[0].search_grid_points[0].longitude))
-	GridFile.write('\n')
 		
-
-with open(flyzoneFileLoc,"w") as flyzoneFile:
-	flyzoneFile.write("Max Altitude")
-	flyzoneFile.write(str(' '))
-	flyzoneFile.write(str(.3048*(missions[0].fly_zones[0].altitude_msl_max)))
-	flyzoneFile.write('\n')
-	flyzoneFile.write("Min Altitude")
-	flyzoneFile.write(str(' '))
-	flyzoneFile.write(str(.3048*(missions[0].fly_zones[0].altitude_msl_min)))
-	flyzoneFile.write('\n')
-
-	for j in range(len(missions[0].fly_zones[0].boundary_pts)):
-		flyzoneFile.write(str(missions[0].fly_zones[0].boundary_pts[j].order))
-		flyzoneFile.write(str(' '))
-		flyzoneFile.write(str(missions[0].fly_zones[0].boundary_pts[j].latitude))
-		flyzoneFile.write(str(' '))
-		flyzoneFile.write(str(missions[0].fly_zones[0].boundary_pts[j].longitude))
-		flyzoneFile.write('\n')
-
-
-with open(flyzoneFenFileLoc,"w") as flyzoneFenFile:
-	flyzoneFenFile.write("#saved by APM Planner 1.3.44")
-	flyzoneFenFile.write('\n')
-	flyzoneFenFile.write(str(missions[0].home_pos.latitude))
-	flyzoneFenFile.write(str(' '))
-	flyzoneFenFile.write(str(missions[0].home_pos.longitude))
-	flyzoneFenFile.write(str('\n'))
-	
-	for j in range(len(missions[0].fly_zones[0].boundary_pts)):
-		flyzoneFenFile.write(str(missions[0].fly_zones[0].boundary_pts[j].latitude))
-		flyzoneFenFile.write(str(' '))
-		flyzoneFenFile.write(str(missions[0].fly_zones[0].boundary_pts[j].longitude))
-		flyzoneFenFile.write('\n')
-	flyzoneFenFile.write(str(missions[0].fly_zones[0].boundary_pts[0].latitude))
-	flyzoneFenFile.write(str(' '))
-	flyzoneFenFile.write(str(missions[0].fly_zones[0].boundary_pts[0].longitude))
-	flyzoneFenFile.write('\n')
-
 
 stationary_obstacles, moving_obstacles = client.get_obstacles()
 
@@ -173,9 +83,9 @@ with open(staticObjFileLoc,"w") as staticObjFile:
 		staticObjFile.write(str(' '))
 		staticObjFile.write(str(stationary_obstacles[j].longitude))
 		staticObjFile.write(str(' '))
-		staticObjFile.write(str(.3048*(stationary_obstacles[j].cylinder_height)))
+		staticObjFile.write(str(stationary_obstacles[j].cylinder_height))
 		staticObjFile.write(str(' '))
-		staticObjFile.write(str(.3048*(stationary_obstacles[j].cylinder_radius)))
+		staticObjFile.write(str(stationary_obstacles[j].cylinder_radius))
 		staticObjFile.write('\n')
 
 
