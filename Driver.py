@@ -27,28 +27,27 @@ Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Tar
 
 
 
-
-def run(avoider object):
+def run(avoider, Cord_System):
 	Start avoider object
-	Localization object
-	Cord_System object
-	Mission_Testing object
 
 
+def monitor(avoider)::
+	avoider.get_current_index
+	avoider.get_current_status
 
-def monitor(avoider object)::
-	Access avoider.get_current_index
 
 def main():
-	Cs = current state object
-	Moving_obstacles = new Moving Obstacles Object
-	run(Moving_obstacles)
-	Static_info = retrieve static info
-	
-	Arm -> record home coords -> take off ->
-	Avoider1 = new Avoider(lst3,Cs,Mav,Moving_obstacles,Static_info,home_coords)
-	
-		run(Avoider1)
-		monitor(Avoider1)
+	Home = [cs.lng,cs.lat,cs.alt]
+	# create avoidance class to control vehicle during obstacle avoidance (Home,cs,MAV)
+	cordSystem = Cord_System(Home)
+	avoider = avoidance(Home,cs,MAV,cord_System)
+	Missions = Mission('CASA1') 
 
+	
+
+	# Arm -> record home coords -> take off ->
+
+
+	avoider.Moving_obstacles.run()
+	monitor(Avoider1)
 

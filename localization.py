@@ -111,18 +111,22 @@ class dynamics_Ob:
 			top_speed = temp_V
 		
 
+		# signal
 		self.fiveSecAvg = sum(self.Vels)/(len(self.Vels))
 		# average last 30s
 		
 		temp_theta = math.atan2(self.yVels[0],self.xVels[0])
 		temp_phi = math.atan2(velZ,(math.sqrt((self.xVels[0])**2+(self.yVels[0])**2)))
 
+		# pop theta list
 		self.thetas.pop()
 		self.xVels.append(0,temp_theta)
 
+		# pop phi list
 		self.phis.pop()
 		self.xVels.append(0,temp_phi)
 
+		# check if it hit a node
 		if((abs(theta[0] - theta[1]) > math.pi*10/180 or abs(theta[0] - theta[1]) > math.pi*10/180) and (abs(theta[0] - theta[2]) > math.pi*10/180 or abs(theta[0] - theta[2]) > math.pi*10/180))
 			if (thetas[1] != 0 and thetas[2] != 0  and phis[1] != 0 and phis[2] != 0)
 				self.nodes.append(self.loc)
