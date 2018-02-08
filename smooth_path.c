@@ -296,8 +296,8 @@ Vector smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
     Vector u_t = unit_vector(w_1, w_2);
     Vector u_p = unit_vector(w_3, w_2);
     // Only print/calcuate if not in line
-    if (!(abs(u_t.x - u_p.x) < .01 &&  abs(u_t.y - u_p.y) < .01
-                                  &&  abs(u_t.z - u_p.z) < .01)) {
+    if (fabs(u_t.x + u_p.x) > .01 ||  fabs(u_t.y + u_p.y) > .01
+                                ||  fabs(u_t.z + u_p.z) > .01) {
       Vector* u_b = cross_prod_vector_unit(&u_t,&u_p);
       Vector* u_n = cross_prod_vector_unit(u_b, &u_t);
 
