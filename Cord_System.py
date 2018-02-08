@@ -22,8 +22,8 @@ class Cord_System:
 
 
 	def toGPS(self,Meters):
-		lng = Meters[1]/self.dlng;
-		lat = Meters[0]/self.dlat;
+		lng = Meters[0]/self.dlng;
+		lat = Meters[1]/self.dlat;
 		
 		return [lat,lng,Meters[2]]
 
