@@ -200,7 +200,6 @@ Point unit_point(Point* a, Point* b) {
  * methodology explained here (for 3x3):
  *          http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
  */
- //NOTE This is not functioning properlys
 float** inverse(float** mat) {
     // Allocate the return matrix
     float** ans = (float **)malloc(4 * sizeof(float *));
@@ -296,8 +295,8 @@ Vector smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
     Vector u_t = unit_vector(w_1, w_2);
     Vector u_p = unit_vector(w_3, w_2);
     // Only print/calcuate if not in line
-    if (fabs(u_t.x + u_p.x) > .01 ||  fabs(u_t.y + u_p.y) > .01
-                                ||  fabs(u_t.z + u_p.z) > .01) {
+    if (fabs(u_t.x + u_p.x) > .02 ||  fabs(u_t.y + u_p.y) > .02
+                                    ||  fabs(u_t.z + u_p.z) > .02) {
       Vector* u_b = cross_prod_vector_unit(&u_t,&u_p);
       Vector* u_n = cross_prod_vector_unit(u_b, &u_t);
 
@@ -411,15 +410,15 @@ Vector smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
 
 
       // The new Vector to be used as the initial waypoint
-      Vector ans = {output[0][7], output[1][7], output[2][7]};
+      Vector ans = {output[0][6], output[1][6], output[2][6]}; //e_1
 
-      // Print the points
+      // Print the points, ONLY what is necessary
       FILE* data_writes = fopen("smooth_path.txt","a");
-      fprintf(data_writes, "%f %f %f\n", output[0][0], output[1][0], output[2][0]); //b_0
+      //fprintf(data_writes, "%f %f %f\n", output[0][0], output[1][0], output[2][0]); //b_0
       fprintf(data_writes, "%f %f %f\n", output[0][1], output[1][1], output[2][1]); //b_1
       fprintf(data_writes, "%f %f %f\n", output[0][3], output[1][3], output[2][3]); //b_3
       fprintf(data_writes, "%f %f %f\n", output[0][6], output[1][6], output[2][6]); //e_1
-      fprintf(data_writes, "%f %f %f\n", output[0][7], output[1][7], output[2][7]); //e_0
+      //fprintf(data_writes, "%f %f %f\n", output[0][7], output[1][7], output[2][7]); //e_0
       fclose(data_writes);
 
       // The bezier_curve_smooth and mult_mat returns a dynamically allocated array
@@ -434,6 +433,7 @@ Vector smooth(Vector* w_1, Vector* w_2, Vector* w_3) {
       free(points);
       return ans;
     }
+    return *w_2;
 }
 
 /* Calucate the curve and print the five points to the output file that parameterize
@@ -565,7 +565,7 @@ int main(void) {
                                     &(waypoints_in[2].z));
 
     // Calculations for smoothing three waypoints
-    smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]));
+    w_close = smooth(&(waypoints_in[0]), &(waypoints_in[1]), &(waypoints_in[2]));
   }
 
   // Print ending point (finish point), no calulations necessary
