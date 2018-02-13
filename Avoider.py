@@ -1,4 +1,6 @@
 # CLASS AVOIDER
+import os
+import Localization
 
 class Avoidance:
 		
@@ -24,6 +26,7 @@ class Avoidance:
 
 		self.localizer = movingObs('dlite/moving_obstacle_file.txt')
 
+
 	def file_len_Loc(self,fileLoc):
     	i = 0
 	    with open(fileLoc,"r") as file:
@@ -31,6 +34,7 @@ class Avoidance:
 		    	i += 1
 	    #print "file length is ", i
 	    return i
+
 
 	def addStaticObstacles(self,static_file):
 		lngth = self.file_len_Loc(static_file)
@@ -46,6 +50,7 @@ class Avoidance:
 
 		# print self.StaticObstacles
 
+
 	def addBounds(self,bounds_file):
 		lngth = self.file_len_Loc(bounds_file)
 
@@ -58,6 +63,7 @@ class Avoidance:
 				self.Bounds.append(temp)
 
 		# print self.StaticObstacles
+
 
 	def getMovingObstacles(self,WPlst,TimeToStart):
 		Time = 0	# dist_to_first_wp/self.cruise 
@@ -81,7 +87,9 @@ class Avoidance:
 
 		return ImportantmovObs
 
+
 	def start():
+		pass
 		plan(@global_index,wp_list)
 	
 	#updates vehicle_wps and sends to plane
@@ -96,11 +104,14 @@ class Avoidance:
 		self.vehicle_wps = wps
 
 
-	
-
 	def get_current_index(self):
 		pass
 		return self.Index
+
+
+	def get_current_status(self):
+		pass
+		return 'Probably Still good'
 
 
 	def plan(self,index,wp_list):
@@ -109,35 +120,44 @@ class Avoidance:
 		while(distance to wp_list[index] > TBD [m]):
 			time.sleep(.1)
 
+
+			# gets static path for dlite to run off of and to initially set
 			staticPath = self.DL(wp_list[index],wp_list[index + 1], [],2)
 			self.set_vehicle_waypoints(staticPath)
 
 			# DL_1(wp_list[index],wp_list[index + 1],True)
 			
 
+			# wait until reached wp 
 			while(self.cs.wpno < 2):
 				time.sleep(.02)
 
 			
+			# localize moving obstacles
 			important_Dy_Obstacles = self.getMovingObstacles(self,staticPath,0)
-			
-			dynamic_wps = self.DL(wp_list[index],wp_list[index + 1],important_Dy_Obstacles,5)
 
-			self.set_vehicle_waypoints(dynamic_wps)
+			# if there are moving obstacles blocking the way replan and send.  If not keep static path 
+			if (len(important_Dy_Obstacles) != 0):
+				dynamic_wps = self.DL(wp_list[index],wp_list[index + 1],important_Dy_Obstacles,5)
+				self.set_vehicle_waypoints(dynamic_wps)
 
+
+			# while still between wps and manuverable check for collisions.  
 			while(self.cs.wp_dist > TBD [m]):
 				important_Dy_Obstacles = self.getMovingObstacles(self,vehicle_wps,0)
-
-				# checking and blocking
+				
+				# checking and blocking.  
 				is_Bad = Check new object locations against predicted path
+				
 
+				# If collision is going to happen replan and check until a workable path is found
 				if(is_Bad):
-					while(is_Bad)
+					while(is_Bad):
 						
 						wp_try = self.DL(self.cord_System.toMeters([cs.lat,cs.lng,cs.alt]),wp_list[index + 1],important_Dy_Obstacles,5)
 						
 
-						if(check if path is still bad)
+						if(check if path is still bad):
 							Block more
 						else 
 							break
@@ -151,8 +171,75 @@ class Avoidance:
 		plan(index,wp_list)
 
 
-	def DL(loc1,loc2,moving_obstacles,timeout):
-		set up flightinfo.txt
-		run dlite
-		Smooth
-		return []
+	def DL(start,goal,current,moving_obstacles,timeout):
+		with open('dlite/flight_information.txt',"w") as flightFile:
+
+			flightFile.write(str("Update 1"))
+
+			flightFile.write(str('\n'))
+			flightFile.write("goal")
+			flightFile.write(str(' '))
+			flightFile.write(str(goal[0]))
+			flightFile.write(str(' '))
+			flightFile.write(str(goal[1]))
+			flightFile.write(str(' '))
+			flightFile.write(str(goal[2]))
+
+			flightFile.write(str('\n'))
+			flightFile.write("start")
+			flightFile.write(str(' '))
+			flightFile.write(str(start[0]))
+			flightFile.write(str(' '))
+			flightFile.write(str(start[1]))
+			flightFile.write(str(' '))
+			flightFile.write(str(start[2]))
+
+			flightFile.write(str('\n'))
+			flightFile.write("current")
+			flightFile.write(str(' '))
+			flightFile.write(str(current[0]))
+			flightFile.write(str(' '))
+			flightFile.write(str(current[1]))
+			flightFile.write(str(' '))
+			flightFile.write(str(current[2]))
+
+			for ob in self.StaticObstacles:
+				flightFile.write(str('\n'))
+				flightFile.write("static")
+				flightFile.write(str(' '))
+				flightFile.write(str(ob[0]))
+				flightFile.write(str(' '))
+				flightFile.write(str(ob[1]))
+				flightFile.write(str(' '))
+				flightFile.write(str(ob[2]))
+				flightFile.write(str(' '))
+				flightFile.write(str(ob[3]))
+
+			if (moving):
+				for ob in moving_obstacles:
+					flightFile.write(str('\n'))
+					flightFile.write("dynamic")
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[0]))
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[1]))
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[2]))
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[3]))
+
+		os.system('./dlite/main.exe')
+		# os.system('./dlite/smooth.exe')
+
+		lngth = file_len_Loc('dlite/intermediate_waypoints.txt')
+		# print 'file length is ',lngth
+		
+		nodes = []
+		with open('dlite/intermediate_waypoints.txt',"r") as intFile:
+			intFile.readline()
+			for i in range(lngth-1):
+				dat = intFile.readline().split(" ")
+				nodes.append([float(dat[0]),float(dat[1]),float(dat[2])])
+
+		return nodes
+

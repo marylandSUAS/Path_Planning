@@ -5,6 +5,7 @@ import clr
 import time
 import System
 from System import Byte
+import threading
 
 clr.AddReference("MissionPlanner")
 import MissionPlanner
@@ -14,7 +15,6 @@ clr.AddReference("MAVLink") # includes the Utilities class
 import MAVLink
 MissionPlanner.MainV2.speechEnable = True
 
-import Localization
 import Mission_Testing
 import Avoider
 import Cord_System
@@ -28,26 +28,33 @@ Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Tar
 
 
 def run(avoider, Cord_System):
-	Start avoider object
+	
 
 
 def monitor(avoider)::
-	avoider.get_current_index
-	avoider.get_current_status
-
+	while(AvoiderMethod.isAlive()):
+		print avoider.get_current_index
+		print avoider.get_current_status
+		time.sleep(.5)
 
 def main():
+	# set home position for takeoff to wherever script is started
 	Home = [cs.lng,cs.lat,cs.alt]
-	# create avoidance class to control vehicle during obstacle avoidance (Home,cs,MAV)
+
+	# initialize coordinate system
 	cordSystem = Cord_System(Home)
+
+	# create avoidance class to control vehicle during obstacle avoidance (Home,cs,MAV)
 	avoider = avoidance(Home,cs,MAV,cord_System)
+
+	# define test mission
 	Missions = Mission('CASA1') 
 
 	
 
-	# Arm -> record home coords -> take off ->
+	# thread this 
+	AvoiderMethod = threading.Thread(target=run(avoider,cordSystem))
+	AvoiderMethod.start()
 
-
-	avoider.Moving_obstacles.run()
-	monitor(Avoider1)
+	monitor(AvoiderMethod,avoider)
 
