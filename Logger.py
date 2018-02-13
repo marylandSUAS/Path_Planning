@@ -1,11 +1,12 @@
 import threading
 
 class logger:
-	def __init__(self,cordSystem,file):
+	def __init__(self,currentState,cordSystem,file):
 		self.running = False
 		self.loger = threading.Thread(target=self.log)
 		self.textfile = file
 		self.cord_System = cordSystem
+		self.cs = currentState
 
 	def startlogging(self):
 		self.running = True
