@@ -4,7 +4,7 @@ clc
 clear all
 close all
 
-% staticObstacles = 
+static_obstacles = randomizeStatic([-150 0 50],[150 0 50],3)
 
 Nodes1 = [100 100 50;
         100 -100 50;
@@ -34,7 +34,7 @@ r = robotics.Rate(Hz);
 
 reset(r)
 while(1)
-    tic
+%     tic
     Object1 = Object1.Update(1/Hz);
     Object2 = Object2.Update(1/Hz);
     Object3 = Object3.Update(1/Hz);
@@ -47,12 +47,15 @@ while(1)
     Object2.plot(tempLoc(3))
     Object3.plot(tempLoc(3))
     
-    plotStatic()
+    
+    for k = 1:size(static_obstacles,1)
+        viscircles([static_obstacles(k,1),static_obstacles(k,2)],static_obstacles(k,4),'Color','bl');
+    end
     
     printLoc([Object1 Object2 Object3])
     
     axis([-150 150 -150 150])
 
     waitfor(r);
-    toc
+%     toc
 end
