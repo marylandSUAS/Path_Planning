@@ -4,12 +4,12 @@ clc
 clear all
 close all
 
-static_obstacles = randomizeStatic([-150 0 50],[150 0 50],3)
+static_obstacles = randomizeStatic([-150 0 50],[150 0 50],3);
 
-Nodes1 = [100 100 50;
-        100 -100 50;
-        -100 -100 50;
-        -100 100 50];
+Nodes1 = [-100 -75 50;
+        -100 75 50;
+        100 75 50;
+        100 -75 50];
 
 Nodes2 = [0 75 65;
         0 -75 35];
@@ -40,6 +40,7 @@ while(1)
     Object3 = Object3.Update(1/Hz);
     tempLoc = getPosition();
     figure(1)
+    
     hold off
     scatter(tempLoc(1),tempLoc(2))
     hold on

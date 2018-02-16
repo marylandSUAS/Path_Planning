@@ -28,7 +28,7 @@ Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Tar
 
 
 def run(avoider, Cord_System):
-	
+
 
 
 def monitor(avoider)::

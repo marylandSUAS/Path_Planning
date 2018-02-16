@@ -156,7 +156,7 @@ class Avoidance:
 						
 						wp_try = self.DL(self.cord_System.toMeters([cs.lat,cs.lng,cs.alt]),wp_list[index + 1],important_Dy_Obstacles,5)
 						
-
+						
 						if(check if path is still bad):
 							Block more
 						else 
