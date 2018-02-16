@@ -48,13 +48,31 @@ def main():
 	avoider = avoidance(Home,cs,MAV,cord_System)
 
 	# define test mission
-	Missions = Mission('CASA1') 
+	# Missions = Mission('CASA1') 
 
-	
+	number_of_tests = 25
+	for k in range(number_of_tests)
+		# thread this
+		logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
+		logger = logger(cs,cordSystem,logFile) 
 
-	# thread this 
-	AvoiderMethod = threading.Thread(target=run(avoider,cordSystem))
-	AvoiderMethod.start()
+		AvoiderMethod = threading.Thread(target=run(avoider,cordSystem))
+		
+		logger.startLogging() 
+		AvoiderMethod.start()
 
-	monitor(AvoiderMethod,avoider)
+		monitor(AvoiderMethod,avoider)
+
+		send (end + reset point 1 + reset point 2 + start)
+		while(cs.wpno < 2):
+			Script.Sleep(1000)
+
+		logger.stoplogging()
+		
+		while (cs.wpno < 4) 
+			Script.Sleep(1000)
+
+		
+
+
 

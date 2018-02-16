@@ -1,6 +1,7 @@
 # CLASS AVOIDER
 import os
 import Localization
+import CheckingAndBlocking
 
 class Avoidance:
 		
@@ -125,6 +126,7 @@ class Avoidance:
 			staticPath = self.DL(wp_list[index],wp_list[index + 1], [],2)
 			self.set_vehicle_waypoints(staticPath)
 
+
 			# DL_1(wp_list[index],wp_list[index + 1],True)
 			
 
@@ -143,12 +145,12 @@ class Avoidance:
 
 
 			# while still between wps and manuverable check for collisions.  
-			while(self.cs.wp_dist > TBD [m]):
+			while(self.cs.wp_dist > 40):
 				important_Dy_Obstacles = self.getMovingObstacles(self,vehicle_wps,0)
 				
 				# checking and blocking.  
-				is_Bad = Check new object locations against predicted path
-				
+				# Check new object locations against predicted path
+				is_Bad = Check(False)
 
 				# If collision is going to happen replan and check until a workable path is found
 				if(is_Bad):
@@ -156,10 +158,8 @@ class Avoidance:
 						
 						wp_try = self.DL(self.cord_System.toMeters([cs.lat,cs.lng,cs.alt]),wp_list[index + 1],important_Dy_Obstacles,5)
 						
-						
-						if(check if path is still bad):
-							Block more
-						else 
+						# check if path is still bad
+						if(Check(True)):
 							break
 
 					self.set_vehicle_waypoints(wp_try)

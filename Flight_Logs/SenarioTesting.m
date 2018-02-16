@@ -34,7 +34,7 @@ r = robotics.Rate(Hz);
 
 reset(r)
 while(1)
-%     tic
+    tic
     Object1 = Object1.Update(1/Hz);
     Object2 = Object2.Update(1/Hz);
     Object3 = Object3.Update(1/Hz);
@@ -56,7 +56,19 @@ while(1)
     printLoc([Object1 Object2 Object3])
     
     axis([-150 150 -150 150])
-
+    
+    fileID = fopen('random.txt');
+        C = fscanf(fileID,'%f');
+    fclose(fileID);
+    if(C == 1)
+        static_obstacles = randomizeStatic([-150 0 50],[150 0 50],3);
+        
+        fileID = fopen('random.txt','w');
+        C = fprintf('0');
+        fclose(fileID);
+    end
+    
+    
     waitfor(r);
-%     toc
+    toc
 end
