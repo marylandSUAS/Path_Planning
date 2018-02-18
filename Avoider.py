@@ -23,6 +23,8 @@ class Avoidance:
 		self.addBounds('dlite/Boundry_File.txt')
 
 		self.StaticObstacles = []
+		self.expandedStaticObstacles = []
+		self.expandedDynamicObstacles = []
 		self.addStaticObstacles('dlite/Static_file.txt')
 
 		self.localizer = movingObs('dlite/moving_obstacle_file.txt')
@@ -116,16 +118,18 @@ class Avoidance:
 
 
 	def plan(self,index,wp_list):
-		if (index == size(wp_list)-1):
+		if (self.Index == size(wp_list)-1):
 			return
-		while(distance to wp_list[index] > TBD [m]):
+
+
+
+		while(distance to wp_list[self.Index] > TBD [m]):
 			time.sleep(.1)
 
 
 			# gets static path for dlite to run off of and to initially set
-			staticPath = self.DL(wp_list[index],wp_list[index + 1], [],2)
+			staticPath = self.DL(wp_list[self.Index],wp_list[self.Index + 1],self.StaticObstacles,[],2)
 			self.set_vehicle_waypoints(staticPath)
-
 
 			# DL_1(wp_list[index],wp_list[index + 1],True)
 			
@@ -140,38 +144,67 @@ class Avoidance:
 
 			# if there are moving obstacles blocking the way replan and send.  If not keep static path 
 			if (len(important_Dy_Obstacles) != 0):
-				dynamic_wps = self.DL(wp_list[index],wp_list[index + 1],important_Dy_Obstacles,5)
+				dynamic_wps = self.DL(wp_list[self.Index],wp_list[self.Index + 1],self.StaticObstacles,important_Dy_Obstacles,5)
 				self.set_vehicle_waypoints(dynamic_wps)
 
 
 			# while still between wps and manuverable check for collisions.  
 			while(self.cs.wp_dist > 40):
+
+				# localize_movingObstacles
 				important_Dy_Obstacles = self.getMovingObstacles(self,vehicle_wps,0)
+				self.expandedDynamicObstacles = important_Dy_Obstacles
 				
 				# checking and blocking.  
 				# Check new object locations against predicted path
-				is_Bad = Check(False)
+				# return false True if good and static Obstacles if not
+				current_loc = self.cord_System.toMeters([cs.lat,cs.lng,cs.alt])
+
+
+				current_list.extend(self.vehicle_wps[(len(self.vehicle_wps)-cs.wpno):])
+# this is wrong, should be checking remainder of waypoints not vehicle wps
+# fix the cs.wpno part of this
+
+				is_Bad, expandedStatics, expandedDynamics = Check(self.StaticObstacles,important_Dy_Obstacles,self.vehicle_wps)
+
 
 				# If collision is going to happen replan and check until a workable path is found
 				if(is_Bad):
+					self.expandedStaticObstacles = expandedStatics
+					self.expandedDynamicObstacles = expandedDynamics
+
+					# find usable path
 					while(is_Bad):
 						
-						wp_try = self.DL(self.cord_System.toMeters([cs.lat,cs.lng,cs.alt]),wp_list[index + 1],important_Dy_Obstacles,5)
-						
+						current_loc = self.cord_System.toMeters([cs.lat,cs.lng,cs.alt])
+						wp_try = self.DL(current_loc,wp_list[self.Index + 1],self.expandedStaticObstacles,self.expandedDynamicObstacles,5)
+						current_list = [current_loc]
+						current_list.extend(wp_try)
+
+
 						# check if path is still bad
-						if(Check(True)):
+						is_Bad, expandedStatics, expandedStatics = Check(self.expandedStaticObstacles,self.expandedDynamicObstacles,current_list)
+
+						if(is_Bad == False):
 							break
+						else:
+							self.expandedStaticObstacles = expandedStatics
+							self.expandedDynamicObstacles = expandedDynamics
 
 					self.set_vehicle_waypoints(wp_try)
 				time.sleep(.25)
 
 		self.Index = self.Index + 1
 
+		# reset expanded obstacles each between each wp
+		self.expandedStaticObstacles = self.StaticObstacles
+		self.expandedDynamicObstacles = []
+
 		# run again until at end of wp list
 		plan(index,wp_list)
 
-
-	def DL(start,goal,current,moving_obstacles,timeout):
+	# start,goal,current,static,moving,timeout,expanded 
+	def DL(start,goal,current,static_Obstacles,moving_obstacles,timeout):
 		with open('dlite/flight_information.txt',"w") as flightFile:
 
 			flightFile.write(str("Update 1"))
@@ -203,7 +236,7 @@ class Avoidance:
 			flightFile.write(str(' '))
 			flightFile.write(str(current[2]))
 
-			for ob in self.StaticObstacles:
+			for ob in self.static_Obstacles:
 				flightFile.write(str('\n'))
 				flightFile.write("static")
 				flightFile.write(str(' '))

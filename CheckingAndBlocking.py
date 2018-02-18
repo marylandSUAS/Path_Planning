@@ -1,18 +1,7 @@
 import re
 
-smoothPathFile = open('smooth_path.txt', 'r')
-newFlightInformationFile = open('new_flight_information.txt', 'w')
-flightInformationFile = open('flight_information.txt', 'r')
-
-collisions = {}
-waypointList = smoothPathFile.readlines()
-obstacleList = flightInformationFile.readlines()
-
-coordSearch = re.compile('\w*\.\w*')
-tagSearch = re.compile('^[a-z]*')
-
 def getCoords(inputLine):
-    return([float(n) for n in re.findall(coordSearch, inputLine)])
+    return([float(n) for n in re.findall(re.compile('\w*\.\w*'), inputLine)])
 
 def distPointLine(obstacle, waypoint):
     px = getCoords(waypoint)[0]
@@ -91,99 +80,114 @@ def component(obstacle, waypoint):
         (q1z-q2z)*(q1z/2-pz+q2z/2)) / ((q1x-q2x)**2+(q1y-q2y)**2 + \
         (q1z - q2z)**2)**(1/2))  
 
-#Check to see if any smooth path waypoint is in an obstacle
-for waypoint in smoothPathFile:
-    for obstacle in obstacleList:
-        if re.findall(tagSearch, obstacle)[0] == 'static':
-            distance = ((getCoords(waypoint)[0] - \
-                         getCoords(obstacle)[0])**2 + \
-                         (getCoords(waypoint)[1] - \
-                         getCoords(obstacle)[1])**2)**(1/2)
-            if distance < getCoords(obstacle)[4] and \
-            getCoords(waypoint)[3] < \
-            getCoords(obstacle)[3]:
-                collisions[obstacle] = distance
-        if re.findall(tagSearch, obstacle)[0] == 'dynamic':
-            if distPointLine(obstacle, waypoint) < \
-            getCoords(obstacle)[6] and \
-            ((getCoords(waypoint)[0] - \
-            (getCoords(obstacle)[0] + \
-            getCoords(obstacle)[3])/2)**2 + \
-            (getCoords(waypoint)[1] - \
-            (getCoords(obstacle)[1] + \
-            getCoords(obstacle)[4])/2)**2 + \
-            (getCoords(waypoint)[2] - \
-            (getCoords(obstacle)[2] + \
-            getCoords(obstacle)[5])/2)**2)**(1/2) < \
-            getCoords(obstacle)[6] + \
-            ((getCoords(obstacle)[0] - \
-            getCoords(obstacle)[3])**2 + \
-            (getCoords(obstacle)[1] - \
-            getCoords(obstacle)[4])**2 + \
-            (getCoords(obstacle)[2] - \
-            getCoords(obstacle)[5])**2)**(1/2)/2: 
-                collisions[obstacle] = distPointLine(obstacle, waypoint)
+def Check(rewrite=False):
+    smoothPathFile = open('smooth_path.txt', 'r')
+    newFlightInformationFile = open('new_flight_information.txt', 'w')
+    flightInformationFile = open('flight_information.txt', 'r')
 
-#Check if line connecting smooth path waypoints is too close to obstacle
-for n in range(len(waypointList) - 1):
-    for obstacle in obstacleList:
-        if re.findall(tagSearch, obstacle)[0] == 'static':
-            distance = distLineVerticalLine(
-                obstacleX=getCoords(obstacle)[0],
-                obstacleY=getCoords(obstacle)[1],
-                waypoint1=waypointList[n],
-                waypoint2=waypointList[n + 1])
-            if  distance < getCoords(obstacle)[3] and \
-            getCoords(waypointList[n])[2] < getCoords(obstacle)[2] and \
-            getCoords(waypointList[n + 1])[2] < getCoords(obstacle)[2]:
-                collisions[obstacle] = distance
-        if re.findall(tagSearch, obstacle)[0] == 'dynamic':
-            if distLineLine(obstacle, waypointList[n],
-            waypointList[n+1]) < getCoords(obstacle)[6] and \
-            (component(obstacle, waypointList[n]) < \
-            getCoords(obstacle)[6] + \
-            ((getCoords(obstacle)[0] - \
-            getCoords(obstacle)[3])**2 + \
-            (getCoords(obstacle)[1] - \
-            getCoords(obstacle)[4])**2 + \
-            (getCoords(obstacle)[2] - \
-            getCoords(obstacle)[5])**2)**(1/2)/2 or \
-            component(obstacle, waypointList[n+1]) < \
-             getCoords(obstacle)[6] + \
-            ((getCoords(obstacle)[0] - \
-            getCoords(obstacle)[3])**2 + \
-            (getCoords(obstacle)[1] - \
-            getCoords(obstacle)[4])**2 + \
-            (getCoords(obstacle)[2] - \
-            getCoords(obstacle)[5])**2)**(1/2)/2):
-                collisions[obstacle] = distLineLine(
-                    obstacle=obstacle,
+    collisions = {}
+    waypointList = smoothPathFile.readlines()
+    obstacleList = flightInformationFile.readlines()
+
+    tagSearch = re.compile('^[a-z]*')
+
+    #Check to see if any smooth path waypoint is in an obstacle
+    for waypoint in smoothPathFile:
+        for obstacle in obstacleList:
+            if re.findall(tagSearch, obstacle)[0] == 'static':
+                distance = ((getCoords(waypoint)[0] - \
+                             getCoords(obstacle)[0])**2 + \
+                             (getCoords(waypoint)[1] - \
+                             getCoords(obstacle)[1])**2)**(1/2)
+                if distance < getCoords(obstacle)[4] and \
+                getCoords(waypoint)[3] < \
+                getCoords(obstacle)[3]:
+                    collisions[obstacle] = distance
+            if re.findall(tagSearch, obstacle)[0] == 'dynamic':
+                if distPointLine(obstacle, waypoint) < \
+                getCoords(obstacle)[6] and \
+                ((getCoords(waypoint)[0] - \
+                (getCoords(obstacle)[0] + \
+                getCoords(obstacle)[3])/2)**2 + \
+                (getCoords(waypoint)[1] - \
+                (getCoords(obstacle)[1] + \
+                getCoords(obstacle)[4])/2)**2 + \
+                (getCoords(waypoint)[2] - \
+                (getCoords(obstacle)[2] + \
+                getCoords(obstacle)[5])/2)**2)**(1/2) < \
+                getCoords(obstacle)[6] + \
+                ((getCoords(obstacle)[0] - \
+                getCoords(obstacle)[3])**2 + \
+                (getCoords(obstacle)[1] - \
+                getCoords(obstacle)[4])**2 + \
+                (getCoords(obstacle)[2] - \
+                getCoords(obstacle)[5])**2)**(1/2)/2: 
+                    collisions[obstacle] = distPointLine(obstacle, waypoint)
+
+    #Check if line connecting smooth path waypoints is too close to obstacle
+    for n in range(len(waypointList) - 1):
+        for obstacle in obstacleList:
+            if re.findall(tagSearch, obstacle)[0] == 'static':
+                distance = distLineVerticalLine(
+                    obstacleX=getCoords(obstacle)[0],
+                    obstacleY=getCoords(obstacle)[1],
                     waypoint1=waypointList[n],
-                    waypoint2=waypointList[n+1])
+                    waypoint2=waypointList[n + 1])
+                if  distance < getCoords(obstacle)[3] and \
+                getCoords(waypointList[n])[2] < getCoords(obstacle)[2] and \
+                getCoords(waypointList[n + 1])[2] < getCoords(obstacle)[2]:
+                    collisions[obstacle] = distance
+            if re.findall(tagSearch, obstacle)[0] == 'dynamic':
+                if distLineLine(obstacle, waypointList[n],
+                waypointList[n+1]) < getCoords(obstacle)[6] and \
+                (component(obstacle, waypointList[n]) < \
+                getCoords(obstacle)[6] + \
+                ((getCoords(obstacle)[0] - \
+                getCoords(obstacle)[3])**2 + \
+                (getCoords(obstacle)[1] - \
+                getCoords(obstacle)[4])**2 + \
+                (getCoords(obstacle)[2] - \
+                getCoords(obstacle)[5])**2)**(1/2)/2 or \
+                component(obstacle, waypointList[n+1]) < \
+                 getCoords(obstacle)[6] + \
+                ((getCoords(obstacle)[0] - \
+                getCoords(obstacle)[3])**2 + \
+                (getCoords(obstacle)[1] - \
+                getCoords(obstacle)[4])**2 + \
+                (getCoords(obstacle)[2] - \
+                getCoords(obstacle)[5])**2)**(1/2)/2):
+                    collisions[obstacle] = distLineLine(
+                        obstacle=obstacle,
+                        waypoint1=waypointList[n],
+                        waypoint2=waypointList[n+1])
 
-if len(collisions) > 0:
-    for obstacle in collisions:
-        if re.findall(tagSearch, obstacle)[0] == 'static':
-            newFlightInformationFile.write(
-                "stati" + re.findall('c\d*', obstacle)[0] + " " + \
-                str(getCoords(obstacle)[0]) + " " + \
-                str(getCoords(obstacle)[1]) + " " + \
-                str(getCoords(obstacle)[2]) + " " + \
-                str((2*getCoords(obstacle)[3]) - \
-                collisions[obstacle]) + '\n')
-        if re.findall(tagSearch, obstacle)[0] == 'dynamic':
-            newFlightInformationFile.write(
-                "dynami" + re.findall('c\d*', obstacle)[0] + " " + \
-                str(getCoords(obstacle)[0]) + " " + \
-                str(getCoords(obstacle)[1]) + " " + \
-                str(getCoords(obstacle)[2]) + " " + \
-                str(getCoords(obstacle)[3]) + " " + \
-                str(getCoords(obstacle)[4]) + " " + \
-                str(getCoords(obstacle)[5]) + " " + \
-                str((2*int(getCoords(obstacle)[6])) - \
-                collisions[obstacle]) + '\n')
+    if len(collisions) == 0:
+        return(False)
+    else:
+        return(True)
+        if rewrite:
+            print("OBS" + collisions)
+            for obstacle in collisions:
+                if re.findall(tagSearch, obstacle)[0] == 'static':
+                    newFlightInformationFile.write(
+                        "stati" + re.findall('c\d*', obstacle)[0] + " " + \
+                        str(getCoords(obstacle)[0]) + " " + \
+                        str(getCoords(obstacle)[1]) + " " + \
+                        str(getCoords(obstacle)[2]) + " " + \
+                        str((2*getCoords(obstacle)[3]) - \
+                        collisions[obstacle]) + '\n')
+                if re.findall(tagSearch, obstacle)[0] == 'dynamic':
+                    newFlightInformationFile.write(
+                        "dynami" + re.findall('c\d*', obstacle)[0] + " " + \
+                        str(getCoords(obstacle)[0]) + " " + \
+                        str(getCoords(obstacle)[1]) + " " + \
+                        str(getCoords(obstacle)[2]) + " " + \
+                        str(getCoords(obstacle)[3]) + " " + \
+                        str(getCoords(obstacle)[4]) + " " + \
+                        str(getCoords(obstacle)[5]) + " " + \
+                        str((2*int(getCoords(obstacle)[6])) - \
+                        collisions[obstacle]) + '\n')
 
-smoothPathFile.close()
-flightInformationFile.close()
-newFlightInformationFile.close()
-
+    smoothPathFile.close()
+    flightInformationFile.close()
+    newFlightInformationFile.close()
