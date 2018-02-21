@@ -40,7 +40,9 @@ def monitor(avoider)::
 def main():
 	# set home position for takeoff to wherever script is started
 	Home = [cs.lng,cs.lat,cs.alt]
-
+	resetPoint1 = []
+	resetPoint2 = []
+	startPoint = []
 	# initialize coordinate system
 	cordSystem = Cord_System(Home)
 
@@ -54,7 +56,7 @@ def main():
 	for k in range(number_of_tests)
 		# thread this
 		logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
-		logger = logger(cs,cordSystem,logFile) 
+		logger = logger(cs,cordSystem,logFile,None,'Flight_Logs/static_obstacles.txt') 
 
 		AvoiderMethod = threading.Thread(target=run(avoider,cordSystem))
 		
@@ -63,7 +65,7 @@ def main():
 
 		monitor(AvoiderMethod,avoider)
 
-		send (end + reset point 1 + reset point 2 + start)
+		avoider.set_vehicle_waypoints([resetPoint1,resetPoint2,startPoint])
 		while(cs.wpno < 2):
 			Script.Sleep(1000)
 

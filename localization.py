@@ -9,13 +9,21 @@ class movingObs:
 		self.fileLoc = fileReadLoc
 		self.loger = threading.Thread(target=self.run)
 		self.Reading = False
-		self.hz = 2
+		self.hz = 4
 
-		num = self.file_len()
+		
+		num = 0
 		self.moving_Obstacles = []
 
-		for i in range(num):
-			self.moving_Obstacles.append(dynamics_Ob(self.hz))
+		ob_File = open(self.fileLoc,"r")
+			Ob_data = ob_File.readline().split(" ")
+			while(len(Ob_data) == 7):
+				self.num = self.num+1
+				self.moving_Obstacles.append(dynamics_Ob(self.hz))
+				self.moving_Obstacles(self.num-1).addRadius(Ob_data(0))
+				Ob_data = ob_File.readline().split(" ")
+
+		ob_File.close()
 		
 		# make new objects for each file
 		
@@ -54,7 +62,9 @@ class movingObs:
 	def closestApproach(self,pos,vel,time):
 		closest_approach = []
 		for ob in self.moving_Obstacles:
-			closest_approach.append(ob.dcaAddtime(pos,vel,time))
+			temp = ob.dcaAddtime(pos,vel,time)[1]
+			temp.extend(ob.Radius)
+			closest_approach.append(temp)
 
 		return closest_approach
 
@@ -62,7 +72,7 @@ class movingObs:
 
 class dynamics_Ob:
 	def __init__(self,hertz):
-
+		self.Radius = 0
 
 		self.xVels = [0,0,0,0,0,0,0,0,0,0]
 		self.yVels = [0,0,0,0,0,0,0,0,0,0]
@@ -86,6 +96,9 @@ class dynamics_Ob:
 		self.nodesVec = []
 
 
+	def addRadius(rad):
+		pass
+		self.Radius = rad
 
 
 
@@ -131,7 +144,7 @@ class dynamics_Ob:
 			if (thetas[1] != 0 and thetas[2] != 0  and phis[1] != 0 and phis[2] != 0)
 				self.nodes.append(self.loc)
 				self.nodesVec.append([temp_theta,temp_phi])
-
+		
 		self.loc = [X,Y,Z]		
 
 
@@ -162,6 +175,13 @@ class dynamics_Ob:
 
 		dist = ((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)**.5
 		return dist,loc
+
+	def getVel(self):
+		x_vel = sum(self.xVels)/len(self.xVels)
+		y_vel = sum(self.yVels)/len(self.yVels)
+		z_vel = sum(self.zVels)/len(self.zVels)
+
+		return[xvel,y_vel,z_vel]
 
 	def dcaAddtime(Pos,Vel,time):
 		

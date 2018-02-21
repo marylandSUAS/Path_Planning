@@ -2,6 +2,8 @@
 import os
 import Localization
 import CheckingAndBlocking
+import multiprocessing
+from multiprocessing import Process
 
 class Avoidance:
 		
@@ -70,6 +72,7 @@ class Avoidance:
 
 	def getMovingObstacles(self,WPlst,TimeToStart):
 		Time = 0	# dist_to_first_wp/self.cruise 
+		timeError = 1
 
 		Important_moving_Obs = []
 		# Steps through each dis between wps and looks for collisions
@@ -82,7 +85,11 @@ class Avoidance:
 
 			Vel = [dx*self.cruise/dis,dy*self.cruise/dis,dz*self.cruise/dis]
 
-			Important_moving_Obs.append(self.localizer.closestApproach(Pos,Vel,Time))
+			minus_error = self.localizer.closestApproach(Pos,Vel,Time)
+			plus_error = self.localizer.closestApproach(Pos,Vel,Time)
+
+			tempOb = [minus_error[0],minus_error[1],minus_error[2],plus_error[0],plus_error[1],plus_error[2],plus_error[3],]
+			Important_moving_Obs.append(tempOb)
 
 			Time = Time + dis/self.cruise
 			# add time based off angle and time it takes turn
@@ -203,8 +210,16 @@ class Avoidance:
 		# run again until at end of wp list
 		plan(index,wp_list)
 
+
+	def DLAS(self):
+		os.system('./dlite/main.exe')
+		# os.system('./dlite/smooth.exe')
+		print 'Found Path'
+
+
 	# start,goal,current,static,moving,timeout,expanded 
-	def DL(start,goal,current,static_Obstacles,moving_obstacles,timeout):
+	def DL(start,goal,current,staticObstacles,movingObstacles,timeout):
+
 		with open('dlite/flight_information.txt',"w") as flightFile:
 
 			flightFile.write(str("Update 1"))
@@ -236,7 +251,7 @@ class Avoidance:
 			flightFile.write(str(' '))
 			flightFile.write(str(current[2]))
 
-			for ob in self.static_Obstacles:
+			for ob in staticObstacles:
 				flightFile.write(str('\n'))
 				flightFile.write("static")
 				flightFile.write(str(' '))
@@ -249,7 +264,7 @@ class Avoidance:
 				flightFile.write(str(ob[3]))
 
 			if (moving):
-				for ob in moving_obstacles:
+				for ob in movingObstacles:
 					flightFile.write(str('\n'))
 					flightFile.write("dynamic")
 					flightFile.write(str(' '))
@@ -260,19 +275,25 @@ class Avoidance:
 					flightFile.write(str(ob[2]))
 					flightFile.write(str(' '))
 					flightFile.write(str(ob[3]))
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[4]))
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[5]))
+					flightFile.write(str(' '))
+					flightFile.write(str(ob[6]))
 
-		os.system('./dlite/main.exe')
-		# os.system('./dlite/smooth.exe')
 
-		lngth = file_len_Loc('dlite/intermediate_waypoints.txt')
-		# print 'file length is ',lngth
+		ttp = Process(target=DLAS)
+    	ttp.start()
+    	ttp.join(timeout=3)
 		
 		nodes = []
 		with open('dlite/intermediate_waypoints.txt',"r") as intFile:
 			intFile.readline()
-			for i in range(lngth-1):
-				dat = intFile.readline().split(" ")
+			dat = intFile.readline().split(" ")	
+			while(len(dat) > 1):
 				nodes.append([float(dat[0]),float(dat[1]),float(dat[2])])
-
+				dat = intFile.readline().split(" ")
+				
 		return nodes
 

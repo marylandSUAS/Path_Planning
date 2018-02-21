@@ -1,69 +1,51 @@
 import re
 
-# def getCoords(inputLine):
-    # return([float(n) for n in re.findall(re.compile('\w*\.\w*'), inputLine)])
+def closestPoint(gl, st, ob):
+    lin = [gl[0]-st[0],gl[1]-st[1],gl[2]-st[2]]
+    length = ((lin[0])**2+(lin[1])**2+(lin[2])**2)**.5
+    ln = [lin[0]/length,lin[1]/length,lin[2]/length]
+    t = (((ob[0]-st[0])*ln[0])+((ob[1]-st[1])*ln[1])+(ln[2]*(ob[2]-st[2])))/(ln[0]**2+ln[1]**2+ln[2]**2)
+    if (t < 0):
+        t = 0
+    elif(t > length):
+        t = length;
+    cp = [st[0]+ln[0]*t,st[1]+ln[1]*t,st[2]+ln[2]*t]
+    return cp
 
-def distPointLine(point, wp1, wp2):
-    px = point[0]
-    py = point[1]
-    pz = point[2]
+def distPointLine(wp2, wp1, point):
+    cp = closestPoint(gl, st, ob)
+    d = ((ob[0]-cp[0])**2+(ob[1]-cp[1])**2+(ob[2]-cp[2])**2)**.5
+    return d
+
+def dist_static(wp1,wp2,ob):
+    cp = closestPoint(wp1, wp2, ob)
+    if(cp[2] > ob[2]):
+        return ((ob[0]-cp[0])**2+(ob[1]-cp[1])**2+(ob[2]-cp[2])**2)**.5
+    else:
+        return distLineLine(ob,[ob[0],ob[1],0], wp1, wp2,ob[4])
+        
+
+def distLineLine(ob1, ob2, wp1, wp2,radius):
     
-    q1x = wp1[0]
-    q1y = wp1[1]
-    q1z = wp1[2]
-    
-    q2x = wp2[3]
-    q2y = wp2[4]
-    q2z = wp2[5]
-    
-    return(
-        (((px-q1x)*(q1y-q2y) - (py-q1y)*(q1x-q2x))**2 + \
-        ((px-q1x)*(q1z-q2z) - (pz-q1z)*(q1x-q2x))**2 + \
-        ((py-q1y)*(q1z-q2z) - (pz-q1z)*(q1y-q2y))**2)**(1/2) / \
-        ((q1x-q2x)**2 + (q1y-q2y)**2 + (q1z-q2z)**2)**(1/2))
 
+    while(sqrt((ob2[0]-ob1[0])^2+(ob2[1]-ob1[1])^2+(ob2[2]-ob1[2])^2) > radius/1.5):
+        
+        ob15 = [ob1[0]+ob2[0]/2,ob1[1]+ob2[1]/2,ob1[2]+ob2[2]/2]
+        d1 = distPointLine(wp1,wp2,ob1)
+        d2 = distPointLine(wp1,wp2,ob15)
+        d3 = distPointLine(wp1,wp2,ob2)
 
-def distLineLine(obstacle1, obstacle2, waypoint1, waypoint2):
-    p1x = waypoint1[0] 
-    p1y = waypoint1[1] 
-    p1z = waypoint1[2]
+        if (d2 < d3):
+            ob2 = ob15
+        else:
+            ob1 = ob15
 
-    p2x = waypoint2[0]
-    p2y = waypoint2[1] 
-    p2z = waypoint2[2]
-    
-    q1x = obstacle1[0] 
-    q1y = obstacle1[1]
-    q1z = obstacle1[2] 
-    
-    q2x = obstacle2[1] 
-    q2y = obstacle2[1] 
-    q2z = obstacle2[2] 
-
-    return(
-        ((((p1x-p2x)*(q1y-q2y) - (p1y-p2y)*(q1x-q2x))*(p1z-q1z) - \
-        ((p1x-p2x)*(q1z-q2z) - (p1z-p2z)*(q1x-q2x))*(p1y-q1y) + \
-        ((p1y-p2y)*(q1z-q2z) - (p1z-p2z)*(q1y-q2y))*(p1x-q1x))**2)**(1/2) / \
-        (((p1x-p2x)*(q1y-q2y) - (p1y-p2y)*(q1x-q2x))**2 + \
-        ((p1x-p2x)*(q1z-q2z) - (p1z-p2z)*(q1x-q2x))**2 + \
-        ((p1y-p2y)*(q1z-q2z) - (p1z-p2z)*(q1y-q2y))**2)**(1/2))
-
-
-def distLineVerticalLine(obXY, waypoint1, waypoint2):
-    p1x = waypoint1[0]
-    p1y = waypoint1[1]
-    p1z = waypoint1[2]
-
-    p2x = waypoint2[0]
-    p2y = waypoint2[1]
-    p2z = waypoint2[2]
-
-    q1x = obXY[0]
-    q1y = obXY[1]
-
-    return(
-        (((p1x-p2x)*(p1y-q1y) - (p1y-p2y)*(p1x-q1x))**2)**(1/2) / \
-        ((p1x-p2x)**2 + (p1y-p2y)**2)**(1/2)) 
+    finalDist1 = distPointLine(wp1,wp2,ob1)
+    finalDist2 = distPointLine(wp1,wp2,ob2)
+    if (finalDist2 < finalDist):
+        return finalDist2
+    else:
+         return finalDist1
 
 
 # return is_bad,expaned Static, expanded Dynamic
@@ -76,16 +58,8 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
 
     for k in range(vehicle_wps-1):
         for obstacle in static_obs:
-            collisions = False
 
-            # if dist between line and static
-            if (distPointLine(obstacle, vehicle_wps[k], vehicle_wpsk[k+1]) < obstacle[2]):
-                collisions = True
-            # if dist between line and static
-            if (distLineLine(obstacle, [obstacle[0],obstacle[1],0], vehicle_wps[k], vehicle_wpsk[k+1]) < obstacle[2]):
-                collisions = True
-
-            if collisions:
+            if (dist_static(wp1,wp2,ob) < 0);
                 static_collisions.append(True)
             else:
                 static_collisions.append(False)
@@ -93,18 +67,9 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
 
     for k in range(vehicle_wps-1):
         for obstacle in dynamic_obs:
-            collisions = False
 
-            # if dist between path and dynamic points
-            if (distPointLine([obstacle[0],obstacle[1],obstacle[2],obstacle[6]], vehicle_wps[k], vehicle_wpsk[k+1]) < obstacle[6]):
-                collisions = True
-            if (distPointLine([obstacle[3],obstacle[4],obstacle[5],obstacle[6]], vehicle_wps[k], vehicle_wpsk[k+1]) < obstacle[6]):
-                collisions = True 
             # if dist between path and dynamic line
             if (distLineLine(obstacle, [obstacle[3],obstacle[4],obstacle[5]], vehicle_wps[k], vehicle_wpsk[k+1]) < obstacle[6]):
-                collisions = True            
-
-            if collisions:
                 static_collisions.append(True)
             else:
                 static_collisions.append(False)
@@ -123,7 +88,7 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
     final_dynamic_obs = []
     for k in range(dynamic_collisions):
         if (dynamic_collisions[k]):
-            final_dynamic_obs.append([static_obs[k][0],static_obs[k][1],static_obs[k][2],static_obs[k][3]+addition])
+            final_dynamic_obs.append([dynamic_obs[k][0],dynamic_obs[k][1],dynamic_obs[k][2],dynamic_obs[k][3],dynamic_obs[k][4],dynamic_obs[k][5],dynamic_obs[k][6]+addition])
             is_bad = True  
         else:
             final_dynamic_obs.append(dynamic_obs[k])
