@@ -16,12 +16,12 @@ class movingObs:
 		self.moving_Obstacles = []
 
 		ob_File = open(self.fileLoc,"r")
+		Ob_data = ob_File.readline().split(" ")
+		while(len(Ob_data) == 7):
+			self.num = self.num+1
+			self.moving_Obstacles.append(dynamics_Ob(self.hz))
+			self.moving_Obstacles(self.num-1).addRadius(Ob_data(0))
 			Ob_data = ob_File.readline().split(" ")
-			while(len(Ob_data) == 7):
-				self.num = self.num+1
-				self.moving_Obstacles.append(dynamics_Ob(self.hz))
-				self.moving_Obstacles(self.num-1).addRadius(Ob_data(0))
-				Ob_data = ob_File.readline().split(" ")
 
 		ob_File.close()
 		
@@ -40,15 +40,16 @@ class movingObs:
 
 	# fix this
 	def run():
+		ob_File = open(self.fileLoc,"r")
 		while(self.Reading):
-			with open(self.fileLoc,"r") as ob_File:
-				for i in range(len(self.moving_Obstacles)) 
-					Ob_data = ob_File.readline().split(" ")
-					self.moving_Obstacles(i).addXVelocity(Ob_data(1))
-					self.moving_Obstacles(i).addYVelocity(Ob_data(2))
-					self.moving_Obstacles(i).addZVelocity(Ob_data(3))
-
+			for i in range(len(self.moving_Obstacles)):
+				Ob_data = ob_File.readline().split(" ")
+				self.moving_Obstacles(i).addXVelocity(Ob_data(1))
+				self.moving_Obstacles(i).addYVelocity(Ob_data(2))
+				self.moving_Obstacles(i).addZVelocity(Ob_data(3))
 			time.sleep(1/self.hz)
+
+		ob_File.close()
 
 	def file_len(self):
 	    i = 0
@@ -140,8 +141,8 @@ class dynamics_Ob:
 		self.xVels.append(0,temp_phi)
 
 		# check if it hit a node
-		if((abs(theta[0] - theta[1]) > math.pi*10/180 or abs(theta[0] - theta[1]) > math.pi*10/180) and (abs(theta[0] - theta[2]) > math.pi*10/180 or abs(theta[0] - theta[2]) > math.pi*10/180))
-			if (thetas[1] != 0 and thetas[2] != 0  and phis[1] != 0 and phis[2] != 0)
+		if((abs(theta[0] - theta[1]) > math.pi*10/180 or abs(theta[0] - theta[1]) > math.pi*10/180) and (abs(theta[0] - theta[2]) > math.pi*10/180 or abs(theta[0] - theta[2]) > math.pi*10/180)):
+			if (thetas[1] != 0 and thetas[2] != 0  and phis[1] != 0 and phis[2] != 0):
 				self.nodes.append(self.loc)
 				self.nodesVec.append([temp_theta,temp_phi])
 		

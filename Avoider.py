@@ -1,6 +1,6 @@
 # CLASS AVOIDER
 import os
-import Localization
+import localization
 import CheckingAndBlocking
 import multiprocessing
 from multiprocessing import Process
@@ -21,52 +21,45 @@ class Avoidance:
 		self.Home = start
 
 
-		self.Bounds = []
-		self.addBounds('dlite/Boundry_File.txt')
+		# self.Bounds = []
+		# self.addBounds('dlite/Boundry_File.txt')
 
 		self.StaticObstacles = []
 		self.expandedStaticObstacles = []
 		self.expandedDynamicObstacles = []
-		self.addStaticObstacles('dlite/Static_file.txt')
+		self.addStaticObstacles('Flight_Logs/static_obstacles.txt')
 
-		self.localizer = movingObs('dlite/moving_obstacle_file.txt')
-
-
-	def file_len_Loc(self,fileLoc):
-    	i = 0
-	    with open(fileLoc,"r") as file:
-		    for line in file:
-		    	i += 1
-	    #print "file length is ", i
-	    return i
+		# self.localizer = movingObs('Flight_Logs/moving_obstacles.txt')
 
 
 	def addStaticObstacles(self,static_file):
-		lngth = self.file_len_Loc(static_file)
 
-		with open(static_file,"r") as OFile:
-			for i in range(lngth):
-				dat = OFile.readline().split(" ")
-				
-				temp = self.cord_System.toMeters([float(dat[1]),float(dat[2]),float(dat[3])])
+		OFile = open(static_file,"r")
+		dat = OFile.readline().split(" ")
+		print dat
+		while(len(dat) > 3):
 
-				temp.append(float(dat[4]))
-				self.StaticObstacles.append(temp)
+			temp = self.cord_System.toMeters([float(dat[0]),float(dat[1]),float(dat[2])])
+			temp.append(float(dat[3]))
+			self.StaticObstacles.append(temp)
 
-		# print self.StaticObstacles
-
+			dat = OFile.readline().split(" ")
+			print dat
+		
+		OFile.close()
 
 	def addBounds(self,bounds_file):
 		lngth = self.file_len_Loc(bounds_file)
 
-		with open(bounds_file,"r") as BFile:
-			for i in range(lngth):
-				dat = BFile.readline().split(" ")
+		BFile = open(bounds_file,"r")
+		dat = BFile.readline().split(" ")
+
+		while(len(dat) > 3):
+			temp = self.cord_System.toMeters([float(dat[1]),float(dat[2]),float(dat[3])])
+			self.Bounds.append(temp)
+			dat = BFile.readline().split(" ")
 				
-				temp = self.cord_System.toMeters([float(dat[1]),float(dat[2]),float(dat[3])])
-
-				self.Bounds.append(temp)
-
+		BFile.close()
 		# print self.StaticObstacles
 
 
@@ -100,7 +93,7 @@ class Avoidance:
 
 	def start():
 		pass
-		plan(@global_index,wp_list)
+		plan(self.index,wp_list)
 	
 	#updates vehicle_wps and sends to plane
 	def set_vehicle_waypoints(self,wps):
@@ -130,7 +123,7 @@ class Avoidance:
 
 
 
-		while(distance to wp_list[self.Index] > TBD [m]):
+		while(cs.wp_dist > 40):
 			time.sleep(.1)
 
 
@@ -284,16 +277,17 @@ class Avoidance:
 
 
 		ttp = Process(target=DLAS)
-    	ttp.start()
-    	ttp.join(timeout=3)
-		
+		ttp.start()
+		ttp.join(timeout=3)
+
 		nodes = []
-		with open('dlite/intermediate_waypoints.txt',"r") as intFile:
-			intFile.readline()
-			dat = intFile.readline().split(" ")	
-			while(len(dat) > 1):
-				nodes.append([float(dat[0]),float(dat[1]),float(dat[2])])
-				dat = intFile.readline().split(" ")
+		intFile = open('dlite/intermediate_waypoints.txt',"r") 
+		intFile.readline()
+		dat = intFile.readline().split(" ")	
+		while(len(dat) > 1):
+			nodes.append([float(dat[0]),float(dat[1]),float(dat[2])])
+			dat = intFile.readline().split(" ")
 				
+		intFile.close()
 		return nodes
 

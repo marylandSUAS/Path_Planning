@@ -1,4 +1,5 @@
 import threading
+import time
 
 class logger:
 	def __init__(self,currentState,cordSystem,file,movingObstacles,staticObstacles_file):
@@ -7,12 +8,12 @@ class logger:
 		self.textfile = file
 		self.cord_System = cordSystem
 		self.cs = currentState
-		self.moving_Obs = movingObjects
+		self.moving_Obs = movingObstacles
 		self.static_Obstacles = staticObstacles_file
 
 	def startlogging(self):
 		self.running = True
-		self.loger1.start()
+		self.loger.start()
 		print ("Logging Data")
 
 	def stoplogging(self):
@@ -23,12 +24,12 @@ class logger:
 		senarioFile = open(self.textfile,"w")
 
 		statics = []
-		with open(static_file,"r") as OFile:
+		with open(self.static_Obstacles,"r") as OFile:
 			dat = OFile.readline().split(" ")
 			while(len(dat) == 4):
 
-				temp = self.cord_System.toMeters([float(dat[1]),float(dat[2]),float(dat[3])])
-				temp.append(float(dat[4]))
+				temp = self.cord_System.toMeters([float(dat[0]),float(dat[1]),float(dat[2])])
+				temp.append(float(dat[3]))
 				statics.append(temp)
 				dat = OFile.readline().split(" ")
 				
@@ -49,7 +50,7 @@ class logger:
 
 
 		while(self.running):
-			point = self.cord_System.toMeters([cs.lat,cs.lng,cs.alt])
+			point = self.cord_System.toMeters([self.cs.lat,self.cs.lng,self.cs.alt])
 			senarioFile.write(str(point[0]))
 			senarioFile.write(str(' '))
 			senarioFile.write(str(point[1]))
@@ -69,7 +70,7 @@ class logger:
 					senarioFile.write(ob.loc(2))
 			
 
-			Script.Sleep(250)
+			time.sleep(.25)
 			senarioFile.write(str('\n'))
 					
 		senarioFile.close()
