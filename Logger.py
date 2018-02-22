@@ -10,6 +10,7 @@ class logger:
 		self.cs = currentState
 		self.moving_Obs = movingObstacles
 		self.static_Obstacles = staticObstacles_file
+		self.assumptions = []
 
 	def startlogging(self):
 		self.running = True
@@ -60,6 +61,7 @@ class logger:
 			
 			if(self.moving_Obs != None):
 				for ob in self.moving_Obs:
+					senarioFile.write('Dynamic Actual')
 					senarioFile.write(str(' '))
 					senarioFile.write(ob.radius)
 					senarioFile.write(str(' '))
@@ -68,7 +70,13 @@ class logger:
 					senarioFile.write(ob.loc(1))
 					senarioFile.write(str(' '))
 					senarioFile.write(ob.loc(2))
-			
+
+			if (len(self.assumptions) != 0):
+				for assump in self.assumptions:
+				senarioFile.write(' ')
+				senarioFile.write(assump)
+
+
 
 			time.sleep(.25)
 			senarioFile.write(str('\n'))

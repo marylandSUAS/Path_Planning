@@ -1,6 +1,7 @@
 # CLASS AVOIDER
 import os
 import localization
+from localization import movingObs
 import CheckingAndBlocking
 import multiprocessing
 from multiprocessing import Process
@@ -20,6 +21,8 @@ class Avoidance:
 
 		self.Home = start
 
+		self.assuptions = False
+		self.logger = None
 
 		# self.Bounds = []
 		# self.addBounds('dlite/Boundry_File.txt')
@@ -29,8 +32,30 @@ class Avoidance:
 		self.expandedDynamicObstacles = []
 		self.addStaticObstacles('Flight_Logs/static_obstacles.txt')
 
-		# self.localizer = movingObs('Flight_Logs/moving_obstacles.txt')
+		self.localizer = movingObs('Flight_Logs/moving_obstacles.txt')
 
+
+	def addLogger(self,loger):
+		self.logger = loger
+		self.assuptions = True
+
+	def assumptions(self,pathStillGood,statics,dynamics):
+		temp = []
+
+		if(statics != None):
+			for ob in statics:
+				temp2 = 'AsStatic'+str(ob[0])+' '+str(ob[1])+' '+str(ob[2])+' '+str(ob[3])
+				temp.append(temp2)
+
+		if(dynamics != None):
+			for ob in dynamics:
+				temp2 = 'AsDynamic'+str(ob[0])+' '+str(ob[1])+' '+str(ob[2])+' '+str(ob[3])+' '+str(ob[4])+' '+str(ob[5])+' '+str(ob[6])
+				temp.append(temp2)
+
+		if(pathStillGood == False):
+			temp.append('Bad_Path')
+
+		self.logger.assuption = temp
 
 	def addStaticObstacles(self,static_file):
 
@@ -142,6 +167,8 @@ class Avoidance:
 			# localize moving obstacles
 			important_Dy_Obstacles = self.getMovingObstacles(self,staticPath,0)
 
+			self.assumptions(True,None,important_Dy_Obstacles)
+
 			# if there are moving obstacles blocking the way replan and send.  If not keep static path 
 			if (len(important_Dy_Obstacles) != 0):
 				dynamic_wps = self.DL(wp_list[self.Index],wp_list[self.Index + 1],self.StaticObstacles,important_Dy_Obstacles,5)
@@ -160,13 +187,13 @@ class Avoidance:
 				# return false True if good and static Obstacles if not
 				current_loc = self.cord_System.toMeters([cs.lat,cs.lng,cs.alt])
 
+				self.assumptions(False,None,important_Dy_Obstacles)
 
 				current_list.extend(self.vehicle_wps[(len(self.vehicle_wps)-cs.wpno):])
 # this is wrong, should be checking remainder of waypoints not vehicle wps
 # fix the cs.wpno part of this
 
 				is_Bad, expandedStatics, expandedDynamics = Check(self.StaticObstacles,important_Dy_Obstacles,self.vehicle_wps)
-
 
 				# If collision is going to happen replan and check until a workable path is found
 				if(is_Bad):
@@ -184,6 +211,8 @@ class Avoidance:
 
 						# check if path is still bad
 						is_Bad, expandedStatics, expandedStatics = Check(self.expandedStaticObstacles,self.expandedDynamicObstacles,current_list)
+
+						self.assumptions(False,expandedStatics,expandedDynamics)
 
 						if(is_Bad == False):
 							break

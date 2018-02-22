@@ -57,7 +57,7 @@ def main():
 		# thread this
 		logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
 		logger = logger(cs,cordSystem,logFile,None,'Flight_Logs/static_obstacles.txt') 
-
+		avoider.addLogger(logger)
 		AvoiderMethod = threading.Thread(target=run(avoider,cordSystem))
 		
 		logger.startLogging() 

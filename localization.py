@@ -12,15 +12,17 @@ class movingObs:
 		self.hz = 4
 
 		
-		num = 0
+		self.num = 0
 		self.moving_Obstacles = []
 
 		ob_File = open(self.fileLoc,"r")
 		Ob_data = ob_File.readline().split(" ")
 		while(len(Ob_data) == 7):
 			self.num = self.num+1
-			self.moving_Obstacles.append(dynamics_Ob(self.hz))
-			self.moving_Obstacles(self.num-1).addRadius(Ob_data(0))
+			temp = dynamics_Ob(self.hz)
+			temp.addRadius(float(Ob_data[6]))
+			self.moving_Obstacles.append(temp)
+			
 			Ob_data = ob_File.readline().split(" ")
 
 		ob_File.close()
@@ -34,22 +36,24 @@ class movingObs:
 		self.Reading = True
 		self.loger.start()
 
-	def stop():
+	def stop(self):
 		self.Reading = False
 
 
 	# fix this
-	def run():
-		ob_File = open(self.fileLoc,"r")
+	def run(self):
+		
 		while(self.Reading):
+			ob_File = open(self.fileLoc,"r")
 			for i in range(len(self.moving_Obstacles)):
 				Ob_data = ob_File.readline().split(" ")
-				self.moving_Obstacles(i).addXVelocity(Ob_data(1))
-				self.moving_Obstacles(i).addYVelocity(Ob_data(2))
-				self.moving_Obstacles(i).addZVelocity(Ob_data(3))
+				if(len(Ob_data) > 1):
+					self.moving_Obstacles[i].addLoc( float(Ob_data[0]), float(Ob_data[1]), float(Ob_data[2]))
+			ob_File.close()
+
 			time.sleep(1/self.hz)
 
-		ob_File.close()
+			
 
 	def file_len(self):
 	    i = 0
@@ -77,7 +81,7 @@ class dynamics_Ob:
 
 		self.xVels = [0,0,0,0,0,0,0,0,0,0]
 		self.yVels = [0,0,0,0,0,0,0,0,0,0]
-		self.ZVels = [0,0,0,0,0,0,0,0,0,0]
+		self.zVels = [0,0,0,0,0,0,0,0,0,0]
 
 		self.Vels = [0,0,0,0,0,0,0,0,0,0]
 		self.loc = [0,0,0]
@@ -97,7 +101,7 @@ class dynamics_Ob:
 		self.nodesVec = []
 
 
-	def addRadius(rad):
+	def addRadius(self,rad):
 		pass
 		self.Radius = rad
 
@@ -109,19 +113,19 @@ class dynamics_Ob:
 		self.xVels.pop()
 		self.yVels.pop()
 		self.zVels.pop()
-		self.xVels.append(0,X-self.loc[0])
-		self.yVels.append(0,Y-self.loc[1])
-		self.zVels.append(0,Z-self.loc[2])
+		self.xVels.insert(0,X-self.loc[0])
+		self.yVels.insert(0,Y-self.loc[1])
+		self.zVels.insert(0,Z-self.loc[2])
 
 		
 
 		temp_V = self.hz*math.sqrt((self.xVels[0]-self.xVels[1])**2 + (self.yVels[0]-self.yVels[1])**2 + (self.zVels[0]-self.zVels[1])**2)
 		self.Vels.pop()
-		self.Vels.append(0,temp_V)
+		self.Vels.insert(0,temp_V)
 		
-		if (temp_V < slow_speed):
+		if (temp_V < self.slow_speed):
 			slow_speed = temp_V
-		elif (temp_V > top_speed):
+		elif (temp_V > self.top_speed):
 			top_speed = temp_V
 		
 
@@ -130,19 +134,21 @@ class dynamics_Ob:
 		# average last 30s
 		
 		temp_theta = math.atan2(self.yVels[0],self.xVels[0])
-		temp_phi = math.atan2(velZ,(math.sqrt((self.xVels[0])**2+(self.yVels[0])**2)))
+		temp_phi = math.atan2(self.zVels[0],(math.sqrt((self.xVels[0])**2+(self.yVels[0])**2)))
 
 		# pop theta list
 		self.thetas.pop()
-		self.xVels.append(0,temp_theta)
+		self.thetas.insert(0,temp_theta)
 
 		# pop phi list
 		self.phis.pop()
-		self.xVels.append(0,temp_phi)
+		self.phis.insert(0,temp_phi)
 
 		# check if it hit a node
-		if((abs(theta[0] - theta[1]) > math.pi*10/180 or abs(theta[0] - theta[1]) > math.pi*10/180) and (abs(theta[0] - theta[2]) > math.pi*10/180 or abs(theta[0] - theta[2]) > math.pi*10/180)):
-			if (thetas[1] != 0 and thetas[2] != 0  and phis[1] != 0 and phis[2] != 0):
+		# print self.thetas
+		# print self.phis
+		if((abs(self.thetas[0] - self.thetas[1]) > math.pi*10/180 or abs(self.thetas[0] - self.thetas[1]) > math.pi*10/180) and (abs(self.thetas[0] - self.thetas[2]) > math.pi*10/180 or abs(self.thetas[0] - self.thetas[2]) > math.pi*10/180)):
+			if (self.thetas[1] != 0 and self.thetas[2] != 0  and self.phis[1] != 0 and self.phis[2] != 0):
 				self.nodes.append(self.loc)
 				self.nodesVec.append([temp_theta,temp_phi])
 		
@@ -203,6 +209,23 @@ class dynamics_Ob:
 		dc,loc = self.dca([x1,y1,z1],[x_vel, y_vel, z_vel],[x2,y2,z2],Vel)
 		return [dc,loc]
 
+
+
+
+
+pos = [-150,0,0]
+vel = [16,0,0]
+
+
+localizer = movingObs('Flight_Logs/moving_obstacles.txt')
+localizer.start()
+time.sleep(1)
+print localizer.closestApproach(pos,vel,0):
+time.sleep(1)
+print localizer.closestApproach(pos,vel,0):
+time.sleep(1)
+print localizer.closestApproach(pos,vel,0):
+localizer.stop()
 
 
 
