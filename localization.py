@@ -9,7 +9,7 @@ class movingObs:
 		self.fileLoc = fileReadLoc
 		self.loger = threading.Thread(target=self.run)
 		self.Reading = False
-		self.hz = 4
+		self.hz = 4.0
 
 		
 		self.num = 0
@@ -36,6 +36,8 @@ class movingObs:
 		self.Reading = True
 		self.loger.start()
 
+		
+
 	def stop(self):
 		self.Reading = False
 
@@ -44,6 +46,7 @@ class movingObs:
 	def run(self):
 		
 		while(self.Reading):
+
 			ob_File = open(self.fileLoc,"r")
 			for i in range(len(self.moving_Obstacles)):
 				Ob_data = ob_File.readline().split(" ")
@@ -51,7 +54,9 @@ class movingObs:
 					self.moving_Obstacles[i].addLoc( float(Ob_data[0]), float(Ob_data[1]), float(Ob_data[2]))
 			ob_File.close()
 
-			time.sleep(1/self.hz)
+			sleeptime = 1/self.hz
+			print 'sleep: ',sleeptime
+			time.sleep(sleeptime)
 
 			
 
@@ -67,9 +72,9 @@ class movingObs:
 	def closestApproach(self,pos,vel,time):
 		closest_approach = []
 		for ob in self.moving_Obstacles:
-			temp = ob.dcaAddtime(pos,vel,time)[1]
-			temp.extend(ob.Radius)
-			closest_approach.append(temp)
+			tempdis,temploc = ob.dcaAddtime(pos,vel,time)
+			temploc.append(ob.Radius)
+			closest_approach.append(temploc)
 
 		return closest_approach
 
@@ -109,17 +114,15 @@ class dynamics_Ob:
 
 
 	def addLoc(self,X,Y,Z):
-	# def addLoc(X,Y,Z,time):
 		self.xVels.pop()
 		self.yVels.pop()
 		self.zVels.pop()
-		self.xVels.insert(0,X-self.loc[0])
-		self.yVels.insert(0,Y-self.loc[1])
-		self.zVels.insert(0,Z-self.loc[2])
+		self.xVels.insert(0,(X-self.loc[0])*self.hz)
+		self.yVels.insert(0,(Y-self.loc[1])*self.hz)
+		self.zVels.insert(0,(Z-self.loc[2])*self.hz)
 
-		
-
-		temp_V = self.hz*math.sqrt((self.xVels[0]-self.xVels[1])**2 + (self.yVels[0]-self.yVels[1])**2 + (self.zVels[0]-self.zVels[1])**2)
+		temp_V = math.sqrt(((X-self.loc[0])*self.hz)**2 + ((Y-self.loc[1])*self.hz)**2 + ((Z-self.loc[2])*self.hz)**2)
+		print 'Vel: ',temp_V
 		self.Vels.pop()
 		self.Vels.insert(0,temp_V)
 		
@@ -155,7 +158,7 @@ class dynamics_Ob:
 		self.loc = [X,Y,Z]		
 
 
-	def timeAtClosestApproach(Pos1,Vel1,Pos2,Vel2):
+	def timeAtClosestApproach(self,Pos1,Vel1,Pos2,Vel2):
 		p1 = Pos2[0]-Pos1[0]
 		p2 = Pos2[1]-Pos1[1]
 		p3 = Pos2[2]-Pos1[2]
@@ -167,8 +170,17 @@ class dynamics_Ob:
 		t = -(p1*v1+p2*v2+p3*v3)/(v1**2+v2**2+v3**2)
 		return t
 
-	def dca(Pos1,Vel1,Pos2,Vel2):
-		t = timeAtClosestApproach(Pos1,Vel1,Pos2,Vel2)
+	def dca(self,Pos1,Vel1,Pos2,Vel2):
+
+		p1 = Pos2[0]-Pos1[0]
+		p2 = Pos2[1]-Pos1[1]
+		p3 = Pos2[2]-Pos1[2]
+
+		v1 = Vel2[0]-Vel1[0]
+		v2 = Vel2[1]-Vel1[1]
+		v3 = Vel2[2]-Vel1[2]
+
+		t = -(p1*v1+p2*v2+p3*v3)/(v1**2+v2**2+v3**2)
 
 		x1 = Pos1[0]+t*Vel1[0]
 		y1 = Pos1[1]+t*Vel1[1]
@@ -188,9 +200,9 @@ class dynamics_Ob:
 		y_vel = sum(self.yVels)/len(self.yVels)
 		z_vel = sum(self.zVels)/len(self.zVels)
 
-		return[xvel,y_vel,z_vel]
+		return[x_vel,y_vel,z_vel]
 
-	def dcaAddtime(Pos,Vel,time):
+	def dcaAddtime(self,Pos,Vel,time):
 		
 		x_vel = sum(self.xVels)/len(self.xVels)
 		y_vel = sum(self.yVels)/len(self.yVels)
@@ -207,81 +219,25 @@ class dynamics_Ob:
 		z2 = Pos[2]-time*Vel[2]
 
 		dc,loc = self.dca([x1,y1,z1],[x_vel, y_vel, z_vel],[x2,y2,z2],Vel)
-		return [dc,loc]
+		return dc,loc
 
 
 
 
 
-pos = [-150,0,0]
-vel = [16,0,0]
+# pos = [-150,0,0]
+# vel = [16,0,0]
 
 
-localizer = movingObs('Flight_Logs/moving_obstacles.txt')
-localizer.start()
-time.sleep(1)
-print localizer.closestApproach(pos,vel,0):
-time.sleep(1)
-print localizer.closestApproach(pos,vel,0):
-time.sleep(1)
-print localizer.closestApproach(pos,vel,0):
-localizer.stop()
+# localizer = movingObs('Flight_Logs/moving_obstacles.txt')
+# localizer.start()
+# time.sleep(3)
+# print localizer.closestApproach(pos,vel,0)
+# print localizer.moving_Obstacles[0].fiveSecAvg
 
+# time.sleep(1)
+# print localizer.closestApproach(pos,vel,0)
+# print localizer.moving_Obstacles[0].fiveSecAvg
 
-
-	# def addXVelocity(vel):
-	# 	temp = xVels[1:len(xVels)]
-	# 	temp.append(vel)
-	# 	xVels = temp
-
-	# def addYVelocity(vel):
-	# 	temp = yVels[1:len(yVels)]
-	# 	temp.append(vel)
-	# 	yVels = temp
-
-	# def addZVelocity(vel):
-	# 	temp = zVels[1:len(zVels)]
-	# 	temp.append(vel)
-	# 	zVels = temp
-
-	# def addXVelocity(theta):
-	# 	temp = thetas[1:len(thetas)]
-	# 	temp.append(theta)
-	# 	thetas = temp
-
-	# def addXVelocity(phi):
-	# 	temp = phis[1:len(phis)]
-	# 	temp.append(phi)
-	# 	phis = temp
-
-	# def getVelocityX(initX, finalX, deltaTime):
-	# 	return (finalX - initX)//deltaTime
-
-	# def getVelocityY(initY, finalY, deltaTime):
-	# 	return (finalY - initY)//deltaTime
-
-	# def getVelocityZ(initZ, finalZ, deltaTime):
-	# 	return (finalZ - initZ)//deltaTime
-
-	# def getVelocity(initX, finalX, initY, finalY, initZ, finalZ, deltaTime):
-	# 	return math.sqrt(getVelocityX(initX, finalX, deltaTime)**2 + getVelocityY(initY, finalY, deltaTime)**2 + getVelocityZ(initZ, finalZ, deltaTime)**2)
-
-	# def getTheta(initX, finalX, initY, finalY, initZ, finalZ, deltaTime):
-	# 	velX = (finalX - initX)//deltaTime
-	# 	velY = (finalY - initY)//deltaTime
-	# 	return math.atan(velY/velX)
-
-	# def getPhi(initY, finalY, initZ, finalZ, deltaTime):
-	# 	velY = (finalY - initY)//deltaTime
-	# 	velZ = (finalZ - initZ)//deltaTime
-	# 	return math.atan(velZ/velY)
-
-	# def getProjectedX(initX, finalX, initY, finalY, initZ, finalZ, deltaTime, projectedTime):
-	# 	return getVelocityX() * projectedTime * math.cos(getTheta(initX, finalX, initY, finalY, initZ, finalZ, deltaTime))
-
-	# def getProjectedY(initX, finalX, initY, finalY, initZ, finalZ, deltaTime, projectedTime):
-	# 	return getVelocityY() * projectedTime * math.sin(getTheta(initX, finalX, initY, finalY, initZ, finalZ, deltaTime))
-
-	# def getProjectedZ(initX, finalX, initY, finalY, initZ, finalZ, deltaTime, projectedTime):
-	# 	return getVelocityZ() * projectedTime * math.cos(getPhi(initX, finalX, initY, finalY, initZ, finalZ, deltaTime))
+# localizer.stop()
 

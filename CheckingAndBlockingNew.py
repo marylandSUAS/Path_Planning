@@ -56,10 +56,10 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
     waypointList = vehicle_wps
     addition = 3
 
-    for k in range(vehicle_wps-1):
+    for k in range(len(vehicle_wps)-1):
         for obstacle in static_obs:
 
-            if (dist_static(wp1,wp2,ob) < 0);
+            if (dist_static(vehicle_wps[k],vehicle_wps[k+1],obstacle) < 0):
                 static_collisions.append(True)
             else:
                 static_collisions.append(False)
@@ -96,3 +96,19 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
 
 
         return is_bad, final_static_obs, final_dynmic_obs
+
+
+st1 = [0,0,50,10]
+st2 = [-10,30,50,8]
+st3 = [20,-30,50,5]
+statics = [st1,st2,st3]
+
+dy1 = [-80,10,50,-80,-10,50,10]
+dy2 = [-60,10,50,-60,-10,50,10]
+dy3 = [-40,10,50,-40,-10,50,10]
+dynamics = [dy1,dy2,dy3]
+
+vwps = [[-150,0,50],[150,0,50]]
+
+chk = Check(statics,dynamics,vwps)
+print chk

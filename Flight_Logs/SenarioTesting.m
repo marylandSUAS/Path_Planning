@@ -6,10 +6,10 @@ close all
 
 static_obstacles = randomizeStatic([-150 0 50],[150 0 50],3);
 
-Nodes1 = [-100 -75 50;
-        -100 75 50;
-        100 75 50;
-        100 -75 50];
+Nodes1 = [-100 -40 50;
+        -100 40 50;
+        100 40 50;
+        100 -40 50];
 
 Nodes2 = [0 75 65;
         0 -75 35];
@@ -34,7 +34,7 @@ r = robotics.Rate(Hz);
 
 reset(r)
 while(1)
-    tic
+%     tic
     Object1 = Object1.Update(1/Hz);
     Object2 = Object2.Update(1/Hz);
     Object3 = Object3.Update(1/Hz);
@@ -70,5 +70,5 @@ while(1)
     
     
     waitfor(r);
-    toc
+%     toc
 end
