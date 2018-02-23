@@ -32,14 +32,12 @@ def main():
 	avoider = Avoider.Avoidance(Home,cs,None,cordSystem)
 	k = 0
 	logFile = 'Flight_Logs/Paper_Flight_Record' + str(k+1) + '.txt'
-	logger = Logger.logger(cs,cordSystem,logFile,None,'Flight_Logs/static_obstacles.txt') 
-	
+	logger = Logger.logger(cs,cordSystem,logFile,avoider.localizer,'Flight_Logs/static_obstacles.txt') 
+	avoider.addLogger(logger)
+
 	logger.startlogging() 
 	time.sleep(3)
 	logger.stoplogging()
 		
-
-		
-
 
 main()

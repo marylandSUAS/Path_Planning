@@ -11,6 +11,7 @@ typedef struct{
 	int seen;
 	int infinite;
 	int cell[3];
+	int expanded;
 	double g;
 	double rhs;
 	double k[2];
@@ -23,8 +24,10 @@ typedef struct{
 
 typedef struct obstacle{
 	double location[3];
+	double velocity[3];
 	double radius;
 	int mark;
+	int type;
 	struct obstacle *next;
 } Obstacle;
 

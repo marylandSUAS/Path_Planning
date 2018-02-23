@@ -66,6 +66,10 @@ while(1)
         fileID = fopen('random.txt','w');
         C = fprintf('0');
         fclose(fileID);
+    elseif(C == 2)
+        break
+    elseif(C == 3)
+        exit
     end
     
     

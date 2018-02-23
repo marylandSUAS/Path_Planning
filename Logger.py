@@ -8,7 +8,7 @@ class logger:
 		self.textfile = file
 		self.cord_System = cordSystem
 		self.cs = currentState
-		self.moving_Obs = movingObstacles
+		self.localizer = movingObstacles
 		self.static_Obstacles = staticObstacles_file
 		self.assumptions = []
 
@@ -20,6 +20,9 @@ class logger:
 	def stoplogging(self):
 		self.running = False
 		print ('Stopped logging')
+
+	def addDynamic(self,dynamics):
+		self.localizer = dynamics
 
 	def log(self):
 		senarioFile = open(self.textfile,"w")
@@ -60,7 +63,8 @@ class logger:
 
 			
 			if(self.moving_Obs != None):
-				for ob in self.moving_Obs:
+				temp = self.localizer
+				for ob in temp.moving_Obstacles:
 					senarioFile.write('Dynamic Actual')
 					senarioFile.write(str(' '))
 					senarioFile.write(ob.radius)
@@ -73,8 +77,8 @@ class logger:
 
 			if (len(self.assumptions) != 0):
 				for assump in self.assumptions:
-				senarioFile.write(' ')
-				senarioFile.write(assump)
+					senarioFile.write(' ')
+					senarioFile.write(assump)
 
 
 

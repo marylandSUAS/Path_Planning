@@ -1,4 +1,5 @@
 import re
+from math import sqrt
 
 def closestPoint(gl, st, ob):
     lin = [gl[0]-st[0],gl[1]-st[1],gl[2]-st[2]]
@@ -12,25 +13,25 @@ def closestPoint(gl, st, ob):
     cp = [st[0]+ln[0]*t,st[1]+ln[1]*t,st[2]+ln[2]*t]
     return cp
 
-def distPointLine(wp2, wp1, point):
-    cp = closestPoint(gl, st, ob)
+def distPointLine(wp1, wp2, ob):
+    cp = closestPoint(wp1, wp2, ob)
     d = ((ob[0]-cp[0])**2+(ob[1]-cp[1])**2+(ob[2]-cp[2])**2)**.5
     return d
 
 def dist_static(wp1,wp2,ob):
     cp = closestPoint(wp1, wp2, ob)
-    if(cp[2] > ob[2]):
+    if(cp[2] > ob[2]+ob[3]/2):
         return ((ob[0]-cp[0])**2+(ob[1]-cp[1])**2+(ob[2]-cp[2])**2)**.5
     else:
-        return distLineLine(ob,[ob[0],ob[1],0], wp1, wp2,ob[4])
+        return distLineLine(ob,[ob[0],ob[1],0], wp1, wp2,ob[3])
         
 
 def distLineLine(ob1, ob2, wp1, wp2,radius):
     
 
-    while(sqrt((ob2[0]-ob1[0])^2+(ob2[1]-ob1[1])^2+(ob2[2]-ob1[2])^2) > radius/1.5):
+    while(sqrt((ob2[0]-ob1[0])**2+(ob2[1]-ob1[1])**2+(ob2[2]-ob1[2])**2) > radius/1.5):
         
-        ob15 = [ob1[0]+ob2[0]/2,ob1[1]+ob2[1]/2,ob1[2]+ob2[2]/2]
+        ob15 = [(ob1[0]+ob2[0])/2,(ob1[1]+ob2[1])/2,(ob1[2]+ob2[2])/2]
         d1 = distPointLine(wp1,wp2,ob1)
         d2 = distPointLine(wp1,wp2,ob15)
         d3 = distPointLine(wp1,wp2,ob2)
@@ -42,7 +43,7 @@ def distLineLine(ob1, ob2, wp1, wp2,radius):
 
     finalDist1 = distPointLine(wp1,wp2,ob1)
     finalDist2 = distPointLine(wp1,wp2,ob2)
-    if (finalDist2 < finalDist):
+    if (finalDist2 < finalDist1):
         return finalDist2
     else:
          return finalDist1
@@ -56,28 +57,48 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
     waypointList = vehicle_wps
     addition = 3
 
-    for k in range(len(vehicle_wps)-1):
-        for obstacle in static_obs:
+    for obstacle in static_obs:
+        for k in range(len(vehicle_wps)-1):
+        
+            temp = False
+            tempdist = dist_static(vehicle_wps[k],vehicle_wps[k+1],obstacle)
+            # print 'dist = ',tempdist
+            # print obstacle[3]
+            if (tempdist < obstacle[3]):
+                temp = True
 
-            if (dist_static(vehicle_wps[k],vehicle_wps[k+1],obstacle) < 0):
-                static_collisions.append(True)
-            else:
-                static_collisions.append(False)
+        if(temp):
+            static_collisions.append(True)
+            print 'static collision'
+        else:
+            static_collisions.append(False)
+            print 'no static collision'
 
 
-    for k in range(vehicle_wps-1):
-        for obstacle in dynamic_obs:
+    for obstacle in dynamic_obs:
+        for k in range(len(vehicle_wps)-1):
 
+            temp = False
             # if dist between path and dynamic line
-            if (distLineLine(obstacle, [obstacle[3],obstacle[4],obstacle[5]], vehicle_wps[k], vehicle_wpsk[k+1]) < obstacle[6]):
-                static_collisions.append(True)
-            else:
-                static_collisions.append(False)
+            tempdist = distLineLine(obstacle, [obstacle[3],obstacle[4],obstacle[5]], vehicle_wps[k], vehicle_wps[k+1],obstacle[6])
+            # print 'tempdist = ',tempdist
+            if (tempdist < obstacle[6]):
+                temp = True
 
+        if(temp):
+            print 'dynamic collision'
+            dynamic_collisions.append(True)
+        else:
+            print 'no dynamic collision'
+            dynamic_collisions.append(False)
+
+
+    print static_collisions
+    print dynamic_collisions
 
     is_bad = False
     final_static_obs = []
-    for k in range(static_collisions):
+    for k in range(len(static_collisions)):
         if (static_collisions[k]):
             final_static_obs.append([static_obs[k][0],static_obs[k][1],static_obs[k][2],static_obs[k][3]+addition])
             is_bad = True  
@@ -86,29 +107,27 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
 
 
     final_dynamic_obs = []
-    for k in range(dynamic_collisions):
+    for k in range(len(dynamic_collisions)):
         if (dynamic_collisions[k]):
             final_dynamic_obs.append([dynamic_obs[k][0],dynamic_obs[k][1],dynamic_obs[k][2],dynamic_obs[k][3],dynamic_obs[k][4],dynamic_obs[k][5],dynamic_obs[k][6]+addition])
             is_bad = True  
         else:
             final_dynamic_obs.append(dynamic_obs[k])
     
+    return is_bad, final_static_obs, final_dynamic_obs
 
 
-        return is_bad, final_static_obs, final_dynmic_obs
+# st1 = [0,0,50,10]
+# st2 = [-10,30,50,8]
+# st3 = [20,-30,50,5]
+# statics = [st1,st2,st3]
 
+# dy1 = [-80,10,50,-80,-10,50,10]
+# dy2 = [-60,10,50,-60,-10,50,10]
+# dy3 = [-40,10,50,-40,-10,50,10]
+# dynamics = [dy1,dy2,dy3]
 
-st1 = [0,0,50,10]
-st2 = [-10,30,50,8]
-st3 = [20,-30,50,5]
-statics = [st1,st2,st3]
+# vwps = [[-150,0,50],[150,0,50]]
 
-dy1 = [-80,10,50,-80,-10,50,10]
-dy2 = [-60,10,50,-60,-10,50,10]
-dy3 = [-40,10,50,-40,-10,50,10]
-dynamics = [dy1,dy2,dy3]
-
-vwps = [[-150,0,50],[150,0,50]]
-
-chk = Check(statics,dynamics,vwps)
-print chk
+# chk = Check(statics,dynamics,vwps)
+# print chk
