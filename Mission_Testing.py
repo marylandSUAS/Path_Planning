@@ -35,15 +35,6 @@ def Mission(mission):
 
 		self.offAxisLoc = [39.1100334,-77.1410608,0]
 
-
-	# Main paved runway
-	if (mission == 'CASA1'):
-		pass
-
-	# tarp runway
-	if (mission == 'CASA2'):
-		pass
-
 	if (mission == 'PGRC'):
 		pass
 

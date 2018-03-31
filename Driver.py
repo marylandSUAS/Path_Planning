@@ -39,29 +39,40 @@ def monitor(avoider)::
 
 def main():
 	# set home position for takeoff to wherever script is started
-	Home = [cs.lng,cs.lat,cs.alt]
+	Home = [39.0829973,-76.9045262,100]
 	resetPoint1 = []
 	resetPoint2 = []
 	startPoint = []
 	# initialize coordinate system
-	cordSystem = Cord_System(Home)
+	cordSystem = Cord_System.Cord_System(Home)
+	print "initalized coords"
+
 
 	# create avoidance class to control vehicle during obstacle avoidance (Home,cs,MAV)
-	avoider = avoidance(Home,cs,MAV,cord_System)
+	# avoider = avoidance(Home,cs,MAV,cord_System)
+	avoider = Avoider.Avoidance(Home,cs,None,cordSystem)
+	print "initalized avoider"
+
 
 	# define test mission
 	# Missions = Mission('CASA1') 
 
-	number_of_tests = 25
+	number_of_tests = 1
 	for k in range(number_of_tests)
 		# thread this
 		logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
 		logger = logger(cs,cordSystem,logFile,None,'Flight_Logs/static_obstacles.txt') 
 		avoider.addLogger(logger)
+		print "added logger"
+
+
 		AvoiderMethod = threading.Thread(target=run(avoider,cordSystem))
 		
+
 		logger.startLogging() 
 		AvoiderMethod.start()
+		print "Avoider Running"
+
 
 		monitor(AvoiderMethod,avoider)
 

@@ -3,18 +3,22 @@ import os
 import localization
 from localization import movingObs
 import CheckingAndBlocking
+from CheckingAndBlocking import Check
 import multiprocessing
 from multiprocessing import Process
 
 class Avoidance:
 		
 
-	def __init__(self,start,cs,MAV,cord_Sys):
+	def __init__(self,start,cs,mav,cord_Sys):
 		
-		Safety_Margin = 6
-		cruise = 16	
-		dataPath = 'dlite/flight_information.txt'
+		self.Safety_Margin = 6
+		self.cruise = 16	
+		self.dataPath = 'dlite/flight_information.txt'
+
+
 		self.cord_System = cord_Sys
+		self.MAV = mav
 
 		self.Index = 0
 		self.vehicle_wps = []
@@ -88,6 +92,9 @@ class Avoidance:
 		# print self.StaticObstacles
 
 
+
+	# WPlst = list of points to next global wp including global wp
+	# TimeToStart = approximate time until first global wp
 	def getMovingObstacles(self,WPlst,TimeToStart):
 		Time = 0	# dist_to_first_wp/self.cruise 
 		timeError = 1
@@ -103,17 +110,22 @@ class Avoidance:
 
 			Vel = [dx*self.cruise/dis,dy*self.cruise/dis,dz*self.cruise/dis]
 
-			minus_error = self.localizer.closestApproach(Pos,Vel,Time)
-			plus_error = self.localizer.closestApproach(Pos,Vel,Time)
 
-			tempOb = [minus_error[0],minus_error[1],minus_error[2],plus_error[0],plus_error[1],plus_error[2],plus_error[3],]
-			Important_moving_Obs.append(tempOb)
+
+			minus_dist, minus_error = self.localizer.closestApproach(Pos,Vel,Time)
+			plus_dist, plus_error = self.localizer.closestApproach(Pos,Vel,Time)
+			
+			for k in range(len(minus_dist)):
+				if (minus_dist[k] < minus_error[k][3]+self.Safety_Margin or plus_dist[k] < plus_error[k][3]+self.Safety_Margin):
+					tempOb = [minus_error[0],minus_error[1],minus_error[2],plus_error[0],plus_error[1],plus_error[2],minus_error[3]]
+					Important_moving_Obs.append(tempOb)
+
 
 			Time = Time + dis/self.cruise
 			# add time based off angle and time it takes turn
 			# could be like turn radius/cruise_speed time sin angle
 
-		return ImportantmovObs
+		return Important_moving_Obs
 
 
 	def start():
@@ -122,13 +134,13 @@ class Avoidance:
 	
 	#updates vehicle_wps and sends to plane
 	def set_vehicle_waypoints(self,wps):
-		MAV.setWPTotal(len(lst)+1)	
-		MAV.setWP(Locationwp().Set(self.Home[0],self.Home[1],self.Home[2], 16),0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
+		self.MAV.setWPTotal(len(lst)+1)	
+		self.MAV.setWP(Locationwp().Set(self.Home[0],self.Home[1],self.Home[2], 16),0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 		for i in range(len(lst)):
-			MAV.setWP(Locationwp().Set(wps[i][0],wps[i][1],wps[i][2], 16),1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
+			self.MAV.setWP(Locationwp().Set(wps[i][0],wps[i][1],wps[i][2], 16),1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 			if (i+1 == 1):
 				MAV.setWPCurrent(1)	
-		MAV.setMode("Auto")
+		self.MAV.setMode("Auto")
 		self.vehicle_wps = wps
 
 
@@ -308,6 +320,8 @@ class Avoidance:
 		ttp = Process(target=DLAS)
 		ttp.start()
 		ttp.join(timeout=3)
+
+# need to check if path finding failed
 
 		nodes = []
 		intFile = open('dlite/intermediate_waypoints.txt',"r") 

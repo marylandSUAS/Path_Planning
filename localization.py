@@ -69,14 +69,17 @@ class movingObs:
 	    return i
 
 
+	# returns each object distance, [closest point,radius]
 	def closestApproach(self,pos,vel,time):
 		closest_approach = []
+		closest_dist = []
 		for ob in self.moving_Obstacles:
 			tempdis,temploc = ob.dcaAddtime(pos,vel,time)
+			closest_dist.append(tempdis)
 			temploc.append(ob.Radius)
 			closest_approach.append(temploc)
 
-		return closest_approach
+		return closest_dist, closest_approach
 
 
 

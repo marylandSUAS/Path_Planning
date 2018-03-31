@@ -62,18 +62,18 @@ class logger:
 			senarioFile.write(str(point[2]))
 
 			
-			if(self.moving_Obs != None):
-				temp = self.localizer
-				for ob in temp.moving_Obstacles:
-					senarioFile.write('Dynamic Actual')
+			if(self.localizer != None):
+				# temp = self.localizer
+				for ob in self.localizer.moving_Obstacles:
+					senarioFile.write(' Dynamic_Actual')
 					senarioFile.write(str(' '))
-					senarioFile.write(ob.radius)
+					senarioFile.write(str(ob.Radius))
 					senarioFile.write(str(' '))
-					senarioFile.write(ob.loc(0))
+					senarioFile.write(str(ob.loc[0]))
 					senarioFile.write(str(' '))
-					senarioFile.write(ob.loc(1))
+					senarioFile.write(str(ob.loc[1]))
 					senarioFile.write(str(' '))
-					senarioFile.write(ob.loc(2))
+					senarioFile.write(str(ob.loc[2]))
 
 			if (len(self.assumptions) != 0):
 				for assump in self.assumptions:
