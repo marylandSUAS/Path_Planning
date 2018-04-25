@@ -19,7 +19,7 @@ class logger:
 
 	def stoplogging(self):
 		self.running = False
-		print ('Stopped logging')
+		print ('Logging stopped')
 
 	def addDynamic(self,dynamics):
 		self.localizer = dynamics

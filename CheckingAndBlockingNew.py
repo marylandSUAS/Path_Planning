@@ -57,6 +57,7 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
     waypointList = vehicle_wps
     addition = 3
 
+    return False,static_obs,dynamic_obs
     for obstacle in static_obs:
         for k in range(len(vehicle_wps)-1):
         

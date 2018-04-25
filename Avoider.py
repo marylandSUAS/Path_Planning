@@ -3,9 +3,13 @@ import os
 import localization
 from localization import movingObs
 import CheckingAndBlocking
-from CheckingAndBlocking import Check
-import multiprocessing
-from multiprocessing import Process
+from CheckingAndBlockingNew import Check
+import threading
+import time
+import MissionPlanner
+# clr.AddReference("MissionPlanner.Utilities") #includes the Utilities class
+from MissionPlanner.Utilities import Locationwp
+import MAVLink
 
 class Avoidance:
 		
@@ -23,10 +27,13 @@ class Avoidance:
 		self.Index = 0
 		self.vehicle_wps = []
 
+		self.wp_list = []
+
 		self.Home = start
 
-		self.assuptions = False
+		self.assuptions = []
 		self.logger = None
+		self.quit = False
 
 		# self.Bounds = []
 		# self.addBounds('dlite/Boundry_File.txt')
@@ -57,9 +64,9 @@ class Avoidance:
 				temp.append(temp2)
 
 		if(pathStillGood == False):
-			temp.append('Bad_Path')
-
-		self.logger.assuption = temp
+			temp.append(' Bad_Path')
+		if (self.logger != None):
+			self.logger.assuption = temp
 
 	def addStaticObstacles(self,static_file):
 
@@ -128,18 +135,25 @@ class Avoidance:
 		return Important_moving_Obs
 
 
-	def start():
-		pass
-		plan(self.index,wp_list)
+	def start(self):
+		print 'start planning'
+		# time.sleep(5)
+
+		self.test()
+
+		# self.plan(self.index)
+		print 'finished planning'
+
 	
 	#updates vehicle_wps and sends to plane
 	def set_vehicle_waypoints(self,wps):
-		self.MAV.setWPTotal(len(lst)+1)	
+		self.MAV.setWPTotal(len(wps)+1)	
+# doesnt know what Locationwp is
 		self.MAV.setWP(Locationwp().Set(self.Home[0],self.Home[1],self.Home[2], 16),0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-		for i in range(len(lst)):
+		for i in range(len(wps)):
 			self.MAV.setWP(Locationwp().Set(wps[i][0],wps[i][1],wps[i][2], 16),1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 			if (i+1 == 1):
-				MAV.setWPCurrent(1)	
+				self.MAV.setWPCurrent(1)	
 		self.MAV.setMode("Auto")
 		self.vehicle_wps = wps
 
@@ -153,9 +167,34 @@ class Avoidance:
 		pass
 		return 'Probably Still good'
 
+	def test(self):
+		
+		# static path and send
+		print self.wp_list
+		staticPath = self.DL(self.wp_list[self.Index],self.wp_list[self.Index + 1],self.StaticObstacles,[],2)
+		print 'found static path'
+		print 'static path:'
+		print staticPath
+		self.set_vehicle_waypoints(staticPath)
+		print 'set wps'
 
-	def plan(self,index,wp_list):
-		if (self.Index == size(wp_list)-1):
+		# localize moving obstacles
+		important_Dy_Obstacles = self.getMovingObstacles(self.wp_list,0)
+		print 'localized important dynamics obstacles'
+		# see if it records assumptions right
+		self.assumptions(True,None,important_Dy_Obstacles)
+		print 'set assumptions'
+		# see if check has errors
+		is_Bad, expandedStatics, expandedDynamics = Check(self.StaticObstacles,important_Dy_Obstacles,self.vehicle_wps)
+		print 'checked'
+		print 'is bad: ', is_Bad
+		print 'statics: ', expandedStatics
+		print 'dynamics: ',expandedDynamics
+
+
+
+	def plan(self,index):
+		if (self.Index == size(self.wp_list)-1):
 			return
 
 
@@ -165,10 +204,11 @@ class Avoidance:
 
 
 			# gets static path for dlite to run off of and to initially set
-			staticPath = self.DL(wp_list[self.Index],wp_list[self.Index + 1],self.StaticObstacles,[],2)
+			staticPath = self.DL(self.wp_list[self.Index],self.wp_list[self.Index + 1],self.StaticObstacles,[],2)
+			staticPath.append(self.wp_list[Index-1])
 			self.set_vehicle_waypoints(staticPath)
 
-			# DL_1(wp_list[index],wp_list[index + 1],True)
+			# DL_1(self.wp_list[index],self.wp_list[index + 1],True)
 			
 
 			# wait until reached wp 
@@ -177,27 +217,34 @@ class Avoidance:
 
 			
 			# localize moving obstacles
-			important_Dy_Obstacles = self.getMovingObstacles(self,staticPath,0)
+			important_Dy_Obstacles = self.getMovingObstacles(self.vehicle_wps,0)
 
-			self.assumptions(True,None,important_Dy_Obstacles)
-
+			
 			# if there are moving obstacles blocking the way replan and send.  If not keep static path 
 			if (len(important_Dy_Obstacles) != 0):
-				dynamic_wps = self.DL(wp_list[self.Index],wp_list[self.Index + 1],self.StaticObstacles,important_Dy_Obstacles,5)
+				
+				self.assumptions(True,None,important_Dy_Obstacles)
+
+				dynamic_wps = self.DL(self.wp_list[self.Index-1],self.wp_list[self.Index],self.StaticObstacles,important_Dy_Obstacles,5)
+				dynamic_wps.append(self.wp_list[Index-1])
 				self.set_vehicle_waypoints(dynamic_wps)
 
 
 			# while still between wps and manuverable check for collisions.  
 			while(self.cs.wp_dist > 40):
-
+				if (self.quit == True):
+					return None
 				# localize_movingObstacles
-				important_Dy_Obstacles = self.getMovingObstacles(self,vehicle_wps,0)
+				current_path = [self.cord_System.toMeters([self.cs.lat,self.cs.lng,self.cs.alt])]
+				current_path.extend(vehicle_wps[(self.cs.wpno-1):])
+
+				important_Dy_Obstacles = self.getMovingObstacles(self,current_path,0)
 				self.expandedDynamicObstacles = important_Dy_Obstacles
 				
 				# checking and blocking.  
 				# Check new object locations against predicted path
 				# return false True if good and static Obstacles if not
-				current_loc = self.cord_System.toMeters([cs.lat,cs.lng,cs.alt])
+				current_loc = self.cord_System.toMeters([self.cs.lat,self.cs.lng,self.cs.alt])
 
 				self.assumptions(False,None,important_Dy_Obstacles)
 
@@ -214,9 +261,10 @@ class Avoidance:
 
 					# find usable path
 					while(is_Bad):
-						
-						current_loc = self.cord_System.toMeters([cs.lat,cs.lng,cs.alt])
-						wp_try = self.DL(current_loc,wp_list[self.Index + 1],self.expandedStaticObstacles,self.expandedDynamicObstacles,5)
+						if (self.quit == True):
+							return None
+						current_loc = self.cord_System.toMeters([self.cs.lat,self.cs.lng,self.cs.alt])
+						wp_try = self.DL(current_loc,self.wp_list[self.Index],self.expandedStaticObstacles,self.expandedDynamicObstacles,5)
 						current_list = [current_loc]
 						current_list.extend(wp_try)
 
@@ -242,7 +290,7 @@ class Avoidance:
 		self.expandedDynamicObstacles = []
 
 		# run again until at end of wp list
-		plan(index,wp_list)
+		plan(index)
 
 
 	def DLAS(self):
@@ -252,8 +300,9 @@ class Avoidance:
 
 
 	# start,goal,current,static,moving,timeout,expanded 
-	def DL(start,goal,current,staticObstacles,movingObstacles,timeout):
-
+	# def DL(start,goal,current,staticObstacles,movingObstacles,timeout):
+	def DL(self,start,goal,staticObstacles,movingObstacles,timeout):
+		current = start
 		with open('dlite/flight_information.txt',"w") as flightFile:
 
 			flightFile.write(str("Update 1"))
@@ -297,7 +346,7 @@ class Avoidance:
 				flightFile.write(str(' '))
 				flightFile.write(str(ob[3]))
 
-			if (moving):
+			if (movingObstacles != []):
 				for ob in movingObstacles:
 					flightFile.write(str('\n'))
 					flightFile.write("dynamic")
@@ -317,9 +366,12 @@ class Avoidance:
 					flightFile.write(str(ob[6]))
 
 
-		ttp = Process(target=DLAS)
+		ttp = threading.Thread(target=self.DLAS)
+		print 'thread created at: ', time.time()
 		ttp.start()
+		print 'thread started at: ', time.time()
 		ttp.join(timeout=3)
+		print 'thread joined at: ', time.time()
 
 # need to check if path finding failed
 
