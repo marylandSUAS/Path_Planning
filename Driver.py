@@ -1,4 +1,3 @@
-
 import sys
 sys.path.append('C:\Python27\Lib')
 sys.path.append('C:\Users\derek_000\Documents\Documents\MUAS\Path Planning')
@@ -23,19 +22,22 @@ import MAVLink
 MissionPlanner.MainV2.speechEnable = True
 
 
-import Mission_Testing
+# import Mission_Testing
 import Avoider
 import Cord_System
+
+def speak(strin):
+	print strin
+	MissionPlanner.MainV2.speechEngine.SpeakAsync(strin)
+
 
 
 # Driver
 
-Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Target','Landing']
+# Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Target','Landing']
 
 
 
-def run(avoider, Cord_System):
-	pass
 
 
 def monitor(AvoiderMethod,avoider):
@@ -53,10 +55,15 @@ def monitor(AvoiderMethod,avoider):
 
 def main():
 	# set home position for takeoff to wherever script is started
+
 	Home = [39.0829973,-76.9045262,100]
 	resetPoint1 = [39.0835220,-76.9064641,100,False]
 	resetPoint2 = [39.0828391,-76.9069147,100,False]
 	startPoint = [39.0826392,-76.9064212,100,False]
+	endpoint = [39.0836885,-76.9029611,100]
+
+	# mission = Mission_Testing.Mission('FreeState')
+
 	# initialize coordinate system
 	cordSystem = Cord_System.Cord_System(Home)
 	print "initalized coords"
@@ -73,18 +80,19 @@ def main():
 
 	number_of_tests = 1
 	for k in range(number_of_tests):
-		# thread this
+
 		# logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
 		# logger = Logger.logger(cs,cordSystem,logFile,None,'Flight_Logs/static_obstacles.txt') 
 		# avoider.addLogger(logger)
 		# print "added logger"
 
-		avoider.wp_list = [resetPoint1,resetPoint2,startPoint]
-		AvoiderMethod = threading.Thread(target=avoider.start)
+		avoider.wp_list = [startPoint,endpoint]
+		avoider.test()
+		# AvoiderMethod = threading.Thread(target=avoider.start)
 		print 'added avoider thread'
 
 		# logger.startlogging() 
-		AvoiderMethod.start()
+		# AvoiderMethod.start()
 		print "Avoider Running"
 
 		monitor(AvoiderMethod,avoider)
@@ -95,12 +103,14 @@ def main():
 		
 		while(cs.wpno < 2):
 			Script.Sleep(1000)
-
 		# logger.stoplogging()
 
-		while (cs.wpno < 4):
+
+		while(cs.wpno < 3):
 			Script.Sleep(1000)
-		return
+			
+		print 'reached wp, would restart now'
+		
 
 
 

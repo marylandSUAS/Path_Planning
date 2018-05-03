@@ -10,7 +10,6 @@ class Mission():
 		self.Emergent = []
 		self.SearchGridPoints = []
 
-	
 
 
 def Mission(mission):
@@ -18,22 +17,24 @@ def Mission(mission):
 	Mission_Class = Mission()
 
 	if (mission == 'FreeState'):
-		self.bounds.append([39.1116984,-77.1371448,0])
-		self.bounds.append([39.1076774,-77.1437323,0])
-		self.bounds.append([39.1058126,-77.1406960,0])
-		self.bounds.append([39.1070114,-77.1330786,0])
-		self.bounds.append([39.1085183,-77.1323276,0])
-		self.bounds.append([39.1092259,-77.1359754,0])
 
-		self.dropLoc = [39.1095006,-77.1377134,0]
+		self.Home = [39.0827766,-76.9045329,100]
+		self.bounds.append([39.0834553,-76.9015503,100])
+		self.bounds.append([39.0852209,-76.9020009,100])
+		self.bounds.append([39.0858871,-76.9048977,100])
+		self.bounds.append([39.0845713,-76.9081593,100])
+		self.bounds.append([39.0812734,-76.9091034,100])
 
-		self.MissionWPs.append([39.1088096,-77.1392906,0])
-		self.MissionWPs.append([39.1080354,-77.1418226,0])
-		self.MissionWPs.append([39.1067367,-77.1416080,0])
-		self.MissionWPs.append([39.1074360,-77.1371663,0])
-		self.MissionWPs.append([39.1075442,-77.1357930,0])
+		self.dropLoc = [39.0829536,-76.9045517,100]
 
-		self.offAxisLoc = [39.1100334,-77.1410608,0]
+		self.MissionWPs.append([39.0834845,-76.9032079,100])
+		self.MissionWPs.append([39.0823685,-76.9069576,100])
+		self.MissionWPs.append([39.0844839,-76.9060671,100])
+		self.MissionWPs.append([39.0840008,-76.9036156,100])
+
+		self.offAxisLoc = [39.0823685,-76.9043827,100]
+
+		self.Emergent = [39.0834429,-76.9048011,100]
 
 	if (mission == 'PGRC'):
 		pass

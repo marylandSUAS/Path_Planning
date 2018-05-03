@@ -28,19 +28,14 @@ class movingObs:
 		ob_File.close()
 		
 		# make new objects for each file
-		
-
-		
+			
 
 	def start(self):
 		self.Reading = True
 		self.loger.start()
 
-		
-
 	def stop(self):
 		self.Reading = False
-
 
 	# fix this
 	def run(self):
@@ -58,7 +53,6 @@ class movingObs:
 			print 'sleep: ',sleeptime
 			time.sleep(sleeptime)
 
-			
 
 	def file_len(self):
 	    i = 0

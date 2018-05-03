@@ -1,5 +1,6 @@
 import re
-from math import sqrt
+import time
+from math import pi,sin,cos,atan,fabs,atan2,asin,acos
 
 def closestPoint(gl, st, ob):
     lin = [gl[0]-st[0],gl[1]-st[1],gl[2]-st[2]]
@@ -20,10 +21,20 @@ def distPointLine(wp1, wp2, ob):
 
 def dist_static(wp1,wp2,ob):
     cp = closestPoint(wp1, wp2, ob)
-    if(cp[2] > ob[2]+ob[3]/2):
-        return ((ob[0]-cp[0])**2+(ob[1]-cp[1])**2+(ob[2]-cp[2])**2)**.5
+    dist2D = ((cp[0]-ob[0])**2+(cp[1]-ob[1])**2)**.5    
+
+    if(dist2D > ob[3]):
+        return ob[3]+5
+        
+    xdist = ((ob[3])**2-(dist2D)**2)**.5
+    phi = atan2(wp2[2]-wp1[2],((wp2[1]-wp1[1])**2+(wp2[0]-wp1[0])**2)**.5)
+    z1 = cp[2]+xdist*sin(phi)
+    z2 = cp[2]-xdist*sin(phi)
+
+    if(z1 > ob[2] and z2 > ob[2]):
+        return ob[3]+5
     else:
-        return distLineLine(ob,[ob[0],ob[1],0], wp1, wp2,ob[3])
+        return dist2D
         
 
 def distLineLine(ob1, ob2, wp1, wp2,radius):
@@ -49,53 +60,129 @@ def distLineLine(ob1, ob2, wp1, wp2,radius):
          return finalDist1
 
 
+def genPath(vehicle_wps,thetaOG):
+
+    if(thetaOG == None):
+        theta = atan2(vehicle_wps[1][1]-vehicle_wps[0][1],vehicle_wps[1][0]-vehicle_wps[0][0])
+        print 'new theta'
+    else:
+        theta = thetaOG
+        print 'OG'
+
+    wpto = 1
+    stepsize = 3.0
+    maxtheta = asin(stepsize/30)
+
+    loc = vehicle_wps[0]
+    theta = thetaOG
+    path = [loc]
+    while(wpto < len(vehicle_wps)):
+        dist = ((loc[0]-vehicle_wps[wpto][0])**2+(loc[1]-vehicle_wps[wpto][1])**2)**.5
+        linDist = dist
+        heightDif = vehicle_wps[wpto][2]-loc[2]
+        counter = 0
+        while(dist > stepsize):
+            dtheta = atan2(vehicle_wps[wpto][1]-loc[1],vehicle_wps[wpto][0]-loc[0])
+            print dtheta,' ',theta
+            diftheta = dtheta-theta
+            
+            if (fabs(diftheta) > maxtheta):
+                theta = theta+maxtheta*diftheta/fabs(diftheta)
+            else:
+                theta = theta+diftheta
+
+            step = [stepsize*cos(theta),stepsize*sin(theta)]
+
+
+            loc = [loc[0]+step[0],loc[1]+step[1],vehicle_wps[wpto][2]+heightDif*(1-(dist/linDist))]
+            path.append(loc)
+
+            dist = ((loc[0]-vehicle_wps[wpto][0])**2+(loc[1]-vehicle_wps[wpto][1])**2)**.5
+
+            counter = counter+1
+            if (counter > 150):
+                print 'failed'
+                return
+
+
+        wpto = wpto+1
+    return path
+
+
 # return is_bad,expaned Static, expanded Dynamic
-def Check(static_obs,dynamic_obs,vehicle_wps):
+def Check(static_obs,dynamic_obs,vehicle_wps,direc):
 
     static_collisions = []
     dynamic_collisions = []
-    waypointList = vehicle_wps
     addition = 3
 
-    return False,static_obs,dynamic_obs
-    for obstacle in static_obs:
-        for k in range(len(vehicle_wps)-1):
-        
-            temp = False
-            tempdist = dist_static(vehicle_wps[k],vehicle_wps[k+1],obstacle)
-            # print 'dist = ',tempdist
-            # print obstacle[3]
-            if (tempdist < obstacle[3]):
-                temp = True
+    if(len(vehicle_wps) < 2):
+        return False,static_obs,dynamic_obs
 
-        if(temp):
-            static_collisions.append(True)
-            print 'static collision'
-        else:
-            static_collisions.append(False)
-            print 'no static collision'
+    path = genPath(vehicle_wps,direc)
 
 
+    dynamic_collisions = []
     for obstacle in dynamic_obs:
-        for k in range(len(vehicle_wps)-1):
-
-            temp = False
-            # if dist between path and dynamic line
-            tempdist = distLineLine(obstacle, [obstacle[3],obstacle[4],obstacle[5]], vehicle_wps[k], vehicle_wps[k+1],obstacle[6])
-            # print 'tempdist = ',tempdist
-            if (tempdist < obstacle[6]):
+        temp = False
+        for point in path:
+            if (((obstacle[0]-point[0])**2+(obstacle[1]-point[1])**2+(obstacle[2]-point[2])**2)**.5 < obstacle[3]):
                 temp = True
 
-        if(temp):
-            print 'dynamic collision'
-            dynamic_collisions.append(True)
-        else:
-            print 'no dynamic collision'
-            dynamic_collisions.append(False)
+        dynamic_collisions.append(temp)
 
 
-    print static_collisions
-    print dynamic_collisions
+    static_collisions = []
+    for obstacle in static_obs:
+        temp = False
+        for point in path:
+            if (((obstacle[0]-point[0])**2+(obstacle[1]-point[1])**2)**.5 < obstacle[3] and point[2] < obstacle[2]):
+                temp = True
+
+        static_collisions.append(temp)
+     
+
+    
+    # for obstacle in static_obs:
+    #     for k in range(len(vehicle_wps)-1):
+    #         temp = False
+
+    #         tempdist = dist_static(vehicle_wps[k],vehicle_wps[k+1],obstacle)
+    #         # print 'dist = ',tempdist
+    #         # print obstacle[3]
+    #         if (tempdist < obstacle[3]):
+    #             temp = True
+
+    #     if(temp):
+    #         static_collisions.append(True)
+    #         # print 'static collision'
+    #     else:
+    #         static_collisions.append(False)
+    #         # print 'no static collision'
+
+
+    # for obstacle in dynamic_obs:
+    #     for k in range(len(vehicle_wps)-1):
+
+    #         temp = False
+
+
+    #         # if dist between path and dynamic line
+    #         tempdist = distLineLine(obstacle, [obstacle[3],obstacle[4],obstacle[5]], vehicle_wps[k], vehicle_wps[k+1],obstacle[6])
+    #         # print 'tempdist = ',tempdist
+    #         if (tempdist < obstacle[6]):
+    #             temp = True
+
+    #     if(temp):
+    #         # print 'dynamic collision'
+    #         dynamic_collisions.append(True)
+    #     else:
+    #         # print 'no dynamic collision'
+    #         dynamic_collisions.append(False)
+
+
+    print 'static collisions', static_collisions
+    print 'dynamic_collisions', dynamic_collisions
 
     is_bad = False
     final_static_obs = []
@@ -103,6 +190,7 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
         if (static_collisions[k]):
             final_static_obs.append([static_obs[k][0],static_obs[k][1],static_obs[k][2],static_obs[k][3]+addition])
             is_bad = True  
+
         else:
             final_static_obs.append(static_obs[k])
 
@@ -118,7 +206,7 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
     return is_bad, final_static_obs, final_dynamic_obs
 
 
-# st1 = [0,0,50,10]
+# st1 = [0,1,55,10]
 # st2 = [-10,30,50,8]
 # st3 = [20,-30,50,5]
 # statics = [st1,st2,st3]
@@ -127,8 +215,25 @@ def Check(static_obs,dynamic_obs,vehicle_wps):
 # dy2 = [-60,10,50,-60,-10,50,10]
 # dy3 = [-40,10,50,-40,-10,50,10]
 # dynamics = [dy1,dy2,dy3]
+# # dynamics = []
 
-# vwps = [[-150,0,50],[150,0,50]]
 
-# chk = Check(statics,dynamics,vwps)
-# print chk
+# wps = [[-150,0,50],[0,100,50],[150,0,50]]
+# startTime = time.time()
+# # path = genPath(wps,-pi*.25)
+
+
+
+# # BFile = open('Output_Path_gen.txt',"w")
+        
+# # for point in path:
+# #     BFile.write(str(point))
+# #     BFile.write('\n')    
+                
+# # BFile.close()
+
+# is_bad, final_static_obs, final_dynamic_obs = Check(statics,dynamics,wps,None)
+# print 'time taken: ', time.time()-startTime
+# print is_bad
+# print final_static_obs
+# print final_dynamic_obs
