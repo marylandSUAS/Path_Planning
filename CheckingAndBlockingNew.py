@@ -74,7 +74,7 @@ def genPath(vehicle_wps,thetaOG):
     maxtheta = asin(stepsize/30)
 
     loc = vehicle_wps[0]
-    theta = thetaOG
+    # theta = thetaOG
     path = [loc]
     while(wpto < len(vehicle_wps)):
         dist = ((loc[0]-vehicle_wps[wpto][0])**2+(loc[1]-vehicle_wps[wpto][1])**2)**.5

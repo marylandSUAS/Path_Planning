@@ -8,30 +8,38 @@ class Cord_System:
 
 	def __init__(self,start):
 		self.Home = start
-		rad_Earth = 6378160
+		rad_Earth = 6378160.0
 		self.dlng = (pi/180)*rad_Earth*cos(start[0]*pi/180);
 		self.dlat = (pi/180)*rad_Earth
+		# d's are large
 		# print 1/self.dlat
 		# print 1/self.dlng
 
-	def toMeters(self,GPS):
-		x = (GPS[1]-self.Home[1])/self.dlng;
-		y = (GPS[0]-self.Home[0])/self.dlat;
-		
-		return [x,y,GPS[2]]
-
+	def toMeters(self,GPS): 
+		x = (GPS[1]-self.Home[1])*self.dlng
+		y = (GPS[0]-self.Home[0])*self.dlat
+		if(len(GPS) == 4):
+			return [x,y,GPS[2],GPS[3]]
+		else:
+			return [x,y,GPS[2]]
 
 	def toGPS(self,Meters):
-		lng = Meters[0]/self.dlng;
-		lat = Meters[1]/self.dlat;
-		
-		return [lat,lng,Meters[2]]
+		lng = (Meters[0]/self.dlng)+self.Home[1]
+		lat = (Meters[1]/self.dlat)+self.Home[0]
+		if(len(Meters) == 4):
+			return [lat,lng,Meters[2],Meters[3]]
+		else:
+			return [lat,lng,Meters[2]]
 
 
-# test = Cord_System([72,-46,0])
+# test = Cord_System([39.0829973,-76.9045262,100.0])
 
-# GPSpoint = [.0001,.0001,50]
+# GPSpoint = [39.0836885,-76.9029611,50.0]
+
 # Meterspoint = [50,50,50]
 
-# print test.toMeters(GPSpoint)
-# print test.toGPS(Meterspoint)
+# print 'OGpoint: ',GPSpoint
+# one = test.toMeters(GPSpoint)
+# print one
+# two = test.toGPS(one)
+# print 'Meters:  ',two

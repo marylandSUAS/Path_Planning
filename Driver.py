@@ -25,6 +25,7 @@ MissionPlanner.MainV2.speechEnable = True
 # import Mission_Testing
 import Avoider
 import Cord_System
+import functions
 
 def speak(strin):
 	print strin
@@ -32,35 +33,18 @@ def speak(strin):
 
 
 
-# Driver
-
-# Tasks = ['Takeoff','Navigation','Payload','Off Axis','Search Grid','Emergent Target','Landing']
 
 
 
-
-
-def monitor(AvoiderMethod,avoider):
-	while(AvoiderMethod.isAlive()):
-		print 'Index:, ',avoider.Index
-		# print 'Assumptions: '
-		# print avoider.assumptions
-		# if (avoider.assumptions != []):
-		# 	for assum in avoider.assumptions:
-		# 		print assum
-		# else:
-		# 	print 'None'
-		
-		time.sleep(.5)
 
 def main():
 	# set home position for takeoff to wherever script is started
+	Home = [39.0829973,-76.9045262,100.0]
 
-	Home = [39.0829973,-76.9045262,100]
-	resetPoint1 = [39.0835220,-76.9064641,100,False]
-	resetPoint2 = [39.0828391,-76.9069147,100,False]
-	startPoint = [39.0826392,-76.9064212,100,False]
-	endpoint = [39.0836885,-76.9029611,100]
+	resetPoint1 = [39.0835220,-76.9064641,100.0,False]
+	resetPoint2 = [39.0828391,-76.9069147,100.0,False]
+	startPoint = [39.0826392,-76.9064212,100.0,False]
+	endpoint = [39.0836885,-76.9029611,100.0, True]
 
 	# mission = Mission_Testing.Mission('FreeState')
 
@@ -68,10 +52,14 @@ def main():
 	cordSystem = Cord_System.Cord_System(Home)
 	print "initalized coords"
 
+	resetPoint1 = cordSystem.toMeters([39.0835220,-76.9064641,100.0,False])
+	resetPoint2 = cordSystem.toMeters([39.0828391,-76.9069147,100.0,False])
+	startPoint = cordSystem.toMeters([39.0826392,-76.9064212,100.0,False])
+	endpoint = cordSystem.toMeters([39.0836885,-76.9029611,100.0, True])
 
 	# create avoidance class to control vehicle during obstacle avoidance (Home,cs,MAV)
 	# avoider = avoidance(Home,cs,MAV,cord_System)
-	avoider = Avoider.Avoidance(Home,cs,MAV,cordSystem)
+	avoider = Avoider.Avoidance(cs,MAV,cordSystem)
 	print "initalized avoider"
 
 	# return
@@ -82,27 +70,36 @@ def main():
 	for k in range(number_of_tests):
 
 		# logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
-		# logger = Logger.logger(cs,cordSystem,logFile,None,'Flight_Logs/static_obstacles.txt') 
+		# logger = Logger.logger(cs,cordSystem,logFile,None,'PathPlanning/Flight_Logs/static_obstacles.txt') 
 		# avoider.addLogger(logger)
 		# print "added logger"
 
-		avoider.wp_list = [startPoint,endpoint]
-		avoider.test()
+		avoider.wp_list = [startPoint, endpoint]
+		# avoider.test()
 		# AvoiderMethod = threading.Thread(target=avoider.start)
-		print 'added avoider thread'
-
+		# print 'added avoider thread'
+		avoider.set_vehicle_waypoints([resetPoint1,resetPoint2,startPoint])
+		while(cs.wpno < 2):
+			Script.Sleep(1000)
+		
+		avoider.start()
+		# avoider.test()
+		
 		# logger.startlogging() 
 		# AvoiderMethod.start()
-		print "Avoider Running"
+		# print "Avoider Running"
 
-		monitor(AvoiderMethod,avoider)
-		print 'finished monitoring'
+		# monitor(AvoiderMethod,avoider)
+		# print 'finished monitoring'
+		return
+		
 		avoider.set_vehicle_waypoints([resetPoint1,resetPoint2,startPoint])
 		print 'returning'
 		
 		
 		while(cs.wpno < 2):
 			Script.Sleep(1000)
+			print 'waiting until reached wp 2'
 		# logger.stoplogging()
 
 
@@ -111,8 +108,4 @@ def main():
 			
 		print 'reached wp, would restart now'
 		
-
-
-
-
 main()
