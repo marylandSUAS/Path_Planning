@@ -1,15 +1,17 @@
 import sys
 sys.path.append('C:\Python27\Lib')
-sys.path.append('C:\Users\derek_000\Documents\Documents\MUAS\Path Planning')
+sys.path.append('C:\Users\derek_000\Documents\Documents\MUAS\Path_Planning')
 import math
 from math import pi,sin,cos,atan,atan2
 import clr
 import time
 import System
 from System import Byte
-
+import os
 import threading
-import Logger
+
+
+
 
 
 
@@ -22,7 +24,7 @@ import MAVLink
 MissionPlanner.MainV2.speechEnable = True
 
 
-# import Mission_Testing
+import Logger
 import Avoider
 import Cord_System
 import missionFunctions as MF
@@ -52,12 +54,10 @@ cordSystem = Cord_System.Cord_System(Home)
 print "initalized coords"
 
 # create avoidance class to control vehicle during obstacle avoidance
-avoider = Avoider.Avoidance(cs,MAV,cordSystem)
-print "initalized avoider"
+# avoider = Avoider.Avoidance(cs,MAV,cordSystem)
 
 # create avoidance class to control vehicle during obstacle avoidance
 missionFunc = MF.missionTasks(cs,MAV,cordSystem)
-print "initalized mission functions"
 
 
 resetPoint1 = cordSystem.toMeters([39.0835220,-76.9064641,100.0,False])
@@ -67,19 +67,15 @@ endpoint = cordSystem.toMeters([39.0836885,-76.9029611,100.0, True])
 
 
 
-# logFile = 'Paper_Flight_Record' + str(k+1) + '.txt'
-# logger = Logger.logger(cs,cordSystem,logFile,None,'PathPlanning/Flight_Logs/static_obstacles.txt') 
-# avoider.addLogger(logger)
 
-avoider.wp_list = [startPoint, endpoint]
-
-# logger.startlogging() 
+# avoider.wp_list = [startPoint, endpoint]
 
 
-
+# missionFunc.takeoff(Home)
 missionFunc.offAxis()
-missionFunc.payloadDrop()
+# missionFunc.payloadDrop()
+# missionFunc.Land()
+
 
 # avoider.start()
 
-# logger.stoplogging() 

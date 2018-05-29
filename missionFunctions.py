@@ -36,6 +36,8 @@ class missionTasks:
 
 		self.TakeoffWps = self.takeoffSet()
 		# self.takeoffPoint = []
+		print "initalized mission functions"
+
 
 	def speak(self,strin):
 		MissionPlanner.MainV2.speechEngine.SpeakAsync(strin)		
@@ -158,12 +160,14 @@ class missionTasks:
 		self.set_MP_wps(self.offAxiswps)
 		while(self.cs.wpno < 3):
 			time.sleep(.1)
-
+		print '1'
 		self.speak('Attempting Off Axis')
 
 		while(self.cs.wpno < 7):
 			time.sleep(.01)
-		
+
+		time.sleep(1)		
+
 		while(self.cs.wp_dist > 40):
 			time.sleep(.01)
 
@@ -255,7 +259,7 @@ class missionTasks:
 
 	# done
 	def Land(self):
-		self.set_MP_wps(self.dropwps)
+		self.set_MP_wps(self.landingwps)
 		self.speak('Landing')
 
 		while(self.cs.wpno < 3):

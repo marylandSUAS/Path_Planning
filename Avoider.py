@@ -45,8 +45,11 @@ class Avoidance:
 
 		self.localizer = movingObs('PathPlanning/data/moving_obstacles.txt')
 
-		# self.Bounds = []
-		# self.addBounds()
+		self.Bounds = []
+		self.addBounds()
+
+		print "initalized avoider"
+
 
 	def currentLoc(self):
 		pass
@@ -313,7 +316,7 @@ class Avoidance:
 				self.MAV.setWPCurrent(1)
 		self.MAV.setMode("Auto")
 
-		OFile = open('GUI/waypoints.txt',"w")
+		OFile = open('PathPlanning/GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(i != 0):
 				OFile.write(str('\n'))

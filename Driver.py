@@ -1,6 +1,6 @@
 import sys
 sys.path.append('C:\Python27\Lib')
-sys.path.append('C:\Users\derek_000\Documents\Documents\MUAS\Path Planning')
+sys.path.append('C:\Users\derek_000\Documents\Documents\MUAS\Path_Planning')
 import math
 from math import pi,sin,cos,atan,atan2
 import clr
