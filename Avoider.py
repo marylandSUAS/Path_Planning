@@ -1,5 +1,5 @@
 # CLASS AVOIDER
-import os
+# import os
 import localization
 from localization import movingObs
 # import CheckingAndBlockingNew
@@ -389,6 +389,31 @@ class Avoidance:
 		# sends up initial static path before reaching first wp
 		self.set_vehicle_waypoints(staticPath)
 		while(self.cs.wpno < len(staticPath)):
+			time.sleep(.01)
+		time.sleep(1)
+		while(self.cs.wp_dist > 40):
+			time.sleep(.01)
+
+	def dynamicPlan(self, wp1, wp2):
+		self.set_vehicle_waypoints([wp1,wp2])
+		# gets static path for dlite to run off of and to initially set		
+		staticPath = [wp1]
+		temp_points = self.DL(wp1,wp2,self.StaticObstacles,[],3)
+		# if(temp_points != []):
+		staticPath.extend(temp_points)
+		staticPath.append(wp2)
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		
+		dyanmicPath = [wp1]
+		temp_points = self.DL(wp1,wp2,self.StaticObstacles,important_Dy_Obstacles,3)
+		dyanmicPath.extend(temp_points)
+		dyanmicPath.append(wp2)
+		
+		# print 'Total Path in Meters: ',staticPath
+
+		# sends up initial static path before reaching first wp
+		self.set_vehicle_waypoints(dyanmicPath)
+		while(self.cs.wpno < len(dyanmicPath)):
 			time.sleep(.01)
 		time.sleep(1)
 		while(self.cs.wp_dist > 40):

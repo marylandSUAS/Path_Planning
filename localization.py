@@ -35,6 +35,7 @@ class movingObs:
 		self.loger.start()
 
 	def stop(self):
+		pass
 		self.Reading = False
 
 	# fix this
@@ -53,7 +54,6 @@ class movingObs:
 			print 'sleep: ',sleeptime
 			time.sleep(sleeptime)
 
-
 	def file_len(self):
 	    i = 0
 	    file = open(self.fileLoc,"r")
@@ -61,7 +61,6 @@ class movingObs:
 	    	i += 1
 	    file.close()
 	    return i
-
 
 	# returns each object distance, [closest point,radius]
 	def closestApproach(self,pos,vel,time):
@@ -107,9 +106,6 @@ class dynamics_Ob:
 		pass
 		self.Radius = rad
 
-
-
-
 	def addLoc(self,X,Y,Z):
 		self.xVels.pop()
 		self.yVels.pop()
@@ -153,7 +149,6 @@ class dynamics_Ob:
 				self.nodesVec.append([temp_theta,temp_phi])
 		
 		self.loc = [X,Y,Z]		
-
 
 	def timeAtClosestApproach(self,Pos1,Vel1,Pos2,Vel2):
 		p1 = Pos2[0]-Pos1[0]

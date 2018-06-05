@@ -1,16 +1,14 @@
 import sys
-sys.path.append('C:\Python27\Lib')
-sys.path.append('C:\Users\derek_000\Documents\Documents\MUAS\Path_Planning')
 import math
 from math import pi,sin,cos,atan,atan2
-import clr
 import time
-import System
-from System import Byte
-import os
+import clr
+
+
+sys.path.append('C:\\Users\\imaging2.0\\Documents\\MUAS-18\\Path_Planning\\Path_Planning')
+sys.path.append('C:\\Python27\\Lib')
+
 import threading
-
-
 
 
 
@@ -24,10 +22,11 @@ import MAVLink
 MissionPlanner.MainV2.speechEnable = True
 
 
-import Logger
+
 import Avoider
 import Cord_System
 import missionFunctions as MF
+
 
 def speak(strin):
 	print strin
