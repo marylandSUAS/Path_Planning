@@ -11,6 +11,8 @@ import MissionPlanner
 from MissionPlanner.Utilities import Locationwp
 import MAVLink
 
+import math
+
 class Avoidance:
 
 
@@ -18,7 +20,7 @@ class Avoidance:
 		
 		self.Safety_Margin = 6
 		self.cruise = 16	
-		self.dataPath = 'dlite/flight_information.txt'
+		self.dataPath = 'Path_Planning/dlite/flight_information.txt'
 
 
 		self.cord_System = cord_Sys
@@ -41,9 +43,9 @@ class Avoidance:
 		self.printLocThread.start()
 		
 		self.StaticObstacles = []
-		self.addStaticObstacles('data/static_obstacles.txt')
+		self.addStaticObstacles('Path_Planning/data/static_obstacles.txt')
 
-		self.localizer = movingObs('data/moving_obstacles.txt')
+		self.localizer = movingObs('Path_Planning/data/moving_obstacles.txt')
 
 		self.Bounds = []
 		self.addBounds()
@@ -61,7 +63,7 @@ class Avoidance:
 			
 			loc = self.currentLoc()
 
-			senarioFile = open('GUI/current_state.txt',"w")
+			senarioFile = open('Path_Planning/GUI/current_state.txt',"w")
 			senarioFile.write(str(loc[0]))
 			senarioFile.write(str(' '))
 			senarioFile.write(str(loc[1]))
@@ -98,7 +100,7 @@ class Avoidance:
 			self.logger.assuption = temp
 
 	def checkStaticOnly(self):
-		OFile = open('GUI/static_bool.txt',"r")
+		OFile = open('Path_Planning/GUI/static_bool.txt',"r")
 		dat = OFile.readline().split(" ")
 		stat = False
 		if(dat[0] == 1):
@@ -124,7 +126,7 @@ class Avoidance:
 		
 		OFile.close()
 
-		OFile = open('GUI/static_obstacles.txt',"w")
+		OFile = open('Path_Planning/GUI/static_obstacles.txt',"w")
 		for i in range(len(self.StaticObstacles)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -140,7 +142,7 @@ class Avoidance:
 
 	def addBounds(self):
 
-
+		'''
 		# flying field 		
 		self.Bounds.append(self.cord_System.toMeters([38.3652183,-76.5409541,50]))
 		self.Bounds.append(self.cord_System.toMeters([38.3641457,-76.5325481,50]))
@@ -150,22 +152,21 @@ class Avoidance:
 
 		'''
 		# competition
-		self.Bounds.append(self.cord_System.toMeters([38.1466738,-76.4279151]))
-		self.Bounds.append(self.cord_System.toMeters([38.1512131,-76.4292884]))
-		self.Bounds.append(self.cord_System.toMeters([38.1519386,-76.4314556]))
-		self.Bounds.append(self.cord_System.toMeters([38.1506056,-76.4353824]))
-		self.Bounds.append(self.cord_System.toMeters([38.1481082,-76.4330006]))
-		self.Bounds.append(self.cord_System.toMeters([38.1447501,-76.4327645]))
-		self.Bounds.append(self.cord_System.toMeters([38.1432650,-76.4346743]))
-		self.Bounds.append(self.cord_System.toMeters([38.1404973,-76.4327431]))
-		self.Bounds.append(self.cord_System.toMeters([38.1404973,-76.4260697]))
-		self.Bounds.append(self.cord_System.toMeters([38.1439738,-76.4213920]))
-		self.Bounds.append(self.cord_System.toMeters([38.1471801,-76.4234304]))
-		self.Bounds.append(self.cord_System.toMeters([38.1462857,-76.4264131]))
+		self.Bounds.append(self.cord_System.toMeters([38.1466738,-76.4279151,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1512131,-76.4292884,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1519386,-76.4314556,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1506056,-76.4353824,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1481082,-76.4330006,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1447501,-76.4327645,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1432650,-76.4346743,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1404973,-76.4327431,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1404973,-76.4260697,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1439738,-76.4213920,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1471801,-76.4234304,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.1462857,-76.4264131,0.0]))
 
-		'''
 
-		OFile = open('GUI/boundry.txt',"w")
+		OFile = open('Path_Planning/GUI/boundry.txt',"w")
 		for i in range(len(self.Bounds)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -175,7 +176,7 @@ class Avoidance:
 		OFile.close()
 
 
-		OFile = open('dlite/boundry.txt',"w")
+		OFile = open('Path_Planning/dlite/boundry.txt',"w")
 		for i in range(len(self.Bounds)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -218,7 +219,7 @@ class Avoidance:
 			plus_dist, plus_error = self.localizer.closestApproach(Pos,Vel,Time)
 			
 			for k in range(len(minus_dist)):
-				if (minus_dist[k] < minus_error[k][3]+self.Safety_Margin or plus_dist[k] < plus_error[k][3]+self.Safety_Margin):
+				if (minus_dist[k] < minus_error[k][3]+self.Safety_Margin*3 or plus_dist[k] < plus_error[k][3]+self.Safety_Margin*3):
 					tempOb = [minus_error[0],minus_error[1],minus_error[2],plus_error[0],plus_error[1],plus_error[2],minus_error[3]]
 					Important_moving_Obs.append(tempOb)
 
@@ -227,7 +228,7 @@ class Avoidance:
 			# add time based off angle and time it takes turn
 			# could be like turn radius/cruise_speed time sin angle
 
-		OFile = open('GUI/moving_obstacles_predicted.txt',"w")
+		OFile = open('Path_Planning/GUI/moving_obstacles_predicted.txt',"w")
 		for i in range(len(Important_moving_Obs)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -247,7 +248,6 @@ class Avoidance:
 		OFile.close()
 
 		return Important_moving_Obs
-
 
 	def start(self):
 		print 'start planning'
@@ -269,54 +269,6 @@ class Avoidance:
 
 		print 'finished planning'
 	
-	def cameraGrid(self):
-
-		cameraGridFile = 'data/CameraGridFile.Mission'
-
-		avoidanceIndex = [0,1]
-		with open(cameraGridFile,"r") as globallist:
-			gridList = []
-
-			if (globallist.readline().split(" ")[1] != "WPL"):
-				print "Nothing found"
-
-			else:
-				dat = globallist.readline()
-				i = 0
-				while(len(dat) > 1):
-					dat = globallist.readline().split("	")
-
-					if (int(dat[3]) == 16):
-						point = self.cord_System.toMeters([float(dat[8]),float(dat[9]),float(dat[10])])
-					if(avoidanceIndex[i] == 1):
-						point.append(True)
-					else:
-						point.append(False)
-					lst.append(point)
-					i = i+1
-						
-
-
-
-		self.MAV.setWPTotal(3)	
-		self.MAV.setWP(Locationwp().Set(self.Home[0],self.Home[1],self.Home[2], 16),0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-		
-		temp = Locationwp()
-		Locationwp.id.SetValue(cam, 203)
-		Locationwp.p1.SetValue(cam, 45)
-		self.MAV.setWP(temp)
-
-		tempcord = self.cord_System.toGPS([wps[i][0],wps[i][1],wps[i][2]])
-		self.MAV.setWP(Locationwp().Set(tempcord[0],tempcord[1],tempcord[2],16),1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
-		
-		self.MAV.setWPCurrent(1)
-		self.MAV.setMode("Auto")
-
-		while(self.cs.wpno < 2):
-			time.sleep(.05)
-
-		self.wp_list = lst
-		self.start()
 
 	#updates vehicle_wps and sends to plane
 	def set_vehicle_waypoints(self,wps):
@@ -330,7 +282,7 @@ class Avoidance:
 				self.MAV.setWPCurrent(1)
 		self.MAV.setMode("Auto")
 
-		OFile = open('GUI/waypoints.txt',"w")
+		OFile = open('Path_Planning/GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -347,15 +299,6 @@ class Avoidance:
 		while(self.pause):
 			time.sleep(.1)
 		self.MAV.setMode("Auto")
-
-	# def get_current_index(self):
-	# 	pass
-	# 	return self.Index
-
-	# def get_current_status(self):
-	# 	pass
-	# 	return 'Probably Still good'
-
 
 	def test(self):
 		# static path and send
@@ -382,7 +325,6 @@ class Avoidance:
 		print 'is bad: ', is_Bad
 		print 'statics: ', expandedStatics
 		print 'dynamics: ',expandedDynamics
-
 
 	def notPlan(self,wp1,wp2):
 		self.set_vehicle_waypoints([wp1,wp2])
@@ -536,13 +478,13 @@ class Avoidance:
 		# self.expandedDynamicObstacles = []
 
 
-
-
 	# start,goal,current,static,moving,timeout,expanded 
 	def DL(self,start,goal,staticObstacles,movingObstacles,timeouttaken):
 		# currentGPS = startGPS
+		return []
+
 		current = start
-		with open('dlite/flight_information.txt',"w") as flightFile:
+		with open('Path_Planning/dlite/flight_information.txt',"w") as flightFile:
 
 			flightFile.write(str("Update 1 "))
 
@@ -586,7 +528,7 @@ class Avoidance:
 				flightFile.write(str(' '))
 				flightFile.write(str(ob[2]))
 				flightFile.write(str(' '))
-				flightFile.write(str(ob[3]))
+				flightFile.write(str(ob[3]+self.Safety_Margin))
 
 			if (movingObstacles != []):
 				for ob in movingObstacles:
@@ -605,9 +547,9 @@ class Avoidance:
 					flightFile.write(str(' '))
 					flightFile.write(str(ob[5]))
 					flightFile.write(str(' '))
-					flightFile.write(str(ob[6]))
+					flightFile.write(str(ob[6]+self.Safety_Margin))
 
-		with open('dlite/intermediate_waypoints.txt',"w") as shortfile:
+		with open('Path_Planning/dlite/intermediate_waypoints.txt',"w") as shortfile:
 			shortfile.write(str("Update 0 "))
 
 		# this 
@@ -620,7 +562,7 @@ class Avoidance:
 		
 		while (time.time()-startTime < 3):
 			
-			with open('dlite/intermediate_waypoints.txt',"r") as intermediate_file:
+			with open('Path_Planning/dlite/intermediate_waypoints.txt',"r") as intermediate_file:
 				firstline = intermediate_file.readline()
 				# print 'first line is', firstline
 				if (firstline == 'Changed 1\n'):
@@ -637,11 +579,201 @@ class Avoidance:
 
 			time.sleep(.02)
 
-		with open('dlite/flight_information.txt',"w") as shortfile:
+		with open('Path_Planning/dlite/flight_information.txt',"w") as shortfile:
 			shortfile.write(str("Update 2 "))
 
 		print 'Failed to run'
 		return []
 
+
+
+	# should be good
+	def takeoff(self,waypoint):
+		wp = self.cord_System.WptoMeter(waypoint)
+		while(self.cs.wpno < 2):
+			time.sleep(.05)
 		
+		staticPath = [self.currentLoc()]
+		temp_points = self.DL(self.currentLoc(),wp,self.StaticObstacles,[],3)
+		staticPath.extend(temp_points)
+		staticPath.append(wp)
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		finalPath = temp_points
+		if(len(important_Dy_Obstacles) > 0):
+			temp_points2 = self.DL(staticPath[0],wp,self.StaticObstacles,important_Dy_Obstacles,3)
+			finalPath = temp_points2
+
+		for point in finalPath:
+			self.setGuidedModeWP(self.cord_System.MetertoWp(point))
+			while(self.cs.wp_dist < 30):
+				time.sleep(.05)
+
+		self.MAV.setMode('Auto')
+		while(self.cs.wp_dist < 30):
+				time.sleep(.05)
+
+	# should be good
+	def missionWps(self,wp,num,nextWP):
 		
+		wp.append(nextWP)
+
+		for k in range(len(wp)-1):
+			
+			staticPath = [self.cord_System.WptoMeter(wp[k])]
+			temp_points = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,[],3)
+			staticPath.extend(temp_points)
+			staticPath.append(self.cord_System.WptoMeter(wp[k+1]))
+
+			while(self.cs.wpno < num-len(wp)+k+3):
+				time.sleep(.05)
+
+			important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+			finalPath = temp_points
+			
+			if(len(important_Dy_Obstacles) > 0):
+				finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
+			
+			for wp in finalPath:
+				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				while(self.cs.wp_dist > 30):
+					time.sleep(.05)
+			self.MAV.setMode('Auto')
+			while(self.cs.wp_dist > 40):
+				time.sleep(.05)
+	
+	# should be good
+	def droppayload(self,num,wp1,wp2):
+		staticPath = [self.cord_System.WptoMeter(wp1)]
+		temp_points = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,[],3)
+		staticPath.extend(temp_points)
+		staticPath.append(self.cord_System.WptoMeter(wp2))
+
+
+		while(self.cs.wpno < num+1):
+			time.sleep(.05)
+
+
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		finalPath = temp_points
+			
+		if(len(important_Dy_Obstacles) > 0):
+			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
+			
+			for wp in finalPath:
+				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				while(self.cs.wp_dist > 30):
+					time.sleep(.05)	
+		self.MAV.setMode('Auto')
+		while(self.cs.wp_dist > 40 and self.cs.wpno < wp1num+2):
+			time.sleep(.05)
+
+	# should be good
+	def grid(wp,num,plan,nextWP):
+
+		while(self.cs.wpno < num-len(wp)+3):
+					time.sleep(.05)
+
+
+		for k in range(len(wp)-1):
+			if(plan[k+1]):
+				staticPath = [wp[k]]
+				temp_points = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,[],3)
+				staticPath.extend(temp_points)
+				staticPath.append(self.cord_System.WptoMeter(wp[k+1]))
+
+				important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+				finalPath = temp_points
+
+				if(len(important_Dy_Obstacles) > 0):
+					finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
+
+				for wp in finalPath:
+					self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+					while(self.cs.wp_dist > 30):
+						time.sleep(.05)
+
+				self.MAV.setMode('Auto')
+				while(self.cs.wpno < num-len(wp)+3+k):
+					time.sleep(.05)
+
+			else:
+				while(self.cs.wpno < num-len(wp)+3+k):
+					time.sleep(.05)
+
+
+
+
+		staticPath = [self.cord_System.WptoMeter(wp[len(wp-1)])]
+		temp_points = self.DL(self.cord_System.WptoMeter(wp[len(wp-1)]),self.cord_System.WptoMeter(nextWP),self.StaticObstacles,[],3)
+		staticPath.extend(temp_points)
+		staticPath.append(self.cord_System.WptoMeter(nextWP))
+
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		finalPath = temp_points
+		
+		if(len(important_Dy_Obstacles) > 0):
+			finalPath = self.DL(self.cord_System.WptoMeter(wp[len(wp-1)]),self.cord_System.WptoMeter(nextWP),self.StaticObstacles,important_Dy_Obstacles,3)
+
+		for wp in finalPath:
+			self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+			while(self.cs.wp_dist > 30):
+				time.sleep(.05)
+
+		self.MAV.setMode('Auto')
+		while(self.cs.wpno < num-len(wp)+3+k):
+			time.sleep(.05)
+
+	# should be good to go
+	def emergent(self,num,wp1,wp2):
+		staticPath = [self.cord_System.WptoMeter(wp1)]
+		temp_points = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,[],3)
+		staticPath.extend(temp_points)
+		staticPath.append(self.cord_System.WptoMeter(wp2))
+
+
+		while(self.cs.wpno < num+1):
+			time.sleep(.05)
+
+
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		finalPath = temp_points
+			
+		if(len(important_Dy_Obstacles) > 0):
+			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
+			
+			for wp in finalPath:
+				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				while(self.cs.wp_dist > 30):
+					time.sleep(.05)	
+		self.MAV.setMode('Auto')
+		while(self.cs.wp_dist > 40 and self.cs.wpno < wp1num+2):
+			time.sleep(.05)
+
+	# should be good
+	def offaxis(self,num,wp1,wp2):
+		staticPath = [self.cord_System.WptoMeter(wp1)]
+		temp_points = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,[],3)
+		staticPath.extend(temp_points)
+		staticPath.append(self.cord_System.WptoMeter(wp2))
+
+
+		while(self.cs.wpno < num+1):
+			time.sleep(.05)
+
+
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		finalPath = temp_points
+			
+		if(len(important_Dy_Obstacles) > 0):
+			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
+			
+			for wp in finalPath:
+				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				while(self.cs.wp_dist > 30):
+					time.sleep(.05)	
+		self.MAV.setMode('Auto')
+		while(self.cs.wp_dist > 40 and self.cs.wpno < wp1num+2):
+			time.sleep(.05)
+
+
+

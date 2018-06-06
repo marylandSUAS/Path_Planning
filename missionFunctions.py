@@ -36,6 +36,7 @@ class missionTasks:
 		self.offAxisMeters = self.cord_System.toMeters(self.offAxisloc)
 		self.offAxiswps = self.offAxisSet()
 
+
 		# southern maryland
 		# self.emergentloc = [38.3652078,-76.5366331,50]
 		# competition
@@ -43,6 +44,7 @@ class missionTasks:
 		self.emergentMeters = self.cord_System.toMeters(self.emergentloc)
 		self.emergentwps = self.emergentwpsSet()
 		
+
 		self.LandLoc = self.Home
 		self.landingwps = self.landSet()
 
@@ -50,6 +52,7 @@ class missionTasks:
 		# self.takeoffPoint = []
 
 		self.searchGridWps = self.searchGridSet()
+		self.searchGridPlan = [False]*len(self.searchGridWps)
 
 		print "initalized mission functions"
 
@@ -68,7 +71,7 @@ class missionTasks:
 				self.MAV.setWPCurrent(1)
 
 		self.MAV.setMode("Auto")
-		OFile = open('GUI/waypoints.txt',"w")
+		OFile = open('Path_Planning/GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(wps[i].id == 16):
 				if(i != 0):
@@ -92,7 +95,7 @@ class missionTasks:
 				self.MAV.setWPCurrent(1)
 		self.MAV.setMode("Auto")
 
-		OFile = open('GUI/waypoints.txt',"w")
+		OFile = open('Path_Planning/GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -106,7 +109,7 @@ class missionTasks:
 	# done
 	def takeoffSet(self):
 		to = Locationwp()
-		Locationwp.id.SetValue(to, 21)
+		Locationwp.id.SetValue(to, 22)
 		Locationwp.p1.SetValue(to, 15)
 		Locationwp.alt.SetValue(to, 40)
 		return [to]
@@ -167,7 +170,7 @@ class missionTasks:
 		post2 = self.cord_System.toGPS([prex,prey,height])
 		postloc = Locationwp().Set(post2[0],post2[1],height, 16)
 		
-		print 'Coordinates set with angle ',angle*180/3.1415, ' and distance ', (dist**2+height**2)**.5
+		# print 'Coordinates set with angle ',angle*180/3.1415, ' and distance ', (dist**2+height**2)**.5
 		return [preloc,setangle,offloc,takephoto,post1,resetangle,postloc]
 
 	# done
@@ -284,28 +287,28 @@ class missionTasks:
 
 
 	def searchGridSet(self):
+		# lst = [Locationwp().Set(,,), 16)]
 		lst = []
+
 
 		cam = Locationwp()
 		Locationwp.id.SetValue(cam, 206)
 		Locationwp.p1.SetValue(cam, 40.0)
 		lst.append(cam)
 
-		wpfileLoc = 'data/SearchGridWps.waypoints'
+		wpfileLoc = 'Path_Planning/data/SearchGridWps.waypoints'
 		with open(wpfileLoc,"r") as globallist:
 		
 			if (globallist.readline().split()[1] != "WPL"):
 				print "Nothing found"
 		
 			else:
-				dat = globallist.readline()
-				while(len(dat) > 1):
-					dat = globallist.readline().split("	")
-					
-					if (int(dat[3]) == 16):
-						print "16"
-						print dat[8],dat[9],dat[10]
+				dat = globallist.readline().split()
+				i = 1
+				while(len(dat) > 5):
+					if (dat[3] == '16'):
 						lst.append(Locationwp().Set(float(dat[8]),float(dat[9]),float(dat[10]), 16))
+					dat = globallist.readline().split("	")
 		
 		cam = Locationwp()
 		Locationwp.id.SetValue(cam, 206)

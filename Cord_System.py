@@ -30,6 +30,13 @@ class Cord_System:
 		temp = Locationwp().Set(GPS[0],GPS[1],GPS[2], 16)
 		return temp
 
+	def WptoGPS(self,Wp):
+		return [Wp.lat,Wp.lng,Wp.alt]
+
+	def WptoMeter(self,Wp):
+		return self.toMeters([Wp.lat,Wp.lng,Wp.alt])
+
+
 	def toMeters(self,GPS): 
 		x = (GPS[1]-self.Home[1])*self.dlng
 		y = (GPS[0]-self.Home[0])*self.dlat
