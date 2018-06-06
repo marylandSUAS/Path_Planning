@@ -40,7 +40,9 @@ def Mission(mission):
 		pass
 
 	if (mission == 'SouthernMarylandField'):
-		pass
+		self.Home = []
+		
+		
 
 	if (mission == 'Real1'):
 		# N38-08-45.03 W076-25-34.95

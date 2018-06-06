@@ -18,7 +18,7 @@ class Avoidance:
 		
 		self.Safety_Margin = 6
 		self.cruise = 16	
-		self.dataPath = 'PathPlanning/dlite/flight_information.txt'
+		self.dataPath = 'dlite/flight_information.txt'
 
 
 		self.cord_System = cord_Sys
@@ -41,9 +41,9 @@ class Avoidance:
 		self.printLocThread.start()
 		
 		self.StaticObstacles = []
-		self.addStaticObstacles('PathPlanning/data/static_obstacles.txt')
+		self.addStaticObstacles('data/static_obstacles.txt')
 
-		self.localizer = movingObs('PathPlanning/data/moving_obstacles.txt')
+		self.localizer = movingObs('data/moving_obstacles.txt')
 
 		self.Bounds = []
 		self.addBounds()
@@ -61,7 +61,7 @@ class Avoidance:
 			
 			loc = self.currentLoc()
 
-			senarioFile = open('PathPlanning/GUI/current_state.txt',"w")
+			senarioFile = open('GUI/current_state.txt',"w")
 			senarioFile.write(str(loc[0]))
 			senarioFile.write(str(' '))
 			senarioFile.write(str(loc[1]))
@@ -98,7 +98,7 @@ class Avoidance:
 			self.logger.assuption = temp
 
 	def checkStaticOnly(self):
-		OFile = open('PathPlanning/GUI/static_bool.txt',"r")
+		OFile = open('GUI/static_bool.txt',"r")
 		dat = OFile.readline().split(" ")
 		stat = False
 		if(dat[0] == 1):
@@ -124,7 +124,7 @@ class Avoidance:
 		
 		OFile.close()
 
-		OFile = open('PathPlanning/GUI/static_obstacles.txt',"w")
+		OFile = open('GUI/static_obstacles.txt',"w")
 		for i in range(len(self.StaticObstacles)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -140,18 +140,32 @@ class Avoidance:
 
 	def addBounds(self):
 
-		BFile = open('PathPlanning/data/boundry.txt',"r")
-		dat = BFile.readline().split(" ")
 
-		while(len(dat) > 3):
-			temp = self.cord_System.toMeters([float(dat[1]),float(dat[2]),float(dat[3])])
-			self.Bounds.append(temp)
-			dat = BFile.readline().split(" ")
-
-		BFile.close()
+		# flying field 		
+		self.Bounds.append(self.cord_System.toMeters([38.3652183,-76.5409541,50]))
+		self.Bounds.append(self.cord_System.toMeters([38.3641457,-76.5325481,50]))
+		self.Bounds.append(self.cord_System.toMeters([38.3660637,-76.5320653,50]))
+		self.Bounds.append(self.cord_System.toMeters([38.3672919,-76.5409005,50]))
 
 
-		OFile = open('PathPlanning/GUI/boundry.txt',"w")
+		'''
+		# competition
+		self.Bounds.append(self.cord_System.toMeters([38.1466738,-76.4279151]))
+		self.Bounds.append(self.cord_System.toMeters([38.1512131,-76.4292884]))
+		self.Bounds.append(self.cord_System.toMeters([38.1519386,-76.4314556]))
+		self.Bounds.append(self.cord_System.toMeters([38.1506056,-76.4353824]))
+		self.Bounds.append(self.cord_System.toMeters([38.1481082,-76.4330006]))
+		self.Bounds.append(self.cord_System.toMeters([38.1447501,-76.4327645]))
+		self.Bounds.append(self.cord_System.toMeters([38.1432650,-76.4346743]))
+		self.Bounds.append(self.cord_System.toMeters([38.1404973,-76.4327431]))
+		self.Bounds.append(self.cord_System.toMeters([38.1404973,-76.4260697]))
+		self.Bounds.append(self.cord_System.toMeters([38.1439738,-76.4213920]))
+		self.Bounds.append(self.cord_System.toMeters([38.1471801,-76.4234304]))
+		self.Bounds.append(self.cord_System.toMeters([38.1462857,-76.4264131]))
+
+		'''
+
+		OFile = open('GUI/boundry.txt',"w")
 		for i in range(len(self.Bounds)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -161,7 +175,7 @@ class Avoidance:
 		OFile.close()
 
 
-		OFile = open('PathPlanning/dlite/boundry.txt',"w")
+		OFile = open('dlite/boundry.txt',"w")
 		for i in range(len(self.Bounds)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -213,7 +227,7 @@ class Avoidance:
 			# add time based off angle and time it takes turn
 			# could be like turn radius/cruise_speed time sin angle
 
-		OFile = open('PathPlanning/GUI/moving_obstacles_predicted.txt',"w")
+		OFile = open('GUI/moving_obstacles_predicted.txt',"w")
 		for i in range(len(Important_moving_Obs)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -257,7 +271,7 @@ class Avoidance:
 	
 	def cameraGrid(self):
 
-		cameraGridFile = 'PathPlanning/data/CameraGridFile.Mission'
+		cameraGridFile = 'data/CameraGridFile.Mission'
 
 		avoidanceIndex = [0,1]
 		with open(cameraGridFile,"r") as globallist:
@@ -316,7 +330,7 @@ class Avoidance:
 				self.MAV.setWPCurrent(1)
 		self.MAV.setMode("Auto")
 
-		OFile = open('PathPlanning/GUI/waypoints.txt',"w")
+		OFile = open('GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -528,7 +542,7 @@ class Avoidance:
 	def DL(self,start,goal,staticObstacles,movingObstacles,timeouttaken):
 		# currentGPS = startGPS
 		current = start
-		with open('PathPlanning/dlite/flight_information.txt',"w") as flightFile:
+		with open('dlite/flight_information.txt',"w") as flightFile:
 
 			flightFile.write(str("Update 1 "))
 
@@ -593,7 +607,7 @@ class Avoidance:
 					flightFile.write(str(' '))
 					flightFile.write(str(ob[6]))
 
-		with open('PathPlanning/dlite/intermediate_waypoints.txt',"w") as shortfile:
+		with open('dlite/intermediate_waypoints.txt',"w") as shortfile:
 			shortfile.write(str("Update 0 "))
 
 		# this 
@@ -606,7 +620,7 @@ class Avoidance:
 		
 		while (time.time()-startTime < 3):
 			
-			with open('PathPlanning/dlite/intermediate_waypoints.txt',"r") as intermediate_file:
+			with open('dlite/intermediate_waypoints.txt',"r") as intermediate_file:
 				firstline = intermediate_file.readline()
 				# print 'first line is', firstline
 				if (firstline == 'Changed 1\n'):
@@ -617,13 +631,13 @@ class Avoidance:
 						nodes.append([float(dat[0]),float(dat[1]),float(dat[2])])
 						dat = intermediate_file.readline().split(" ")	
 
-					with open('PathPlanning/dlite/flight_information.txt',"w") as shortfile:
+					with open('dlite/flight_information.txt',"w") as shortfile:
 						shortfile.write(str("Update 2 "))
 					return nodes
 
 			time.sleep(.02)
 
-		with open('PathPlanning/dlite/flight_information.txt',"w") as shortfile:
+		with open('dlite/flight_information.txt',"w") as shortfile:
 			shortfile.write(str("Update 2 "))
 
 		print 'Failed to run'

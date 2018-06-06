@@ -20,22 +20,37 @@ class missionTasks:
 		self.cs = CS
 		self.Home = cord_Sys.Home
 
-		self.droploc = [39.0829015,-76.9045007,100]
+		# southern maryland
+		# self.droploc = [38.3652078,-76.5366331,35]
+		# competition
+		self.droploc = [38.1459313,-76.4263701,35]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
 		self.dropwps = self.payloaddropSet()
 
-		self.offAxisloc = [39.0822561,-76.9048601,100]
+		# southern maryland
+		# self.offAxisloc = [38.3648986,-76.5373251,100]
+		# competition
+		self.offAxisloc = [38.1476020,-76.4272070,100]
+		self.offAxisheight = 100
+		self.offAxisDist = 110
 		self.offAxisMeters = self.cord_System.toMeters(self.offAxisloc)
 		self.offAxiswps = self.offAxisSet()
 
-		self.emergentloc = [39.0828224,-76.9051981,100]
+		# southern maryland
+		# self.emergentloc = [38.3652078,-76.5366331,50]
+		# competition
+		self.emergentloc = [38.1441594,-76.4251471,50]
 		self.emergentMeters = self.cord_System.toMeters(self.emergentloc)
+		self.emergentwps = self.emergentwpsSet()
 		
 		self.LandLoc = self.Home
 		self.landingwps = self.landSet()
 
 		self.TakeoffWps = self.takeoffSet()
 		# self.takeoffPoint = []
+
+		self.searchGridWps = self.searchGridSet()
+
 		print "initalized mission functions"
 
 
@@ -53,7 +68,7 @@ class missionTasks:
 				self.MAV.setWPCurrent(1)
 
 		self.MAV.setMode("Auto")
-		OFile = open('PathPlanning/GUI/waypoints.txt',"w")
+		OFile = open('GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(wps[i].id == 16):
 				if(i != 0):
@@ -77,7 +92,7 @@ class missionTasks:
 				self.MAV.setWPCurrent(1)
 		self.MAV.setMode("Auto")
 
-		OFile = open('PathPlanning/GUI/waypoints.txt',"w")
+		OFile = open('GUI/waypoints.txt',"w")
 		for i in range(len(wps)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -110,8 +125,8 @@ class missionTasks:
 	# done
 	def offAxisSet(self):
 
-		dist = 120.0
-		height = 130.0
+		dist = self.offAxisDist
+		height = self.offAxisheight
 		angle = atan(dist/height)
 		
 		bear = 20
@@ -264,3 +279,47 @@ class missionTasks:
 
 		while(self.cs.wpno < 3):
 			time.sleep(.1)
+
+
+
+
+	def searchGridSet(self):
+		lst = []
+
+		cam = Locationwp()
+		Locationwp.id.SetValue(cam, 206)
+		Locationwp.p1.SetValue(cam, 40.0)
+		lst.append(cam)
+
+		wpfileLoc = 'data/SearchGridWps.waypoints'
+		with open(wpfileLoc,"r") as globallist:
+		
+			if (globallist.readline().split()[1] != "WPL"):
+				print "Nothing found"
+		
+			else:
+				dat = globallist.readline()
+				while(len(dat) > 1):
+					dat = globallist.readline().split("	")
+					
+					if (int(dat[3]) == 16):
+						print "16"
+						print dat[8],dat[9],dat[10]
+						lst.append(Locationwp().Set(float(dat[8]),float(dat[9]),float(dat[10]), 16))
+		
+		cam = Locationwp()
+		Locationwp.id.SetValue(cam, 206)
+		Locationwp.p1.SetValue(cam, 0)
+		lst.append(cam)
+
+		return lst
+
+	def emergentwpsSet(self):
+		lst = []
+		lst.append(Locationwp().Set(self.emergentloc[0],self.emergentloc[1],self.emergentloc[2], 16))
+
+		cam = Locationwp()
+		Locationwp.id.SetValue(cam, 203)
+
+		lst.append(cam)
+		return lst

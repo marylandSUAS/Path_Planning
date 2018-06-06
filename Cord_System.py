@@ -1,9 +1,15 @@
 import math
 from math import cos, pi
+
+import MissionPlanner
+from MissionPlanner.Utilities import Locationwp
+import MAVLink
+
 # GPS Meter Converter
 # All conversions are done 
 	# north is positive Y
 	# east is positive X
+
 class Cord_System:
 
 	def __init__(self,start):
@@ -14,6 +20,15 @@ class Cord_System:
 		# d's are large
 		# print 1/self.dlat
 		# print 1/self.dlng
+
+	def MetertoWp(self,meter):
+		tempGPS = self.toGPS(meter)
+		temp = Locationwp().Set(tempGPS[0],tempGPS[1],tempGPS[2], 16)
+		return temp
+
+	def GPStoWp(self,GPS):
+		temp = Locationwp().Set(GPS[0],GPS[1],GPS[2], 16)
+		return temp
 
 	def toMeters(self,GPS): 
 		x = (GPS[1]-self.Home[1])*self.dlng
