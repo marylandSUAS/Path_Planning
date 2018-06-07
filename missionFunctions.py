@@ -26,6 +26,8 @@ class missionTasks:
 		self.droploc = [38.1459313,-76.4263701,35]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
 		self.dropwps = self.payloaddropSet()
+		self.dropPlan = [True]
+		self.dropPlan.extend([False]*(len(self.dropwps)-1))
 
 		# southern maryland
 		# self.offAxisloc = [38.3648986,-76.5373251,100]
@@ -35,6 +37,8 @@ class missionTasks:
 		self.offAxisDist = 110
 		self.offAxisMeters = self.cord_System.toMeters(self.offAxisloc)
 		self.offAxiswps = self.offAxisSet()
+		self.offAxisPlan = [True]
+		self.offAxisPlan.extend([False]*(len(self.offAxiswps)-1))
 
 
 		# southern maryland
@@ -43,12 +47,17 @@ class missionTasks:
 		self.emergentloc = [38.1441594,-76.4251471,50]
 		self.emergentMeters = self.cord_System.toMeters(self.emergentloc)
 		self.emergentwps = self.emergentwpsSet()
+		self.emergetPlan = [True]		
+		self.emergetPlan.extend([False]*(len(self.emergetPlan)-1))
 		
 
 		self.LandLoc = self.Home
 		self.landingwps = self.landSet()
+		self.landingPlan = [False]*len(self.landingwps)
+
 
 		self.TakeoffWps = self.takeoffSet()
+		self.TakeoffPlan = [False]
 		# self.takeoffPoint = []
 
 		self.searchGridWps = self.searchGridSet()
@@ -284,8 +293,6 @@ class missionTasks:
 			time.sleep(.1)
 
 
-
-
 	def searchGridSet(self):
 		# lst = [Locationwp().Set(,,), 16)]
 		lst = []
@@ -316,6 +323,7 @@ class missionTasks:
 		lst.append(cam)
 
 		return lst
+
 
 	def emergentwpsSet(self):
 		lst = []

@@ -269,7 +269,6 @@ class Avoidance:
 
 		print 'finished planning'
 	
-
 	#updates vehicle_wps and sends to plane
 	def set_vehicle_waypoints(self,wps):
 		self.MAV.setWPTotal(len(wps)+1)	
@@ -302,29 +301,30 @@ class Avoidance:
 
 	def test(self):
 		# static path and send
-		print self.wp_list
-		tempPath = self.DL(self.wp_list[self.Index],self.wp_list[self.Index + 1],self.StaticObstacles,[],2)
-		staticPath = [self.currentLoc()]
-		staticPath.extend(tempPath)
-		staticPath.append(self.wp_list[self.Index + 1])
-		print 'static path:'
-		print staticPath
-		self.set_vehicle_waypoints(staticPath)
-		print 'set wps'
-		return
 
-		# localize moving obstacles
-		important_Dy_Obstacles = self.getMovingObstacles(self.wp_list,0)
-		print 'localized important dynamics obstacles'
-		# see if it records assumptions right
-		self.assumptions(True,None,important_Dy_Obstacles)
-		print 'set assumptions'
-		# see if check has errors
-		is_Bad, expandedStatics, expandedDynamics = Check(self.StaticObstacles,important_Dy_Obstacles,self.vehicle_wps,None)
-		print 'checked'
-		print 'is bad: ', is_Bad
-		print 'statics: ', expandedStatics
-		print 'dynamics: ',expandedDynamics
+		staticPath = [self.cord_System.WptoMeter()]
+		temp_points = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,[],3)
+		staticPath.extend(temp_points)
+		staticPath.append(self.cord_System.WptoMeter(wp2))
+
+
+		while(self.cs.wpno < num+1):
+			time.sleep(.05)
+
+
+		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+		finalPath = temp_points
+			
+		if(len(important_Dy_Obstacles) > 0):
+			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
+			
+			for wp in finalPath:
+				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				while(self.cs.wp_dist > 30):
+					time.sleep(.05)	
+		self.MAV.setMode('Auto')
+		while(self.cs.wp_dist > 40 and self.cs.wpno < wp1num+2):
+			time.sleep(.05)
 
 	def notPlan(self,wp1,wp2):
 		self.set_vehicle_waypoints([wp1,wp2])
@@ -478,6 +478,7 @@ class Avoidance:
 		# self.expandedDynamicObstacles = []
 
 
+	# returns nothing atm
 	# start,goal,current,static,moving,timeout,expanded 
 	def DL(self,start,goal,staticObstacles,movingObstacles,timeouttaken):
 		# currentGPS = startGPS
@@ -625,7 +626,8 @@ class Avoidance:
 			staticPath.append(self.cord_System.WptoMeter(wp[k+1]))
 
 			while(self.cs.wpno < num-len(wp)+k+3):
-				time.sleep(.05)
+				print 'waiting for ',num-len(wp)+k+3,' on ',self.cs.wpno
+				time.sleep(.25)
 
 			important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
 			finalPath = temp_points
@@ -634,11 +636,11 @@ class Avoidance:
 				finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)
 			self.MAV.setMode('Auto')
-			while(self.cs.wp_dist > 40):
+			while(self.cs.wp_dist > 40 and self.cs.wpno < num-len(wp)+k+4):
 				time.sleep(.05)
 	
 	# should be good
@@ -660,7 +662,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)	
 		self.MAV.setMode('Auto')
@@ -688,7 +690,7 @@ class Avoidance:
 					finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
 
 				for wp in finalPath:
-					self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
 					while(self.cs.wp_dist > 30):
 						time.sleep(.05)
 
@@ -715,7 +717,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp[len(wp-1)]),self.cord_System.WptoMeter(nextWP),self.StaticObstacles,important_Dy_Obstacles,3)
 
 		for wp in finalPath:
-			self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+			self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
 			while(self.cs.wp_dist > 30):
 				time.sleep(.05)
 
@@ -742,7 +744,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)	
 		self.MAV.setMode('Auto')
@@ -768,7 +770,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)	
 		self.MAV.setMode('Auto')
@@ -776,4 +778,47 @@ class Avoidance:
 			time.sleep(.05)
 
 
+	def totalreplan(self,waypoints,planList):
 
+		for k in range(waypoints):
+			if planList[k]:
+				wp1 = self.cord_System.WptoMeter(wp[k])
+
+				if(k == 2):
+					wp2 = self.currentLoc()
+				elif(wp[k-1].id != 16):
+					if(wp[k-2.id != 16]):
+						if(wp[k-3.id != 16]):
+							wp2 = self.cord_System.WptoMeter(wp[k-4])
+						wp2 = self.cord_System.WptoMeter(wp[k-3])
+					wp2 = self.cord_System.WptoMeter(wp[k-2])
+
+				else:
+					wp2 = self.cord_System.WptoMeter(wp[k-1])
+
+
+				staticPath = [wp1]
+				temp_points = self.DL(wp1,wp2,self.StaticObstacles,[],3)
+				staticPath.extend(temp_points)
+				staticPath.append(wp2)
+
+				while(self.cs.wpno < k):
+					print 'waiting for ', k
+					time.sleep(.05)
+
+
+				important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
+				finalPath = temp_points
+
+				if(len(important_Dy_Obstacles) > 0):
+					finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
+
+				for wp in finalPath:
+					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
+					while(self.cs.wp_dist > 30):
+						time.sleep(.05)
+
+				self.MAV.setMode('Auto')
+				
+				
+			
