@@ -9,16 +9,17 @@ import interop
 usern = 'testuser'
 passw = 'testpass'
 youareL = 'http://172.17.0.1:8000'
-pathName = 'D:/MUAS/AutoPilot/MissionData/'
+
+# pathName = 'D:/MUAS/AutoPilot/MissionData/'
 
 
 missionFileName = "Mission_data.txt"
 
 staticObjFileName = 'static_obstacles.txt'
-staticObjFileLoc = os.path.join(pathName,staticObjFileName)
+staticObjFileLoc = pathName+staticObjFileName
 
 movingObjFileName = 'moving_obstacles.txt'
-movingObjFileLoc = os.path.join(pathName,movingObjFileName)
+movingObjFileLoc = pathName+movingObjFileName
 
 
 client = interop.Client(url=youareL, username=usern, password=passw)
@@ -69,9 +70,9 @@ while(True):
 			movingObjFile.write(str(' '))
 			movingObjFile.write(str(moving_obstacles[i].longitude))
 			movingObjFile.write(str(' '))
-			movingObjFile.write(str(moving_obstacles[i].altitude_msl*.304))
+			movingObjFile.write(str(moving_obstacles[i].altitude_msl))
 			movingObjFile.write(str(' '))
-			movingObjFile.write(str(moving_obstacles[i].sphere_radius*.304))
+			movingObjFile.write(str(moving_obstacles[i].sphere_radius))
 	
 	while(time.time()-timelast < .1)
 		time.sleep(.005)

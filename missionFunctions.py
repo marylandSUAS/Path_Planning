@@ -25,6 +25,7 @@ class missionTasks:
 		# competition
 		self.droploc = [38.1459313,-76.4263701,35]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
+		self.dropbearing = 20 * pi/180
 		self.dropwps = self.payloaddropSet()
 		self.dropPlan = [True]
 		self.dropPlan.extend([False]*(len(self.dropwps)-1))
@@ -33,8 +34,9 @@ class missionTasks:
 		# self.offAxisloc = [38.3648986,-76.5373251,100]
 		# competition
 		self.offAxisloc = [38.1476020,-76.4272070,100]
-		self.offAxisheight = 100
-		self.offAxisDist = 110
+		self.offAxisheight = 200
+		self.offAxisDist = 250
+		self.offAxisbearing = 20 * pi/180
 		self.offAxisMeters = self.cord_System.toMeters(self.offAxisloc)
 		self.offAxiswps = self.offAxisSet()
 		self.offAxisPlan = [True]
@@ -120,7 +122,7 @@ class missionTasks:
 		to = Locationwp()
 		Locationwp.id.SetValue(to, 22)
 		Locationwp.p1.SetValue(to, 15)
-		Locationwp.alt.SetValue(to, 40)
+		Locationwp.alt.SetValue(to, 100)
 		return [to]
 
 	# done
@@ -141,7 +143,7 @@ class missionTasks:
 		height = self.offAxisheight
 		angle = atan(dist/height)
 		
-		bear = 20
+		bear = self.offAxisbearing
 		LookRight = 1
 
 		safeloc = [self.offAxisMeters[0]-LookRight*dist*sin(bear*pi/180),self.offAxisMeters[1]+LookRight*dist*cos(bear*pi/180),height]
@@ -200,9 +202,9 @@ class missionTasks:
 
 	# done
 	def payloaddropSet(self):
-		bear = 20 * pi/180
-		dist = 20 #function of alt and vel
-		height = 35
+		bear = self.dropbearing
+		dist = 60 #function of alt and vel
+		height = 115
 
 		windoffset  = 0
 

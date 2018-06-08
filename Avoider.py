@@ -18,8 +18,8 @@ class Avoidance:
 
 	def __init__(self,CS,mav,cord_Sys):
 		
-		self.Safety_Margin = 6
-		self.cruise = 16	
+		self.Safety_Margin = 30
+		self.cruise = 52.5	
 		self.dataPath = 'Path_Planning/dlite/flight_information.txt'
 
 
@@ -527,7 +527,7 @@ class Avoidance:
 				flightFile.write(str(' '))
 				flightFile.write(str(ob[1]))
 				flightFile.write(str(' '))
-				flightFile.write(str(ob[2]))
+				flightFile.write(str(ob[2]+self.Safety_Margin))
 				flightFile.write(str(' '))
 				flightFile.write(str(ob[3]+self.Safety_Margin))
 
@@ -815,7 +815,7 @@ class Avoidance:
 
 				for wp in finalPath:
 					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
-					while(self.cs.wp_dist > 30):
+					while(self.cs.wp_dist > 60):
 						time.sleep(.05)
 
 				self.MAV.setMode('Auto')

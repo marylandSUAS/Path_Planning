@@ -66,12 +66,12 @@ missionWpsPlan = [True]*len(missionGPS)
 # initialize coordinate system
 cordSystem = Cord_System.Cord_System(Home)
 
+# create avoidance class to control vehicle during obstacle avoidance
+missionFunc = missionFunctions.missionTasks(cs,MAV,cordSystem)
 
 # create avoidance class to control vehicle during obstacle avoidance
 avoider = Avoider.Avoidance(cs,MAV,cordSystem)
 
-# create avoidance class to control vehicle during obstacle avoidance
-missionFunc = missionFunctions.missionTasks(cs,MAV,cordSystem)
 
 
 

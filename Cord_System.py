@@ -14,7 +14,9 @@ class Cord_System:
 
 	def __init__(self,start):
 		self.Home = start
-		rad_Earth = 6378160.0
+		# rad_Earth = 6378160.0
+		rad_Earth = 20909000.0
+		
 		self.dlng = (pi/180)*rad_Earth*cos(start[0]*pi/180);
 		self.dlat = (pi/180)*rad_Earth
 		# d's are large
