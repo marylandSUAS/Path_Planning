@@ -21,9 +21,9 @@ class missionTasks:
 		self.Home = cord_Sys.Home
 
 		# southern maryland
-		self.droploc = [38.3652078,-76.5366331,115]
+		# self.droploc = [38.3652078,-76.5366331,115]
 		# competition
-		# self.droploc = [38.1459313,-76.4263701,35]
+		self.droploc = [38.1459313,-76.4263701,35]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
 		self.dropbearing = 0.0 * pi/180
 		self.dropwps = self.payloaddropSet()
@@ -31,9 +31,9 @@ class missionTasks:
 		self.dropPlan.extend([False]*(len(self.dropwps)-1))
 
 		# southern maryland
-		self.offAxisloc = [38.3648986,-76.5373251,0.0]
+		# self.offAxisloc = [38.3648986,-76.5373251,0.0]
 		# competition
-		# self.offAxisloc = [38.1476020,-76.4272070,100]
+		self.offAxisloc = [38.1476020,-76.4272070,100]
 		self.offAxisheight = 200
 		self.offAxisDist = 250
 		self.offAxisbearing = 20 * pi/180
@@ -44,13 +44,13 @@ class missionTasks:
 
 
 		# southern maryland
-		self.emergentloc = [38.3652078,-76.5366331,50]
+		# self.emergentloc = [38.3652078,-76.5366331,50]
 		# competition
-		# self.emergentloc = [38.1441594,-76.4251471,50]
+		self.emergentloc = [38.1441594,-76.4251471,50]
 		self.emergentMeters = self.cord_System.toMeters(self.emergentloc)
 		self.emergentwps = self.emergentwpsSet()
-		self.emergetPlan = [True]		
-		self.emergetPlan.extend([False]*(len(self.emergetPlan)-1))
+		self.emergentPlan = [True,False]		
+		# self.emergentPlan.extend([False]*(len(self.emergentPlan)-1))
 		
 
 		self.LandLoc = self.Home
@@ -204,7 +204,7 @@ class missionTasks:
 	# done
 	def payloaddropSet(self):
 		bear = self.dropbearing + pi
-		dist = 60.0 #function of alt and vel
+		dist = 80.0 #function of alt and vel
 		height = 115.0
 
 		windoffset  = 0
@@ -215,7 +215,6 @@ class missionTasks:
 		prey = self.dropMeters[1] + (distprevious2+dist)*sin(bear)
 		prex = self.dropMeters[0] + (distprevious2+dist)*cos(bear)
 		pre = [prex,prey,height]
-		print pre
 		preGPS = self.cord_System.toGPS(pre)
 		pre = Locationwp().Set(preGPS[0],preGPS[1],preGPS[2], 16)
 
@@ -223,14 +222,12 @@ class missionTasks:
 		posty = self.dropMeters[1] + (distafter+dist)*sin(bear)
 		postx = self.dropMeters[0] + (distafter+dist)*cos(bear)
 		post = [postx,posty,height]
-		print post
 		postGPS = self.cord_System.toGPS(post)
 		post = Locationwp().Set(postGPS[0],postGPS[1],postGPS[2], 16)
 
 		dropy = self.dropMeters[1] + dist*sin(bear)
 		dropx = self.dropMeters[0] + dist*cos(bear)
 		drop = [dropx,dropy,height]
-		print drop
 		dropGPS = self.cord_System.toGPS(drop)
 		drop = Locationwp().Set(dropGPS[0],dropGPS[1],dropGPS[2], 16)
 		
@@ -251,7 +248,7 @@ class missionTasks:
 		Locationwp.p2.SetValue(dropWP, 1100)
 
 
-		return [pre, OpenWP, drop, dropWP, post, CloseWP,self.cord_System.GPStoWp(self.droploc)]
+		return [pre, OpenWP, drop, dropWP, post, CloseWP]
 		# return [pre, drop, dropWP, post]
 
 	# done

@@ -116,6 +116,7 @@ searchGridNum = len(total_List)
 total_List.extend(missionFunc.emergentwps)
 total_Plan.extend(missionFunc.emergentPlan)
 emergentNum = len(total_List)
+
 # in wps
 total_List.extend(missionFunc.offAxiswps)
 total_Plan.extend(missionFunc.offAxisPlan)
@@ -125,6 +126,8 @@ offAxisNum = len(total_List)
 total_List.extend(missionFunc.landingwps)
 total_Plan.extend(missionFunc.landingPlan)
 finalNum = len(total_List)
+
+print 'Mission length: ', len(total_List), ' ',len(total_Plan)
 
 missionFunc.set_MP_wps(total_List)
 

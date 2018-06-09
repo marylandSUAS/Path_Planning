@@ -69,8 +69,9 @@ class movingObs:
 		for ob in self.moving_Obstacles:
 			tempdis,temploc = ob.dcaAddtime(pos,vel,time)
 			closest_dist.append(tempdis)
-			temploc.append(ob.Radius)
+			# temploc.append(ob.Radius)
 			closest_approach.append(temploc)
+			
 
 		return closest_dist, closest_approach
 
@@ -183,6 +184,7 @@ class dynamics_Ob:
 		z2 = Pos2[2]+t*Vel2[2]
 		
 		loc = [x1,y1,z1]
+		loc.append(self.Radius)
 
 		dist = ((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)**.5
 		return dist,loc

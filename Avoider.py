@@ -213,14 +213,12 @@ class Avoidance:
 
 			Vel = [dx*self.cruise/dis,dy*self.cruise/dis,dz*self.cruise/dis]
 
-
-
 			minus_dist, minus_error = self.localizer.closestApproach(Pos,Vel,Time)
 			plus_dist, plus_error = self.localizer.closestApproach(Pos,Vel,Time)
 			
 			for k in range(len(minus_dist)):
 				if (minus_dist[k] < minus_error[k][3]+self.Safety_Margin*3 or plus_dist[k] < plus_error[k][3]+self.Safety_Margin*3):
-					tempOb = [minus_error[0],minus_error[1],minus_error[2],plus_error[0],plus_error[1],plus_error[2],minus_error[3]]
+					tempOb = [minus_error[k][0],minus_error[k][1],minus_error[k][2],plus_error[k][0],plus_error[k][1],plus_error[k][2],minus_error[k][3]]
 					Important_moving_Obs.append(tempOb)
 
 
@@ -778,47 +776,68 @@ class Avoidance:
 			time.sleep(.05)
 
 
-	def totalreplan(self,waypoints,planList):
+	def totalreplan(self,wp,planList):
+		print 'received: ', len(wp)
+		print 'received: ', len(planList)
 
-		for k in range(waypoints):
+		for k in range(len(wp)):
+
+			print 'starting wp no ',k+1,' reading ', planList[k]
 			if planList[k]:
-				wp1 = self.cord_System.WptoMeter(wp[k])
 
-				if(k == 2):
-					wp2 = self.currentLoc()
+				wp2 = self.cord_System.WptoMeter(wp[k])
+				print 'wp2'
+				
+				if(k == 1):
+# fix this
+					wp1 = self.currentLoc()
+
+
 				elif(wp[k-1].id != 16):
 					if(wp[k-2].id != 16):
 						if(wp[k-3].id != 16):
-							wp2 = self.cord_System.WptoMeter(wp[k-4])
-						wp2 = self.cord_System.WptoMeter(wp[k-3])
-					wp2 = self.cord_System.WptoMeter(wp[k-2])
-
+							wp1 = self.cord_System.WptoMeter(wp[k-4])
+						wp1 = self.cord_System.WptoMeter(wp[k-3])
+					wp1 = self.cord_System.WptoMeter(wp[k-2])
+# fix this loop
 				else:
-					wp2 = self.cord_System.WptoMeter(wp[k-1])
+					wp1 = self.cord_System.WptoMeter(wp[k-1])
 
+				print 'wp1'
 
 				staticPath = [wp1]
 				temp_points = self.DL(wp1,wp2,self.StaticObstacles,[],3)
 				staticPath.extend(temp_points)
 				staticPath.append(wp2)
 
-				while(self.cs.wpno < k):
+				print 'static path: ',staticPath
+
+				while(self.cs.wpno < k+1):
 					print 'waiting for ', k
 					time.sleep(.05)
 
+				print 'done waiting for arrival'
 
 				important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
 				finalPath = temp_points
 
+				print 'got obstacles'
+
 				if(len(important_Dy_Obstacles) > 0):
 					finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
+					print 'got dynamic path'
+				else:
+					print 'no dynamic needed'	
 
 				for wp in finalPath:
 					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
-					while(self.cs.wp_dist > 60):
+					print 'heading toward wp'
+					while(self.cs.wp_dist > 100):
 						time.sleep(.05)
 
 				self.MAV.setMode('Auto')
+				print 'back to auto'
+			print 'finished ',k
 				
 				
 			
