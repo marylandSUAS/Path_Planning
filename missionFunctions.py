@@ -21,9 +21,9 @@ class missionTasks:
 		self.Home = cord_Sys.Home
 
 		# southern maryland
-		# self.droploc = [38.3652078,-76.5366331,35]
+		self.droploc = [38.3652078,-76.5366331,35]
 		# competition
-		self.droploc = [38.1459313,-76.4263701,35]
+		# self.droploc = [38.1459313,-76.4263701,35]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
 		self.dropbearing = 20 * pi/180
 		self.dropwps = self.payloaddropSet()
@@ -31,9 +31,9 @@ class missionTasks:
 		self.dropPlan.extend([False]*(len(self.dropwps)-1))
 
 		# southern maryland
-		# self.offAxisloc = [38.3648986,-76.5373251,100]
+		self.offAxisloc = [38.3648986,-76.5373251,100]
 		# competition
-		self.offAxisloc = [38.1476020,-76.4272070,100]
+		# self.offAxisloc = [38.1476020,-76.4272070,100]
 		self.offAxisheight = 200
 		self.offAxisDist = 250
 		self.offAxisbearing = 20 * pi/180
@@ -44,9 +44,9 @@ class missionTasks:
 
 
 		# southern maryland
-		# self.emergentloc = [38.3652078,-76.5366331,50]
+		self.emergentloc = [38.3652078,-76.5366331,50]
 		# competition
-		self.emergentloc = [38.1441594,-76.4251471,50]
+		# self.emergentloc = [38.1441594,-76.4251471,50]
 		self.emergentMeters = self.cord_System.toMeters(self.emergentloc)
 		self.emergentwps = self.emergentwpsSet()
 		self.emergetPlan = [True]		
@@ -233,21 +233,21 @@ class missionTasks:
 		
 		dropWP = Locationwp()
 		Locationwp.id.SetValue(dropWP, 183)
-		Locationwp.p1.SetValue(dropWP, 5) # servo number
+		Locationwp.p1.SetValue(dropWP, 8) # servo number
 		Locationwp.p2.SetValue(dropWP, 1100) # ms
 
 		OpenWP = Locationwp()
 		Locationwp.id.SetValue(dropWP, 183)
-		Locationwp.p1.SetValue(dropWP, 5)
+		Locationwp.p1.SetValue(dropWP, 10)
 		Locationwp.p2.SetValue(dropWP, 1100)
 
 		CloseWP = Locationwp()
 		Locationwp.id.SetValue(dropWP, 183)
-		Locationwp.p1.SetValue(dropWP, 5)
+		Locationwp.p1.SetValue(dropWP, 10)
 		Locationwp.p2.SetValue(dropWP, 1100)
 
-		# return [pre, OpenWP, drop, dropWP, post]
-		return [pre, drop, dropWP, post]
+		return [pre, OpenWP, drop, dropWP, post,CloseWP]
+		# return [pre, drop, dropWP, post]
 
 	# done
 	def payloadDrop(self):
