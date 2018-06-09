@@ -101,7 +101,7 @@ function wps = getWps()
 
 function dat = getState()
     fileStatic = fopen('current_state.txt');
-    C = fscanf(fileStatic,'%f %f %f %f %f %f',[6 Inf]);
+    C = fscanf(fileStatic,'%f %f %f %f %f',[5 Inf]);
     fclose(fileStatic);
     dat = C';
 
@@ -117,18 +117,6 @@ function varargout = Final_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in button_staticOnly.
-function button_staticOnly_Callback(hObject, eventdata, handles)
-    fileID = fopen('static_bool.txt','w');
-    fprintf(fileID,'1 ');
-    fclose(fileID);
-    
-    handles.button_staticOnly.BackgroundColor = [.47 .67 .19];
-    handles.button_dynamic.BackgroundColor = [.8 .8 .8];
-    
-    handles.output = hObject;
-    guidata(hObject, handles);
-
 
 % --- Executes on button press in button_start.
 function button_start_Callback(hObject, eventdata, handles)
@@ -143,9 +131,8 @@ function button_start_Callback(hObject, eventdata, handles)
     while(a == 1)
         state = getState();
         handles.text2.String = string(state(3));
-        handles.text9.String = string(state(4));
-        handles.text5.String = string(state(5));
-        handles.text4.String = string(state(6));
+        handles.text5.String = string(state(4));
+        handles.text4.String = string(state(5));
         wps = getWps();
         moving_obs = getMovingObs();
 %         axis(handles.Map)
@@ -165,7 +152,7 @@ function button_start_Callback(hObject, eventdata, handles)
         end
         
         plot(boundry(:,1),boundry(:,2))
-        axis([-250 250 -250 250])
+        axis([-2250 2200 -2000 2700])
 
 %         waitfor(r);
         a = 2;

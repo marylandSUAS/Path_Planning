@@ -70,8 +70,6 @@ class Avoidance:
 			senarioFile.write(str(' '))
 			senarioFile.write(str(loc[2]))
 			senarioFile.write(str(' '))
-			senarioFile.write(str(loc[2]/.305))
-			senarioFile.write(str(' '))
 			senarioFile.write(str(self.cs.airspeed))
 			senarioFile.write(str(' '))
 			senarioFile.write(str(self.cs.wpno))

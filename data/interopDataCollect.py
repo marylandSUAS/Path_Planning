@@ -44,16 +44,16 @@ stationary_obstacles, moving_obstacles = client.get_obstacles()
 
 with open(staticObjFileLoc,"w") as staticObjFile:
 	for j in range(len(stationary_obstacles)):
-		staticObjFile.write(str(j+1))
-		staticObjFile.write(str(' '))
+		if(j != 0):
+			staticObjFile.write('\n')
 		staticObjFile.write(str(stationary_obstacles[j].latitude))
 		staticObjFile.write(str(' '))
 		staticObjFile.write(str(stationary_obstacles[j].longitude))
 		staticObjFile.write(str(' '))
-		staticObjFile.write(str(stationary_obstacles[j].cylinder_height*.304))
+		staticObjFile.write(str(stationary_obstacles[j].cylinder_height))
 		staticObjFile.write(str(' '))
-		staticObjFile.write(str(stationary_obstacles[j].cylinder_radius*.304))
-		staticObjFile.write('\n')
+		staticObjFile.write(str(stationary_obstacles[j].cylinder_radius))
+		
 
 
 
@@ -64,7 +64,7 @@ while(True):
 
 	with open(movingObjFileLoc,"w") as movingObjFile:
 		for i in range(len(MovingObstacles)):
-			if(i != 1):
+			if(i != 0):
 				movingObjFile.write('\n')	
 			movingObjFile.write(str(moving_obstacles[i].latitude))
 			movingObjFile.write(str(' '))
