@@ -60,7 +60,7 @@ class Cord_System:
 
 # GPSpoint = [39.0836885,-76.9029611,50.0]
 
-# Meterspoint = [50,50,50]
+# Meterspoint = [50.0,50.0,50.0]
 
 # print 'OGpoint: ',GPSpoint
 # one = test.toMeters(GPSpoint)

@@ -636,7 +636,7 @@ class Avoidance:
 				finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)
 			self.MAV.setMode('Auto')
@@ -662,7 +662,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)	
 		self.MAV.setMode('Auto')
@@ -690,7 +690,7 @@ class Avoidance:
 					finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
 
 				for wp in finalPath:
-					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
+					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
 					while(self.cs.wp_dist > 30):
 						time.sleep(.05)
 
@@ -717,7 +717,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp[len(wp-1)]),self.cord_System.WptoMeter(nextWP),self.StaticObstacles,important_Dy_Obstacles,3)
 
 		for wp in finalPath:
-			self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
+			self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
 			while(self.cs.wp_dist > 30):
 				time.sleep(.05)
 
@@ -744,7 +744,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)	
 		self.MAV.setMode('Auto')
@@ -770,7 +770,7 @@ class Avoidance:
 			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
 			
 			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp)))
+				self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
 				while(self.cs.wp_dist > 30):
 					time.sleep(.05)	
 		self.MAV.setMode('Auto')
@@ -787,8 +787,8 @@ class Avoidance:
 				if(k == 2):
 					wp2 = self.currentLoc()
 				elif(wp[k-1].id != 16):
-					if(wp[k-2.id != 16]):
-						if(wp[k-3.id != 16]):
+					if(wp[k-2].id != 16):
+						if(wp[k-3].id != 16):
 							wp2 = self.cord_System.WptoMeter(wp[k-4])
 						wp2 = self.cord_System.WptoMeter(wp[k-3])
 					wp2 = self.cord_System.WptoMeter(wp[k-2])
