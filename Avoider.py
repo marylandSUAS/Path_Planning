@@ -115,7 +115,7 @@ class Avoidance:
 		while(len(dat) > 3):
 
 			temp = [float(dat[0]),float(dat[1]),float(dat[2])]
-			# temp = self.cord_System.toMeters([float(dat[0]),float(dat[1]),float(dat[2])])
+			temp = self.cord_System.toMeters([float(dat[0]),float(dat[1]),float(dat[2])])
 			temp.append(float(dat[3]))
 			self.StaticObstacles.append(temp)
 

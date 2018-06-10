@@ -54,6 +54,7 @@ class missionTasks:
 		
 
 		self.LandLoc = self.Home
+		self.landbearing = 20 * pi/180
 		self.landingwps = self.landSet()
 		self.landingPlan = [False]*len(self.landingwps)
 
@@ -232,23 +233,37 @@ class missionTasks:
 		drop = Locationwp().Set(dropGPS[0],dropGPS[1],dropGPS[2], 16)
 		
 		
-		dropWP = Locationwp()
-		Locationwp.id.SetValue(dropWP, 183)
-		Locationwp.p1.SetValue(dropWP, 8) # servo number
-		Locationwp.p2.SetValue(dropWP, 1100) # ms
+		dropWP1 = Locationwp()
+		Locationwp.id.SetValue(dropWP1, 183)
+		Locationwp.p1.SetValue(dropWP1, 10) # servo number
+		Locationwp.p2.SetValue(dropWP1, 1900) # ms
 
-		OpenWP = Locationwp()
-		Locationwp.id.SetValue(dropWP, 183)
-		Locationwp.p1.SetValue(dropWP, 10)
-		Locationwp.p2.SetValue(dropWP, 1100)
+		dropWP2 = Locationwp()
+		Locationwp.id.SetValue(dropWP2, 183)
+		Locationwp.p1.SetValue(dropWP2, 11) # servo number
+		Locationwp.p2.SetValue(dropWP2, 1100) # ms
 
-		CloseWP = Locationwp()
-		Locationwp.id.SetValue(dropWP, 183)
-		Locationwp.p1.SetValue(dropWP, 10)
-		Locationwp.p2.SetValue(dropWP, 1100)
+		OpenWP1 = Locationwp()
+		Locationwp.id.SetValue(OpenWP1, 183)
+		Locationwp.p1.SetValue(OpenWP1, 8)
+		Locationwp.p2.SetValue(OpenWP1, 950)
 
+		OpenWP2 = Locationwp()
+		Locationwp.id.SetValue(OpenWP2, 183)
+		Locationwp.p1.SetValue(OpenWP2, 9)
+		Locationwp.p2.SetValue(OpenWP2, 2100)
 
-		return [pre, OpenWP, drop, dropWP, post, CloseWP]
+		CloseWP1 = Locationwp()
+		Locationwp.id.SetValue(CloseWP1, 183)
+		Locationwp.p1.SetValue(CloseWP1, 8)
+		Locationwp.p2.SetValue(CloseWP1, 2100)
+
+		CloseWP2 = Locationwp()
+		Locationwp.id.SetValue(CloseWP2, 183)
+		Locationwp.p1.SetValue(CloseWP2, 9)
+		Locationwp.p2.SetValue(CloseWP2, 900)
+
+		return [pre, OpenWP1, OpenWP2, drop, dropWP1, dropWP2, post, CloseWP2, CloseWP2]
 		# return [pre, drop, dropWP, post]
 
 	# done
@@ -270,9 +285,9 @@ class missionTasks:
 	def landSet(self):
 
 		descent_ratio = 17.0/150.0 #20 meter descent for every 150 meters traveled
-		alt1 = 40.5
-		alt2 = 27
-		bear = 20 * pi/180
+		alt1 = 100
+		alt2 = 40
+		bear = self.landbearing
 
 		dist1 = alt1/descent_ratio
 		dist2 = alt2/descent_ratio
