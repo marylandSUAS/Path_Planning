@@ -789,18 +789,20 @@ class Avoidance:
 				print 'wp2'
 				
 				if(k == 1):
-# fix this
+					while(self.cs.wpno < k+1):
+						print 'waiting for ', k
+						time.sleep(.05)
 					wp1 = self.currentLoc()
 
-
-				elif(wp[k-1].id != 16):
-					if(wp[k-2].id != 16):
-						if(wp[k-3].id != 16):
-							wp1 = self.cord_System.WptoMeter(wp[k-4])
-						wp1 = self.cord_System.WptoMeter(wp[k-3])
+				elif(wp[k-1].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp[k-1])
+				elif(wp[k-2].id == 16):
 					wp1 = self.cord_System.WptoMeter(wp[k-2])
-# fix this loop
-				else:
+				elif(wp[k-3].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp[k-3])
+				elif(wp[k-4].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp[k-4])
+				else
 					wp1 = self.cord_System.WptoMeter(wp[k-1])
 
 				print 'wp1'
