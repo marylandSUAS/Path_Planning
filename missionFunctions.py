@@ -21,11 +21,11 @@ class missionTasks:
 		self.Home = cord_Sys.Home
 
 		# southern maryland
-		# self.droploc = [38.3652078,-76.5366331,115]
+		self.droploc = [38.3652078,-76.5366331,115]
 		# competition
-		self.droploc = [38.1459313,-76.4263701,35]
+		# self.droploc = [38.1459313,-76.4263701,35]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
-		self.dropbearing = 0.0 * pi/180
+		self.dropbearing = -10 * pi/180
 		self.dropwps = self.payloaddropSet()
 		self.dropPlan = [True]
 		self.dropPlan.extend([False]*(len(self.dropwps)-1))
@@ -263,7 +263,7 @@ class missionTasks:
 		Locationwp.p1.SetValue(CloseWP2, 9)
 		Locationwp.p2.SetValue(CloseWP2, 900)
 
-		return [pre, OpenWP1, OpenWP2, drop, dropWP1, dropWP2, post, CloseWP2, CloseWP2]
+		return [pre, OpenWP1, pre, OpenWP2, drop, dropWP1, drop, dropWP2, post, CloseWP2, post, CloseWP2]
 		# return [pre, drop, dropWP, post]
 
 	# done
