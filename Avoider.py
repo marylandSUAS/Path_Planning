@@ -74,7 +74,7 @@ class Avoidance:
 			senarioFile.write(str(' '))
 			senarioFile.write(str(self.cs.wpno))
 			senarioFile.close()
-				
+			
 	def addLogger(self,loger):
 		self.logger = loger
 		self.assuptions = True
@@ -775,12 +775,12 @@ class Avoidance:
 
 
 	def totalreplan(self,wp,planList):
-		print 'received: ', len(wp)
-		print 'received: ', len(planList)
+		# print 'received: ', len(wp)
+		# print 'received: ', len(planList)
 
-		for k in range(len(wp)):
-
+		for k in range(self.cs.wpno-1,len(wp)):
 			print 'starting wp no ',k+1,' reading ', planList[k]
+
 			if planList[k]:
 
 				wp2 = self.cord_System.WptoMeter(wp[k])

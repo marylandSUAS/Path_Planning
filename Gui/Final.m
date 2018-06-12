@@ -22,7 +22,7 @@ function varargout = Final(varargin)
 
 % Edit the above text to modify the response to help Final
 
-% Last Modified by GUIDE v2.5 28-May-2018 10:57:31
+% Last Modified by GUIDE v2.5 12-Jun-2018 00:32:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -49,10 +49,10 @@ function Final_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 clc
 handles.running = 0;
-handles.text2.String = '0';
-handles.text4.String = '0';
-handles.text5.String = '0';
-handles.text9.String = '0';
+handles.AltitudeText.String = '0';
+handles.wpnoText.String = '0';
+handles.AirspeedText.String = '0';
+handles.wpdistText.String = '0';
 
 fileID = fopen('static_bool.txt','w');
 fprintf(fileID,'1 ');
@@ -101,11 +101,17 @@ function wps = getWps()
 
 function dat = getState()
     fileStatic = fopen('current_state.txt');
-    C = fscanf(fileStatic,'%f %f %f %f %f',[5 Inf]);
+    C = fscanf(fileStatic,'%f %f %f %f %f %f',[6 Inf]);
     fclose(fileStatic);
     dat = C';
 
 
+function dat = getLoc()
+    fileStatic = fopen('currentLoc.txt');
+    C = fscanf(fileStatic,'%f %f %f %f',[4 Inf]);
+    fclose(fileStatic);
+    dat = C';
+    
 % --- Outputs from this function are returned to the command line.
 function varargout = Final_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -130,9 +136,12 @@ function button_start_Callback(hObject, eventdata, handles)
 %     while(hanldes.running == 1)
     while(a == 1)
         state = getState();
-        handles.text2.String = string(state(3));
-        handles.text5.String = string(state(4));
-        handles.text4.String = string(state(5));
+        loc = getLoc();
+        handles.AltitudeText.String = string(loc(3));
+        handles.AirspeedText.String = string(state(4));
+        handles.wpnoText.String = string(state(5));
+        handles.wpdistText.String = string(state(5));
+        
         wps = getWps();
         moving_obs = getMovingObs();
 %         axis(handles.Map)
