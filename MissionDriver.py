@@ -133,5 +133,8 @@ missionFunc.set_MP_wps(total_List)
 
 MAV.setMode('Auto')
 
-avoider.totalreplan(total_List,total_Plan)
-
+while cs.wpno < len(total_List):
+	try:
+		avoider.totalreplan(total_List,total_Plan)
+	except:
+		print 'something failed trying again'

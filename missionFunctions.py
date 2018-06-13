@@ -263,7 +263,7 @@ class missionTasks:
 		Locationwp.p1.SetValue(CloseWP2, 9)
 		Locationwp.p2.SetValue(CloseWP2, 900)
 
-		return [pre, OpenWP1, pre, OpenWP2, drop, dropWP1, drop, dropWP2, post, CloseWP2, post, CloseWP2]
+		return [pre, OpenWP1, OpenWP2, drop, dropWP1, dropWP2, post, CloseWP2, CloseWP2]
 		# return [pre, drop, dropWP, post]
 
 	# done

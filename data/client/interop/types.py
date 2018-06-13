@@ -130,15 +130,22 @@ class Mission(ClientBaseType):
         fly_zones: A list of FlyZone boundaries the UAS must be within.
         home_pos: The GpsPosition of the UAS launch point (tents).
         mission_waypoints: A list of Waypoint the UAS must traverse.
+<<<<<<< HEAD
         off_axis_odlc_pos: The GpsPosition of the off-axis Object.
         emergent_last_known_pos: The last known GpsPosition of the emergent
             Object.
+=======
+        off_axis_target_pos: The GpsPosition of the off-axis target.
+        emergent_last_known_pos: The last known GpsPosition of the emergent
+            target.
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         search_grid_points: List of Waypoint defining the search grid polygon.
 
     Raises:
         ValueError: Argument not convertable to int or float.
     """
 
+<<<<<<< HEAD
     attrs = [
         'id', 'active', 'air_drop_pos', 'fly_zones', 'home_pos',
         'mission_waypoints', 'off_axis_odlc_pos', 'emergent_last_known_pos',
@@ -148,11 +155,21 @@ class Mission(ClientBaseType):
     def __init__(self, id, active, air_drop_pos, fly_zones, home_pos,
                  mission_waypoints, off_axis_odlc_pos, emergent_last_known_pos,
                  search_grid_points):
+=======
+    attrs = ['id', 'active', 'air_drop_pos', 'fly_zones', 'home_pos',
+             'mission_waypoints', 'off_axis_target_pos',
+             'emergent_last_known_pos', 'search_grid_points']
+
+    def __init__(self, id, active, air_drop_pos, fly_zones, home_pos,
+                 mission_waypoints, off_axis_target_pos,
+                 emergent_last_known_pos, search_grid_points):
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         self.id = int(id)
         self.active = bool(active)
         self.air_drop_pos = GpsPosition.deserialize(air_drop_pos)
         self.fly_zones = [FlyZone.deserialize(fz) for fz in fly_zones]
         self.home_pos = GpsPosition.deserialize(home_pos)
+<<<<<<< HEAD
         self.mission_waypoints = [
             Waypoint.deserialize(mw) for mw in mission_waypoints
         ]
@@ -162,6 +179,15 @@ class Mission(ClientBaseType):
         self.search_grid_points = [
             Waypoint.deserialize(sg) for sg in search_grid_points
         ]
+=======
+        self.mission_waypoints = [Waypoint.deserialize(mw)
+                                  for mw in mission_waypoints]
+        self.off_axis_target_pos = GpsPosition.deserialize(off_axis_target_pos)
+        self.emergent_last_known_pos = GpsPosition.deserialize(
+            emergent_last_known_pos)
+        self.search_grid_points = [Waypoint.deserialize(sg)
+                                   for sg in search_grid_points]
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
 
 class Telemetry(ClientBaseType):
@@ -234,6 +260,7 @@ class MovingObstacle(ClientBaseType):
         self.sphere_radius = float(sphere_radius)
 
 
+<<<<<<< HEAD
 class Odlc(ClientBaseType):
     """An odlc.
 
@@ -259,17 +286,50 @@ class Odlc(ClientBaseType):
         team_id: Optional. The username of the team on whose behalf to submit
             odlcs. Must be admin user to specify.
         actionable_override: Optional. Manually sets the odlc to be
+=======
+class Target(ClientBaseType):
+    """A target.
+
+    Attributes:
+        id: Optional. The ID of the target. Assigned by the interoperability
+            server.
+        user: Optional. The ID of the user who created the target. Assigned by
+            the interoperability server.
+        type: Target type, must be one of TargetType.
+        latitude: Optional. Target latitude in decimal degrees. If provided,
+            longitude must also be provided.
+        longitude: Optional. Target longitude in decimal degrees. If provided,
+            latitude must also be provided.
+        orientation: Optional. Target orientation.
+        shape: Optional. Target shape.
+        background_color: Optional. Target color.
+        alphanumeric: Optional. Target alphanumeric. [0-9, a-z, A-Z].
+        alphanumeric_color: Optional. Target alphanumeric color.
+        description: Optional. Free-form description of the target, used for
+            certain target types.
+        autonomous: Optional; defaults to False. Indicates that this is an
+            ADLC target.
+        team_id: Optional. The username of the team on whose behalf to submit
+            targets. Must be admin user to specify.
+        actionable_override: Optional. Manually sets the target to be
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
             actionable. Must be admin user to specify.
 
     Raises:
         ValueError: Argument not valid.
     """
 
+<<<<<<< HEAD
     attrs = [
         'id', 'user', 'type', 'latitude', 'longitude', 'orientation', 'shape',
         'background_color', 'alphanumeric', 'alphanumeric_color',
         'description', 'autonomous', 'team_id', 'actionable_override'
     ]
+=======
+    attrs = ['id', 'user', 'type', 'latitude', 'longitude', 'orientation',
+             'shape', 'background_color', 'alphanumeric', 'alphanumeric_color',
+             'description', 'autonomous', 'team_id', 'actionable_override']
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
     def __init__(self,
                  id=None,

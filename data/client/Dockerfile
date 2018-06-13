@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 FROM ubuntu:16.04
 WORKDIR /interop/client
 
 RUN apt-get -qq update && apt-get -qq install -y \
+=======
+FROM ubuntu:14.04
+WORKDIR /interop/client
+
+RUN sudo apt-get -qq update && sudo apt-get -qq install -y \
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         python \
         python-dev \
         python-nose \
@@ -14,8 +21,12 @@ RUN apt-get -qq update && apt-get -qq install -y \
         python3-nose \
         python3-pip \
         python3-pyproj \
+<<<<<<< HEAD
         python3-lxml \
         sudo
+=======
+        python3-lxml
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
 COPY requirements.txt requirements.txt
 RUN bash -c "virtualenv --system-site-packages -p /usr/bin/python2 \

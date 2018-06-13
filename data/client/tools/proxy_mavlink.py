@@ -57,6 +57,7 @@ def proxy_mavlink(device, client):
 
         telemetry = Telemetry(latitude=telemTEMP[0],longitude=telemTEMP[1],altitude_msl=telemTEMP[2],uas_heading=telemTEMP[3])
         # Forward telemetry.
+<<<<<<< HEAD
         with open('../../Gui/currentLoc.txt',"w") as staticObjFile:
             staticObjFile.write(str(telemTEMP[0]))
             staticObjFile.write(str(' '))
@@ -66,6 +67,9 @@ def proxy_mavlink(device, client):
             staticObjFile.write(str(' '))
             staticObjFile.write(str(telemTEMP[3]))
 
+=======
+        
+>>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         try:
             client.post_telemetry(telemetry)
         except:
