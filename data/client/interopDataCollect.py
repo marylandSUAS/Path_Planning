@@ -8,19 +8,16 @@ import interop
 
 usern = 'testuser'
 passw = 'testpass'
-youareL = 'http://172.17.0.1:8000'
+youareL = 'http://10.0.0.5:8000'
 
 # pathName = 'D:/MUAS/AutoPilot/MissionData/'
 
 
-missionFileName = "Mission_data.txt"
+missionFileLoc = "../Mission_data.txt"
 
-staticObjFileName = 'static_obstacles.txt'
-staticObjFileLoc = pathName+staticObjFileName
+staticObjFileloc = '../static_obstacles.txt'
 
-movingObjFileName = 'moving_obstacles.txt'
-movingObjFileLoc = pathName+movingObjFileName
-
+movingObjFileLoc = '../moving_obstacles.txt'
 
 client = interop.Client(url=youareL, username=usern, password=passw)
 
@@ -30,9 +27,9 @@ missions = client.get_missions()
 with open(missionFileLoc,"w") as missionFile:
 	missionFile.write("off_axis_target_pos")
 	missionFile.write(str(' '))
-	missionFile.write(str(missions[0].off_axis_target_pos.latitude))
+	missionFile.write(str(missions[0].off_axis_odlc_pos.latitude))
 	missionFile.write(str(' '))
-	missionFile.write(str(missions[0].off_axis_target_pos.longitude))
+	missionFile.write(str(missions[0].off_axis_odlc_pos.longitude))
 	missionFile.write(str('\n'))
 
 
@@ -42,7 +39,7 @@ with open(missionFileLoc,"w") as missionFile:
 
 stationary_obstacles, moving_obstacles = client.get_obstacles()
 
-with open(staticObjFileLoc,"w") as staticObjFile:
+with open(staticObjFileloc,"w") as staticObjFile:
 	for j in range(len(stationary_obstacles)):
 		if(j != 0):
 			staticObjFile.write('\n')
@@ -61,9 +58,9 @@ timelast = time.time()
 while(True):
 
 	stationary_obstacles, moving_obstacles = client.get_obstacles()
-
+	print(moving_obstacles)
 	with open(movingObjFileLoc,"w") as movingObjFile:
-		for i in range(len(MovingObstacles)):
+		for i in range(len(moving_obstacles)):
 			if(i != 0):
 				movingObjFile.write('\n')	
 			movingObjFile.write(str(moving_obstacles[i].latitude))
@@ -73,6 +70,7 @@ while(True):
 			movingObjFile.write(str(moving_obstacles[i].altitude_msl))
 			movingObjFile.write(str(' '))
 			movingObjFile.write(str(moving_obstacles[i].sphere_radius))
+
 	
 	while(time.time()-timelast < .1):
 		time.sleep(.005)

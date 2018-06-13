@@ -20,8 +20,6 @@ class Avoidance:
 		
 		self.Safety_Margin = 30
 		self.cruise = 52.5	
-		self.dataPath = 'Path_Planning/dlite/flight_information.txt'
-
 
 		self.cord_System = cord_Sys
 		self.MAV = mav
