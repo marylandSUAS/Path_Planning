@@ -1,1 +1,4 @@
-off_axis_target_pos 38.142544 -76.434088
+air_drop_pos 38.141833 -76.425263 
+home_pos 38.14792 -76.427995 
+off_axis_target_pos 38.142544 -76.434088 
+emergent_last_known_pos 38.145823 -76.422396 

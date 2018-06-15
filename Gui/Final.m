@@ -52,11 +52,8 @@ handles.running = 0;
 handles.AltitudeText.String = '0';
 handles.wpnoText.String = '0';
 handles.AirspeedText.String = '0';
-handles.wpdistText.String = '0';
+handles.wp_distText.String = '0';
 
-fileID = fopen('static_bool.txt','w');
-fprintf(fileID,'1 ');
-fclose(fileID);
 
 handles.button_staticOnly.BackgroundColor = [.47 .67 .19];
 handles.button_dynamic.BackgroundColor = [.8 .8 .8];
@@ -106,9 +103,9 @@ function dat = getState()
     dat = C';
 
 
-function dat = getLoc()
-    fileStatic = fopen('currentLoc.txt');
-    C = fscanf(fileStatic,'%f %f %f %f',[4 Inf]);
+function dat = getMission()
+    fileStatic = fopen('Mission_data.txt');
+    C = fscanf(fileStatic,'%f %f',[2 Inf]);
     fclose(fileStatic);
     dat = C';
     
@@ -126,31 +123,35 @@ varargout{1} = handles.output;
 
 % --- Executes on button press in button_start.
 function button_start_Callback(hObject, eventdata, handles)
-    hanldes.running = 1;
+%     hanldes.running = 1;
+    format long
     static_obs = getStaticObs();
     boundry = getBoundry();
-    
-%     Hz = 2;
-%     r = robotics.Rate(Hz);
-    a = 1;
-%     while(hanldes.running == 1)
-    while(a == 1)
-        state = getState();
-        loc = getLoc();
-        handles.AltitudeText.String = string(loc(3));
-        handles.AirspeedText.String = string(state(4));
-        handles.wpnoText.String = string(state(5));
-        handles.wpdistText.String = string(state(5));
+    mis = getMission();
+
+    tic
+    while(toc < 15)
         
+
+        state = getState();
+        if (size(state,2) > 4)
+            handles.AirspeedText.String = string(state(4));
+            handles.wpnoText.String = string(state(5));
+            handles.AltitudeText.String = string(state(3));
+            handles.wp_distText.String = string(state(6));
+            hold off
+            scatter(state(1),state(2),50,'b','filled')
+            hold on
+        end
+
         wps = getWps();
         moving_obs = getMovingObs();
 %         axis(handles.Map)
-        hold off
-        scatter(state(1),state(2))
-        hold on
         
-        scatter(wps(:,1),wps(:,2))
-        plot(wps(:,1),wps(:,2))
+        scatter(mis(:,1),mis(:,2),60,'g','filled')
+        
+        scatter(wps(:,1),wps(:,2),'r')
+        plot(wps(:,1),wps(:,2),'r')
         
         for k = 1:size(moving_obs)
             viscircles([moving_obs(k,1),moving_obs(k,2)],moving_obs(k,4),'Color',[0 1 .5]);
@@ -160,11 +161,11 @@ function button_start_Callback(hObject, eventdata, handles)
             viscircles([static_obs(k,1),static_obs(k,2)],static_obs(k,4),'Color',[1 0 .5]);
         end
         
-        plot(boundry(:,1),boundry(:,2))
+        plot(boundry(:,1),boundry(:,2),'k')
         axis([-2250 2200 -2000 2700])
 
-%         waitfor(r);
-        a = 2;
+
+        pause(.5)
     end
     
     handles.output = hObject;
@@ -175,13 +176,13 @@ function button_start_Callback(hObject, eventdata, handles)
 
 
 % --- Executes on button press in button_dynamic.
-function button_dynamic_Callback(hObject, eventdata, handles)
+function button_staticOnly_Callback(hObject, eventdata, handles)
     fileID = fopen('static_bool.txt','w');
-    fprintf(fileID,'0 ');
+    fprintf(fileID,'1 ');
     fclose(fileID);
     
-    handles.button_dynamic.BackgroundColor = [.47 .67 .19];
-    handles.button_staticOnly.BackgroundColor = [.8 .8 .8];
+%     handles.button_dynamic.BackgroundColor = [.47 .67 .19];
+%     handles.button_staticOnly.BackgroundColor = [.8 .8 .8];
     
     handles.output = hObject;
     guidata(hObject, handles);

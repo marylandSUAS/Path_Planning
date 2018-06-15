@@ -8,7 +8,7 @@ import clr
 sys.path.append('C:\\Program Files (x86)\\Mission Planner\\Path_Planning')
 sys.path.append('C:\\Python27\\Lib')
 
-import threading
+# import threading
 
 
 
@@ -25,6 +25,7 @@ MissionPlanner.MainV2.speechEnable = True
 
 import Cord_System
 import missionFunctions
+import Avoider
 
 
 def speak(strin):
@@ -53,7 +54,7 @@ missionGPS = [[38.1507575,-76.4307475,150],[38.1496100,-76.4329576,150],[38.1420
 
 missionWpsPlan = [True]*len(missionGPS)
 
-
+print 'start'
 
 
 
@@ -63,6 +64,8 @@ cordSystem = Cord_System.Cord_System(Home)
 # create avoidance class to control vehicle during obstacle avoidance
 missionFunc = missionFunctions.missionTasks(cs,MAV,cordSystem)
 
+# create avoidance class to control vehicle during obstacle avoidance
+avoider = Avoider.Avoidance(cs,MAV,cordSystem)
 
 '''
 # in wps
@@ -96,8 +99,8 @@ total_List.extend(missionFunc.landingwps)
 finalNum = len(total_List)
 '''
 
-print len(missionFunc.dropwps)
-missionFunc.set_MP_wps(missionFunc.dropwps)
+# print len(missionFunc.dropwps)
+# missionFunc.set_MP_wps(missionFunc.dropwps)
 
 # MAV.setMode('Auto')
 

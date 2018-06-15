@@ -8,7 +8,7 @@ import clr
 sys.path.append('C:\\Program Files (x86)\\Mission Planner\\Path_Planning')
 sys.path.append('C:\\Python27\\Lib')
 
-import threading
+# import threading
 
 
 
@@ -33,28 +33,18 @@ def speak(strin):
 	MissionPlanner.MainV2.speechEngine.SpeakAsync(strin)
 
 
-# Southern Maryland Flying Field
-Home = [38.3652435,-76.5365767,60]
-
 # Competition
 Home = [38.1447163,-76.4279848,60]
 
 
-Leftreset = [38.3660385,-76.5390497,60,True]
-LeftPoint = [38.3655800,-76.5391141,60,False]
-
-Rightreset = [38.3645958,-76.5335137,60,False]
-RightPoint = [38.3650585,-76.5335137,60,True]
-
-
 # mission waypoints
 # competition
-missionGPS = [[38.1507575,-76.4307475,46],
-			[38.1496100,-76.4329576,46],
-			[38.1420668,-76.4254689,46],
-			[38.1437038,-76.4229584,61],
-			[38.1455601,-76.4243960,152],
-			[38.1439907,-76.4288163,91]]
+missionGPS = [[38.145314,-76.429119,200],
+			[38.149222,-76.429483,300],
+			[38.150433,-76.430856,300],
+			[38.148950,-76.432286,300],
+			[38.147011,-76.430642,400],
+			[38.143783,-76.431994,200]]
 
 # southern maryland
 # missionGPS = [LeftPoint, RightPoint]
@@ -71,12 +61,6 @@ missionFunc = missionFunctions.missionTasks(cs,MAV,cordSystem)
 
 # create avoidance class to control vehicle during obstacle avoidance
 avoider = Avoider.Avoidance(cs,MAV,cordSystem)
-
-
-
-
-
-
 
 
 
@@ -112,15 +96,33 @@ total_List.extend(missionFunc.searchGridWps)
 total_Plan.extend(missionFunc.searchGridPlan)
 searchGridNum = len(total_List)
 
+'''
+temp = [38.1449526,-76.4285803,200]
+total_Plan.append(temp)
+total_Plan.append(True)
+'''
+
 # in wps
 total_List.extend(missionFunc.emergentwps)
 total_Plan.extend(missionFunc.emergentPlan)
 emergentNum = len(total_List)
 
+'''
+temp = [38.1449526,-76.4285803,200]
+total_Plan.append(temp)
+total_Plan.append(True)
+'''
+
 # in wps
 total_List.extend(missionFunc.offAxiswps)
 total_Plan.extend(missionFunc.offAxisPlan)
 offAxisNum = len(total_List)
+
+'''
+temp = [38.1449526,-76.4285803,200]
+total_Plan.append(temp)
+total_Plan.append(True)
+'''
 
 # in wps
 total_List.extend(missionFunc.landingwps)
@@ -129,12 +131,18 @@ finalNum = len(total_List)
 
 print 'Mission length: ', len(total_List), ' ',len(total_Plan)
 
-missionFunc.set_MP_wps(total_List)
+# print total_List
 
+# missionFunc.set_MP_wps(total_List)
+
+missionFunc.set_MP_wps(missionFunc.offAxiswps)
+
+'''
 MAV.setMode('Auto')
-
+# print total_List
 while cs.wpno < len(total_List):
-	try:
-		avoider.totalreplan(total_List,total_Plan)
-	except:
-		print 'something failed trying again'
+	# try:
+	avoider.totalreplan(total_List,total_Plan)
+	# except:
+		# print 'something failed trying again'
+'''

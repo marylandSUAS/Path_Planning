@@ -5,7 +5,16 @@ import sys
 import time
 from pymavlink import mavutil
 
+import interop
+from interop import Telemetry
 
+
+usern = 'testuser'
+passw = 'testpass'
+youareL = 'http://10.0.0.3:8000'
+
+
+client = interop.Client(url=youareL, username=usern, password=passw)
 
 
 def mavlink_latlon(degrees):
@@ -23,7 +32,7 @@ def mavlink_heading(heading):
     return heading / 100.0
 
 
-def proxy_mavlink(device,):
+def proxy_mavlink(device):
     """Receives packets over the device and forwards telemetry via the client.
 
     Args:
@@ -36,16 +45,14 @@ def proxy_mavlink(device,):
 
     while True:
         # Get packet.
-        msg = mav.recv_match(type='GLOBAL_POSITION_INT',
-                             blocking=True,
-                             timeout=10.0)
+        msg = mav.recv_match(type='GLOBAL_POSITION_INT',blocking=True,timeout=10.0)
+
         if msg is None:
-            logger.critical(
-                'Did not receive MAVLink packet for over 10 seconds.')
-            sys.exit(-1)
-        # Convert to telemetry.
+            print('Did not receive MAVLink packet for over 10 seconds.')
+
+        else:
             telemTEMP = [mavlink_latlon(msg.lat), mavlink_latlon(msg.lon), mavlink_alt(msg.alt),mavlink_heading(msg.hdg)]
-            print(telemTEMP)
+
             with open('../../Gui/currentLoc.txt',"w") as staticObjFile:
                 staticObjFile.write(str(telemTEMP[0]))
                 staticObjFile.write(str(' '))
@@ -55,9 +62,16 @@ def proxy_mavlink(device,):
                 staticObjFile.write(str(' '))
                 staticObjFile.write(str(telemTEMP[3]))
 
+            try:
+                client.post_telemetry(telemetry)
+                print(telemTEMP)
+            except:
+                print('Failed to post telemetry to interop.')
+            
 
 
 
 
 
-proxy_mavlink('127.0.0.1:14550')
+
+proxy_mavlink('127.0.0.1:14551')

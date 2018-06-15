@@ -45,31 +45,19 @@ def proxy_mavlink(device, client):
     # Continuously forward packets.
     while True:
         # Get packet.
-        msg = mav.recv_match(type='GLOBAL_POSITION_INT',
-                             blocking=True,
-                             timeout=10.0)
+        msg = mav.recv_match(
+            type='GLOBAL_POSITION_INT', blocking=True, timeout=10.0)
         if msg is None:
             logger.critical(
                 'Did not receive MAVLink packet for over 10 seconds.')
             sys.exit(-1)
         # Convert to telemetry.
-        telemTEMP = [mavlink_latlon(msg.lat), mavlink_latlon(msg.lon), mavlink_alt(msg.alt),mavlink_heading(msg.hdg)]
-
-        telemetry = Telemetry(latitude=telemTEMP[0],longitude=telemTEMP[1],altitude_msl=telemTEMP[2],uas_heading=telemTEMP[3])
+        telemetry = Telemetry(
+            latitude=mavlink_latlon(msg.lat),
+            longitude=mavlink_latlon(msg.lon),
+            altitude_msl=mavlink_alt(msg.alt),
+            uas_heading=mavlink_heading(msg.hdg))
         # Forward telemetry.
-<<<<<<< HEAD
-        with open('../../Gui/currentLoc.txt',"w") as staticObjFile:
-            staticObjFile.write(str(telemTEMP[0]))
-            staticObjFile.write(str(' '))
-            staticObjFile.write(str(telemTEMP[1]))
-            staticObjFile.write(str(' '))
-            staticObjFile.write(str(telemTEMP[2]))
-            staticObjFile.write(str(' '))
-            staticObjFile.write(str(telemTEMP[3]))
-
-=======
-        
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         try:
             client.post_telemetry(telemetry)
         except:

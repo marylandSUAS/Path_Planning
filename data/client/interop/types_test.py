@@ -5,11 +5,7 @@ from . import GpsPosition
 from . import Mission
 from . import MovingObstacle
 from . import StationaryObstacle
-<<<<<<< HEAD
 from . import Odlc
-=======
-from . import Target
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 from . import Telemetry
 from . import Waypoint
 
@@ -23,7 +19,6 @@ class TestMission(unittest.TestCase):
         mission = Mission(
             id=1,
             active=True,
-<<<<<<< HEAD
             air_drop_pos=GpsPosition(latitude=38, longitude=-76),
             fly_zones=[
                 FlyZone(
@@ -46,40 +41,12 @@ class TestMission(unittest.TestCase):
             search_grid_points=[
                 Waypoint(order=1, latitude=37, longitude=-70, altitude_msl=10)
             ])
-=======
-            air_drop_pos=GpsPosition(latitude=38,
-                                     longitude=-76),
-            fly_zones=[FlyZone(boundary_pts=[Waypoint(order=1,
-                                                      latitude=37,
-                                                      longitude=-70,
-                                                      altitude_msl=10)],
-                               altitude_msl_min=10,
-                               altitude_msl_max=20)],
-            home_pos=GpsPosition(latitude=39,
-                                 longitude=-77),
-            mission_waypoints=[Waypoint(order=1,
-                                        latitude=37,
-                                        longitude=-70,
-                                        altitude_msl=10)],
-            off_axis_target_pos=GpsPosition(latitude=37,
-                                            longitude=-75),
-            emergent_last_known_pos=GpsPosition(latitude=34,
-                                                longitude=-75),
-            search_grid_points=[Waypoint(order=1,
-                                         latitude=37,
-                                         longitude=-70,
-                                         altitude_msl=10)])
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         d = mission.serialize()
         self.assertEqual(1, d['id'])
         self.assertEqual(38, d['air_drop_pos']['latitude'])
         self.assertEqual(-77, d['home_pos']['longitude'])
         self.assertEqual(1, d['mission_waypoints'][0]['order'])
-<<<<<<< HEAD
         self.assertEqual(37, d['off_axis_odlc_pos']['latitude'])
-=======
-        self.assertEqual(37, d['off_axis_target_pos']['latitude'])
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         self.assertEqual(34, d['emergent_last_known_pos']['latitude'])
         self.assertEqual(10, d['search_grid_points'][0]['altitude_msl'])
 
@@ -87,30 +54,20 @@ class TestMission(unittest.TestCase):
         """Test deserialization."""
         return
         m = Mission.deserialize({
-<<<<<<< HEAD
             'id':
             1,
             'active':
             True,
-=======
-            'id': 1,
-            'active': True,
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
             'air_drop_pos': {
                 'latitude': 38,
                 'longitude': -76,
             },
             'fly_zones': [
                 {
-<<<<<<< HEAD
                     'altitude_msl_min':
                     10,
                     'altitude_msl_max':
                     20,
-=======
-                    'altitude_msl_min': 10,
-                    'altitude_msl_max': 20,
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
                     'boundary_pts': [
                         {
                             'order': 1,
@@ -124,7 +81,6 @@ class TestMission(unittest.TestCase):
                 'latitude': 39,
                 'longitude': -75,
             },
-<<<<<<< HEAD
             'mission_waypoints': [{
                 'order': 2,
                 'latitude': 30,
@@ -132,17 +88,6 @@ class TestMission(unittest.TestCase):
                 'altitude_msl': 5,
             }],
             'off_axis_odlc_pos': {
-=======
-            'mission_waypoints': [
-                {
-                    'order': 2,
-                    'latitude': 30,
-                    'longitude': -70,
-                    'altitude_msl': 5,
-                }
-            ],
-            'off_axis_target_pos': {
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
                 'latitude': 31,
                 'longitude': -71,
             },
@@ -174,13 +119,8 @@ class TestMission(unittest.TestCase):
         self.assertEqual(30, m.mission_waypoints[0].latitude)
         self.assertEqual(-70, m.mission_waypoints[0].longitude)
         self.assertEqual(5, m.mission_waypoints[0].altitude_msl)
-<<<<<<< HEAD
         self.assertEqual(31, m.off_axis_odlc_pos.latitude)
         self.assertEqual(-71, m.off_axis_odlc_pos.latitude)
-=======
-        self.assertEqual(31, m.off_axis_target_pos.latitude)
-        self.assertEqual(-71, m.off_axis_target_pos.latitude)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         self.assertEqual(32, m.emergent_last_known_pos.latitude)
         self.assertEqual(-71, m.emergent_last_known_pos.latitude)
         self.assertEqual(3, m.search_grid_points[0].order)
@@ -200,7 +140,6 @@ class TestTelemetry(unittest.TestCase):
         """Test invalid inputs"""
         # Bad latitude
         with self.assertRaises(ValueError):
-<<<<<<< HEAD
             Telemetry(
                 latitude='a', longitude=-76, altitude_msl=100, uas_heading=90)
         # Bad longitude
@@ -220,37 +159,6 @@ class TestTelemetry(unittest.TestCase):
         """Test serialization."""
         t = Telemetry(
             latitude=38, longitude=-76, altitude_msl=100, uas_heading=90)
-=======
-            Telemetry(latitude='a',
-                      longitude=-76,
-                      altitude_msl=100,
-                      uas_heading=90)
-        # Bad longitude
-        with self.assertRaises(ValueError):
-            Telemetry(latitude=38,
-                      longitude='a',
-                      altitude_msl=100,
-                      uas_heading=90)
-        # Bad altitude
-        with self.assertRaises(ValueError):
-            Telemetry(latitude=38,
-                      longitude=-76,
-                      altitude_msl='a',
-                      uas_heading=90)
-        # Bad heading
-        with self.assertRaises(ValueError):
-            Telemetry(latitude=38,
-                      longitude=-76,
-                      altitude_msl=100,
-                      uas_heading='a')
-
-    def test_serialize(self):
-        """Test serialization."""
-        t = Telemetry(latitude=38,
-                      longitude=-76,
-                      altitude_msl=100,
-                      uas_heading=90)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         s = t.serialize()
 
         self.assertEqual(4, len(s))
@@ -280,24 +188,16 @@ class TestStationaryObstacle(unittest.TestCase):
     def test_valid(self):
         """Test valid inputs"""
         # No exceptions
-<<<<<<< HEAD
         StationaryObstacle(
             latitude=38,
             longitude=-76,
             cylinder_radius=100,
             cylinder_height=200)
-=======
-        StationaryObstacle(latitude=38,
-                           longitude=-76,
-                           cylinder_radius=100,
-                           cylinder_height=200)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
     def test_invalid(self):
         """Test invalid inputs"""
         # Bad latitude
         with self.assertRaises(ValueError):
-<<<<<<< HEAD
             StationaryObstacle(
                 latitude='a',
                 longitude=-76,
@@ -332,37 +232,6 @@ class TestStationaryObstacle(unittest.TestCase):
             longitude=-76,
             cylinder_radius=100,
             cylinder_height=200)
-=======
-            StationaryObstacle(latitude='a',
-                               longitude=-76,
-                               cylinder_radius=100,
-                               cylinder_height=200)
-        # Bad longitude
-        with self.assertRaises(ValueError):
-            StationaryObstacle(latitude=38,
-                               longitude='a',
-                               cylinder_radius=100,
-                               cylinder_height=200)
-        # Bad radius
-        with self.assertRaises(ValueError):
-            StationaryObstacle(latitude=38,
-                               longitude=-76,
-                               cylinder_radius='a',
-                               cylinder_height=200)
-        # Bad height
-        with self.assertRaises(ValueError):
-            StationaryObstacle(latitude=38,
-                               longitude=-76,
-                               cylinder_radius=100,
-                               cylinder_height='a')
-
-    def test_serialize(self):
-        """Test serialization."""
-        o = StationaryObstacle(latitude=38,
-                               longitude=-76,
-                               cylinder_radius=100,
-                               cylinder_height=200)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         s = o.serialize()
 
         self.assertEqual(4, len(s))
@@ -392,21 +261,13 @@ class TestMovingObstacle(unittest.TestCase):
     def test_valid(self):
         """Test valid inputs"""
         # No exceptions
-<<<<<<< HEAD
         MovingObstacle(
             latitude=38, longitude=-76, altitude_msl=100, sphere_radius=200)
-=======
-        MovingObstacle(latitude=38,
-                       longitude=-76,
-                       altitude_msl=100,
-                       sphere_radius=200)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
     def test_invalid(self):
         """Test invalid inputs"""
         # Bad latitude
         with self.assertRaises(ValueError):
-<<<<<<< HEAD
             MovingObstacle(
                 latitude='a',
                 longitude=-76,
@@ -438,37 +299,6 @@ class TestMovingObstacle(unittest.TestCase):
         """Test serialization."""
         o = MovingObstacle(
             latitude=38, longitude=-76, altitude_msl=100, sphere_radius=200)
-=======
-            MovingObstacle(latitude='a',
-                           longitude=-76,
-                           altitude_msl=100,
-                           sphere_radius=200)
-        # Bad longitude
-        with self.assertRaises(ValueError):
-            MovingObstacle(latitude=38,
-                           longitude='a',
-                           altitude_msl=100,
-                           sphere_radius=200)
-        # Bad altitude
-        with self.assertRaises(ValueError):
-            MovingObstacle(latitude=38,
-                           longitude=-76,
-                           altitude_msl='a',
-                           sphere_radius=-200)
-        # Bad radius
-        with self.assertRaises(ValueError):
-            MovingObstacle(latitude=38,
-                           longitude=-76,
-                           altitude_msl=100,
-                           sphere_radius='a')
-
-    def test_serialize(self):
-        """Test serialization."""
-        o = MovingObstacle(latitude=38,
-                           longitude=-76,
-                           altitude_msl=100,
-                           sphere_radius=200)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         s = o.serialize()
 
         self.assertEqual(4, len(s))
@@ -492,7 +322,6 @@ class TestMovingObstacle(unittest.TestCase):
         self.assertEqual(200, o.sphere_radius)
 
 
-<<<<<<< HEAD
 class TestOdlc(unittest.TestCase):
     """Tests the Odlc model for validation and serialization."""
 
@@ -527,45 +356,11 @@ class TestOdlc(unittest.TestCase):
             description='Fireman putting out a fire.')
 
         Odlc(type='standard', latitude=10, longitude=-10, autonomous=True)
-=======
-class TestTarget(unittest.TestCase):
-    """Tests the Target model for validation and serialization."""
-
-    def test_valid(self):
-        """Test valid inputs."""
-        Target(id=1,
-               user=2,
-               type='standard',
-               latitude=10,
-               longitude=-10,
-               orientation='n',
-               shape='circle',
-               background_color='white',
-               alphanumeric='a',
-               alphanumeric_color='black')
-
-        Target(type='off_axis',
-               latitude=10,
-               longitude=-10,
-               orientation='n',
-               shape='circle',
-               background_color='white',
-               alphanumeric='a',
-               alphanumeric_color='black')
-
-        Target(type='emergent',
-               latitude=10,
-               longitude=-10,
-               description='Fireman putting out a fire.')
-
-        Target(type='standard', latitude=10, longitude=-10, autonomous=True)
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
     def test_invalid(self):
         """Test invalid inputs."""
         # Bad latitude.
         with self.assertRaises(ValueError):
-<<<<<<< HEAD
             Odlc(
                 type='emergent',
                 latitude='a',
@@ -595,34 +390,6 @@ class TestTarget(unittest.TestCase):
             autonomous=True,
             actionable_override=True,
             team_id='testuser')
-=======
-            Target(type='emergent',
-                   latitude='a',
-                   longitude=-10,
-                   description='Firefighter')
-
-        with self.assertRaises(ValueError):
-            Target(type='emergent',
-                   latitude=10,
-                   longitude='a',
-                   description='Firefighter')
-
-    def test_serialize(self):
-        """Test serialization."""
-        o = Target(id=1,
-                   user=2,
-                   type='standard',
-                   latitude=10,
-                   longitude=-10,
-                   orientation='n',
-                   shape='circle',
-                   background_color='white',
-                   alphanumeric='a',
-                   alphanumeric_color='black',
-                   autonomous=True,
-                   actionable_override=True,
-                   team_id='testuser')
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
         s = o.serialize()
 
         self.assertEqual(13, len(s))
@@ -642,11 +409,7 @@ class TestTarget(unittest.TestCase):
 
     def test_deserialize(self):
         """Test deserialization."""
-<<<<<<< HEAD
         o = Odlc.deserialize({
-=======
-        o = Target.deserialize({
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
             'type': 'standard',
             'latitude': '10',
             'longitude': -10,
@@ -672,10 +435,6 @@ class TestTarget(unittest.TestCase):
         self.assertEqual(True, o.actionable_override)
         self.assertEqual('testuser', o.team_id)
 
-<<<<<<< HEAD
         o = Odlc.deserialize({'type': 'emergent'})
-=======
-        o = Target.deserialize({'type': 'emergent'})
->>>>>>> 6ecfea6f2aa884c93ff663d9577e4690691e94c5
 
         self.assertEqual('emergent', o.type)

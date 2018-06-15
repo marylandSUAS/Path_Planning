@@ -20,12 +20,14 @@ class missionTasks:
 		self.cs = CS
 		self.Home = cord_Sys.Home
 
+
+		self.offAxisloc, self.emergentloc = self.getMissionData()
 		# southern maryland
-		self.droploc = [38.3652078,-76.5366331,115]
+		# self.droploc = [38.3652078,-76.5366331,115]
 		# competition
-		# self.droploc = [38.1459313,-76.4263701,35]
+		self.droploc = [38.145842,-76.426375,115]
 		self.dropMeters = self.cord_System.toMeters(self.droploc)
-		self.dropbearing = -10 * pi/180
+		self.dropbearing = 20 * pi/180
 		self.dropwps = self.payloaddropSet()
 		self.dropPlan = [True]
 		self.dropPlan.extend([False]*(len(self.dropwps)-1))
@@ -33,10 +35,11 @@ class missionTasks:
 		# southern maryland
 		# self.offAxisloc = [38.3648986,-76.5373251,0.0]
 		# competition
-		self.offAxisloc = [38.1476020,-76.4272070,100]
+		# self.offAxisloc = [38.1476020,-76.4272070,100]
 		self.offAxisheight = 200
 		self.offAxisDist = 250
-		self.offAxisbearing = 20 * pi/180
+		self.offAxisbearing = -90 * pi/180
+		self.LookRight = -1
 		self.offAxisMeters = self.cord_System.toMeters(self.offAxisloc)
 		self.offAxiswps = self.offAxisSet()
 		self.offAxisPlan = [True]
@@ -46,15 +49,15 @@ class missionTasks:
 		# southern maryland
 		# self.emergentloc = [38.3652078,-76.5366331,50]
 		# competition
-		self.emergentloc = [38.1441594,-76.4251471,50]
+		# self.emergentloc = [38.1441594,-76.4251471,50]
 		self.emergentMeters = self.cord_System.toMeters(self.emergentloc)
 		self.emergentwps = self.emergentwpsSet()
-		self.emergentPlan = [True,False]		
+		self.emergentPlan = [True]		
 		# self.emergentPlan.extend([False]*(len(self.emergentPlan)-1))
 		
 
 		self.LandLoc = self.Home
-		self.landbearing = 20 * pi/180
+		self.landbearing = -160 * pi/180
 		self.landingwps = self.landSet()
 		self.landingPlan = [False]*len(self.landingwps)
 
@@ -64,8 +67,9 @@ class missionTasks:
 		# self.takeoffPoint = []
 
 		self.searchGridWps = self.searchGridSet()
-		self.searchGridPlan = [False]*len(self.searchGridWps)
+		# self.searchGridPlan = [False]*len(self.searchGridWps)
 
+		self.printMissionMeters()
 		print "initalized mission functions"
 
 
@@ -78,6 +82,8 @@ class missionTasks:
 		self.MAV.setWP(Locationwp().Set(self.Home[0],self.Home[1],self.Home[2], 16),0,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 
 		for i in range(len(wps)):
+			Locationwp.alt.SetValue(wps[i], wps[i].alt * .3048)
+
 			self.MAV.setWP(wps[i],1+i,MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 			if (i+1 == 1):
 				self.MAV.setWPCurrent(1)
@@ -118,6 +124,29 @@ class missionTasks:
 			OFile.write(str(wps[i][2]))
 		OFile.close()
 
+	def getMissionData(self):
+		OFile = open('Path_Planning/data/Mission_data.txt',"r")
+		dat = []
+		for i in range(4):
+			temp = OFile.readline()
+			# print temp
+			dat.append(temp.split(' '))
+
+		OFile.close()
+		
+		temp1 = [float(dat[2][1]),float(dat[2][2]),0.0]
+		temp2 = [float(dat[3][1]),float(dat[3][2]),0.0]
+
+		return temp1,temp2
+
+	def printMissionMeters(self):
+		OFile = open('Path_Planning/Gui/Mission_data.txt',"w")
+		OFile.write(str(self.dropMeters[0])+' '+str(self.dropMeters[1]))
+		OFile.write(str(self.offAxisMeters[0])+' '+str(self.offAxisMeters[1]))
+		OFile.write(str(self.emergentMeters[0])+' '+str(self.emergentMeters[1]))
+		OFile.close()
+
+
 	# done
 	def takeoffSet(self):
 		to = Locationwp()
@@ -145,14 +174,15 @@ class missionTasks:
 		angle = atan(dist/height)
 		
 		bear = self.offAxisbearing
-		LookRight = 1
+		LookRight = self.LookRight
 
-		safeloc = [self.offAxisMeters[0]-LookRight*dist*sin(bear*pi/180),self.offAxisMeters[1]+LookRight*dist*cos(bear*pi/180),height]
-		
+		safeloc = [self.offAxisMeters[0]+LookRight*dist*cos(bear*pi/180),
+					self.offAxisMeters[1]+LookRight*dist*sin(bear*pi/180),
+					height]
 
 		predist = -150
-		prex = safeloc[0] + predist*cos(bear*pi/180)
-		prey = safeloc[1] + predist*sin(bear*pi/180)
+		prex = safeloc[0] + predist*cos((bear+90)*pi/180)
+		prey = safeloc[1] + predist*sin((bear+90)*pi/180)
 
 		pre = self.cord_System.toGPS([prex,prey,height])
 		preloc = Locationwp().Set(pre[0],pre[1],height, 16)
@@ -168,8 +198,8 @@ class missionTasks:
 		Locationwp.id.SetValue(takephoto, 203)
 		
 		after1dist = 20
-		prex = safeloc[0] + after1dist*cos(bear*pi/180)
-		prey = safeloc[1] + after1dist*sin(bear*pi/180)
+		prex = safeloc[0] + after1dist*cos((bear+90)*pi/180)
+		prey = safeloc[1] + after1dist*sin((bear+90)*pi/180)
 		post1 = self.cord_System.toGPS([prex,prey,height])
 		post1 = Locationwp().Set(post1[0],post1[1],height, 16)
 				
@@ -178,13 +208,14 @@ class missionTasks:
 		Locationwp.p2.SetValue(resetangle, 0)
 		
 		postdist2 = 40
-		prex = safeloc[0] + postdist2*cos(bear*pi/180)
-		prey = safeloc[1] + postdist2*sin(bear*pi/180)
+		prex = safeloc[0] + postdist2*cos((bear+90)*pi/180)
+		prey = safeloc[1] + postdist2*sin((bear+90)*pi/180)
 		post2 = self.cord_System.toGPS([prex,prey,height])
 		postloc = Locationwp().Set(post2[0],post2[1],height, 16)
-		
+
 		# print 'Coordinates set with angle ',angle*180/3.1415, ' and distance ', (dist**2+height**2)**.5
-		return [preloc,setangle,offloc,takephoto,post1,resetangle,postloc]
+
+		return [preloc,setangle,offloc,post1,resetangle,postloc]#,self.cord_System.MetertoWp(self.offAxisMeters)]
 
 	# done
 	def offAxis(self):
@@ -205,7 +236,7 @@ class missionTasks:
 	# done
 	def payloaddropSet(self):
 		bear = self.dropbearing + pi
-		dist = 80.0 #function of alt and vel
+		dist = 110.0 #function of alt and vel
 		height = 115.0
 
 		windoffset  = 0
@@ -285,23 +316,31 @@ class missionTasks:
 	def landSet(self):
 
 		descent_ratio = 17.0/150.0 #20 meter descent for every 150 meters traveled
-		alt1 = 100
-		alt2 = 40
+
+		alt1 = 150
+		alt2 = 65
+		alt3 = 36
+
 		bear = self.landbearing
 
-		dist1 = alt1/descent_ratio
-		dist2 = alt2/descent_ratio
+		dist1 = 800
+		dist2 = 550
+		dist3 = 350
 
 		pre1 = [dist1*cos(bear),dist1*sin(bear),alt1]
 		pre2 = [dist2*cos(bear),dist2*sin(bear),alt2]
+		pre3 = [dist3*cos(bear),dist3*sin(bear),alt3]
+
 		pre1 = self.cord_System.toGPS(pre1)
 		pre2 = self.cord_System.toGPS(pre2)
+		pre3 = self.cord_System.toGPS(pre3)
 
 		pre1 = Locationwp().Set(pre1[0],pre1[1],alt1, 16)
 		pre2 = Locationwp().Set(pre2[0],pre2[1],alt2, 16)
+		pre3 = Locationwp().Set(pre3[0],pre3[1],alt3, 16)
 		landing = Locationwp().Set(self.Home[0],self.Home[1],0,21)
 
-		return [pre1,pre2,landing]
+		return [pre1,pre2,pre3,landing]
 
 	# done
 	def Land(self):
@@ -320,27 +359,34 @@ class missionTasks:
 		cam = Locationwp()
 		Locationwp.id.SetValue(cam, 206)
 		Locationwp.p1.SetValue(cam, 40.0)
-		lst.append(cam)
+		# lst.append(cam)
 
 		wpfileLoc = 'Path_Planning/data/SearchGridWps.waypoints'
 		with open(wpfileLoc,"r") as globallist:
-		
+			
 			if (globallist.readline().split()[1] != "WPL"):
 				print "Nothing found"
-		
+			
 			else:
+				dat = globallist.readline().split()
 				dat = globallist.readline().split()
 				i = 1
 				while(len(dat) > 5):
 					if (dat[3] == '16'):
-						lst.append(Locationwp().Set(float(dat[8]),float(dat[9]),float(dat[10]), 16))
+						lst.append(Locationwp().Set(float(dat[8]),float(dat[9]),200, 16))
+						# print dat[10]
 					dat = globallist.readline().split("	")
 		
 		cam = Locationwp()
 		Locationwp.id.SetValue(cam, 206)
 		Locationwp.p1.SetValue(cam, 0)
-		lst.append(cam)
+		# lst.append(cam)
 
+		self.searchGridPlan = [True,False,True,False,True,
+							False,True,False,True,False,
+							True,False,True,False,False]
+
+		# print lst
 		return lst
 
 
@@ -351,5 +397,5 @@ class missionTasks:
 		cam = Locationwp()
 		Locationwp.id.SetValue(cam, 203)
 
-		lst.append(cam)
+		# lst.append(cam)
 		return lst

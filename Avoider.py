@@ -2,6 +2,7 @@
 # import os
 import localization
 from localization import movingObs
+
 # import CheckingAndBlockingNew
 from CheckingAndBlockingNew import Check
 import threading
@@ -12,6 +13,7 @@ from MissionPlanner.Utilities import Locationwp
 import MAVLink
 
 import math
+# import warnings
 
 class Avoidance:
 
@@ -38,7 +40,7 @@ class Avoidance:
 
 		self.printLocation = True
 		self.printLocThread = threading.Thread(target=self.printLoc)
-		self.printLocThread.start()
+		# self.printLocThread.start()
 		
 		self.StaticObstacles = []
 		self.addStaticObstacles('Path_Planning/data/static_obstacles.txt')
@@ -57,7 +59,7 @@ class Avoidance:
 
 	def printLoc(self):
 		timestart = time.time()
-		while(self.printLocation and time.time()-timestart < 60):
+		while(self.printLocation and time.time()-timestart < 600):
 			
 			loc = self.currentLoc()
 
@@ -71,6 +73,8 @@ class Avoidance:
 			senarioFile.write(str(self.cs.airspeed))
 			senarioFile.write(str(' '))
 			senarioFile.write(str(self.cs.wpno))
+			senarioFile.write(str(' '))
+			senarioFile.write(str(self.cs.wp_dist))
 			senarioFile.close()
 			
 	def addLogger(self,loger):
@@ -95,14 +99,20 @@ class Avoidance:
 		if (self.logger != None):
 			self.logger.assuption = temp
 
-	def checkStaticOnly(self):
+	def checkbreak(self):
 		OFile = open('Path_Planning/GUI/static_bool.txt',"r")
 		dat = OFile.readline().split(" ")
 		stat = False
-		if(dat[0] == 1):
+		print dat
+		if(str(dat[0]) == '1'):
 			stat = True
+			print 'break returning true'
 		
 		OFile.close()
+		OFile = open('Path_Planning/GUI/static_bool.txt',"w")
+		OFile.write('0 ')
+		OFile.close()
+
 		return stat
 
 	def addStaticObstacles(self,static_file):
@@ -160,6 +170,23 @@ class Avoidance:
 		self.Bounds.append(self.cord_System.toMeters([38.1439738,-76.4213920,0.0]))
 		self.Bounds.append(self.cord_System.toMeters([38.1471801,-76.4234304,0.0]))
 		self.Bounds.append(self.cord_System.toMeters([38.1462857,-76.4264131,0.0]))
+		
+		'''
+		# competition actual
+		self.Bounds.append(self.cord_System.toMeters([38.1462694,-76.4281639,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.151625,-76.428683,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.101889,-76.431467,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.150594,-76.435361,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.147567,-76.432342,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.144607,-76.432947,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.143256,-76.434767,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.140464,-76.432636,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.140719,-76.426014,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.143761,-76.421206,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.147347,-76.423211,0.0]))
+		self.Bounds.append(self.cord_System.toMeters([38.146131,-76.426653,0.0]))
+		'''
+
 
 
 		OFile = open('Path_Planning/GUI/boundry.txt',"w")
@@ -294,31 +321,10 @@ class Avoidance:
 		self.MAV.setMode("Auto")
 
 	def test(self):
-		# static path and send
+		while (True):
+			print self.checkbreak()
+			time.sleep(4)
 
-		staticPath = [self.cord_System.WptoMeter()]
-		temp_points = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,[],3)
-		staticPath.extend(temp_points)
-		staticPath.append(self.cord_System.WptoMeter(wp2))
-
-
-		while(self.cs.wpno < num+1):
-			time.sleep(.05)
-
-
-		important_Dy_Obstacles = self.getMovingObstacles(staticPath,0)
-		finalPath = temp_points
-			
-		if(len(important_Dy_Obstacles) > 0):
-			finalPath = self.DL(self.cord_System.WptoMeter(wp1),self.cord_System.WptoMeter(wp2),self.StaticObstacles,important_Dy_Obstacles,3)
-			
-			for wp in finalPath:
-				self.MAV.setGuidedModeWP(self.cord_System(MetertoWp(wp)))
-				while(self.cs.wp_dist > 30):
-					time.sleep(.05)	
-		self.MAV.setMode('Auto')
-		while(self.cs.wp_dist > 40 and self.cs.wpno < wp1num+2):
-			time.sleep(.05)
 
 	def notPlan(self,wp1,wp2):
 		self.set_vehicle_waypoints([wp1,wp2])
@@ -476,7 +482,7 @@ class Avoidance:
 	# start,goal,current,static,moving,timeout,expanded 
 	def DL(self,start,goal,staticObstacles,movingObstacles,timeouttaken):
 		# currentGPS = startGPS
-		return []
+		return [[(start[0]+goal[0])/2,(start[1]+goal[1])/2,(start[2]+goal[2])/2]]
 
 		current = start
 		with open('Path_Planning/dlite/flight_information.txt',"w") as flightFile:
@@ -772,34 +778,37 @@ class Avoidance:
 			time.sleep(.05)
 
 
-	def totalreplan(self,wp,planList):
+	def totalreplan(self,wp_list,planList):
 		# print 'received: ', len(wp)
 		# print 'received: ', len(planList)
+		# print wp_list
 
-		for k in range(self.cs.wpno-1,len(wp)):
-			print 'starting wp no ',k+1,' reading ', planList[k]
+		for k in range(self.cs.wpno,len(wp_list)):
+			print 'starting wp no ',k+1,' reading ', planList[k], 'K = ',k
 
 			if planList[k]:
-
-				wp2 = self.cord_System.WptoMeter(wp[k])
+				print wp_list[k]
+				wp2 = self.cord_System.WptoMeter(wp_list[k])
 				print 'wp2'
 				
 				if(k == 1):
-					while(self.cs.wpno < k+1):
-						print 'waiting for ', k
+					while(self.cs.wpno < k):
+						print 'waiting for ', k+1
 						time.sleep(.05)
 					wp1 = self.currentLoc()
 
-				elif(wp[k-1].id == 16):
-					wp1 = self.cord_System.WptoMeter(wp[k-1])
-				elif(wp[k-2].id == 16):
-					wp1 = self.cord_System.WptoMeter(wp[k-2])
-				elif(wp[k-3].id == 16):
-					wp1 = self.cord_System.WptoMeter(wp[k-3])
-				elif(wp[k-4].id == 16):
-					wp1 = self.cord_System.WptoMeter(wp[k-4])
-				else
-					wp1 = self.cord_System.WptoMeter(wp[k-1])
+
+
+				elif(wp_list[k-1].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp_list[k-1])
+				elif(wp_list[k-2].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp_list[k-2])
+				elif(wp_list[k-3].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp_list[k-3])
+				elif(wp_list[k-4].id == 16):
+					wp1 = self.cord_System.WptoMeter(wp_list[k-4])
+				else:
+					wp1 = self.cord_System.WptoMeter(wp_list[k-1])
 
 				print 'wp1'
 
@@ -822,20 +831,26 @@ class Avoidance:
 				print 'got obstacles'
 
 				if(len(important_Dy_Obstacles) > 0):
-					finalPath = self.DL(self.cord_System.WptoMeter(wp[k]),self.cord_System.WptoMeter(wp[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
+					finalPath = self.DL(self.cord_System.WptoMeter(wp_list[k]),self.cord_System.WptoMeter(wp_list[k+1]),self.StaticObstacles,important_Dy_Obstacles,3)
 					print 'got dynamic path'
 				else:
-					print 'no dynamic needed'	
+					print 'no dynamic needed'
 
+				print 'final path is ',finalPath
 				for wp in finalPath:
-					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wp))
+					wptemp = [wp[0],wp[1],wp[2]*.3048]
+					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wptemp))
+					self.MAV.setMode('Guided')
 					print 'heading toward wp'
-					while(self.cs.wp_dist > 100):
+					while(True):
 						time.sleep(.05)
+						tempwp_dist = self.cs.wp_dist
+						tempcheck = self.checkbreak()
+						print 'waiting for break, dist = ',tempwp_dist, 'check = ',tempcheck
+						if(tempwp_dist < 25 or tempcheck):
+							break
+					print 'exited loop'
 
 				self.MAV.setMode('Auto')
 				print 'back to auto'
 			print 'finished ',k
-				
-				
-			
