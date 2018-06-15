@@ -4,16 +4,12 @@ import os
 
 
 Mission = True
-# y = 1#Good
-# r = 2#redo
-# n = 3#bad
-# stop = 4#break
-
 
 def newPathInfo():
 	with open('dlite/flight_information.txt',"r") as shortfile:
-		dat = shortfile.readline()
-		if (dat == "Update 1"):
+		dat = shortfile.readline().split(' ')
+		print dat
+		if (float(dat[1]) == 1):
 			return True
 	return False
 
@@ -27,5 +23,6 @@ while(Mission):
 	if(newPathInfo()):
 		print "Running up Dstar"
 		os.system('./dlite/main.exe')
+		print 'finished dlite'
 
-	time.sleep(.02)
+	time.sleep(.1)

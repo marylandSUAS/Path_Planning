@@ -15,7 +15,7 @@
 
 #define RESOLUTION_X 40 //keep square for 2d interpolation
 #define RESOLUTION_Y 40 // keep square for 2d interpolation
-#define RESOLUTION_Z 1 //keep unit for 2d interpolation
+#define RESOLUTION_Z 25 //keep unit for 2d interpolation
 #define MIN_DIM_SIZE 30
 #define CSP 0
 #define UPDATE 1
@@ -1636,6 +1636,7 @@ Obstacle *mark_if_alive(Obstacle *curr, int type, double x, double y, double z, 
 // 	}
 // 	printf("19\n");
 // }
+
 Obstacle *update_grid_with_obstacles(struct obstacle *curr){
 	// printf("1\n");
 	if(curr){
@@ -2169,6 +2170,7 @@ int main(){
 			printf("Other Time taken %d seconds %d milliseconds\n", times[OTHER]/1000, times[OTHER]%1000);
 			times[0] = 0; times[1] = 0; times[2] = 0; times[3] = 0; times[4] = 0; times[5] = 0; times[6] = 0; times[7] = 0;
 		}
+		return 0;
 		start_time = clock();
 
 		if (current_node->g == max_val){

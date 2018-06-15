@@ -83,7 +83,7 @@ function bounds = getBoundry()
 
 
 function obs = getMovingObs()
-    fileStatic = fopen('moving_obstacles_predicted.txt');
+    fileStatic = fopen('moving_obstacles.txt');
     C = fscanf(fileStatic,'%f %f %f %f',[4 Inf]);
     fclose(fileStatic);
     obs = C';

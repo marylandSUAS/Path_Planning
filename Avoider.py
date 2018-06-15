@@ -37,15 +37,17 @@ class Avoidance:
 		self.logger = None
 		self.pause = False
 		self.quit = False
+		
+		self.StaticObstacles = []
+		self.addStaticObstacles()
+
+		self.localizer = movingObs('Path_Planning/data/moving_obstacles.txt',self.cord_System)
+		self.localizer.start()
+		print 'moving obstacle length: ',len(self.localizer.moving_Obstacles)
 
 		self.printLocation = True
 		self.printLocThread = threading.Thread(target=self.printLoc)
-		# self.printLocThread.start()
-		
-		self.StaticObstacles = []
-		self.addStaticObstacles('Path_Planning/data/static_obstacles.txt')
-
-		self.localizer = movingObs('Path_Planning/data/moving_obstacles.txt')
+		self.printLocThread.start()
 
 		self.Bounds = []
 		self.addBounds()
@@ -59,11 +61,11 @@ class Avoidance:
 
 	def printLoc(self):
 		timestart = time.time()
-		while(self.printLocation and time.time()-timestart < 600):
+		while(self.printLocation and time.time()-timestart < 60):
 			
 			loc = self.currentLoc()
 
-			senarioFile = open('Path_Planning/GUI/current_state.txt',"w")
+			senarioFile = open('Path_Planning/Gui/current_state.txt',"w")
 			senarioFile.write(str(loc[0]))
 			senarioFile.write(str(' '))
 			senarioFile.write(str(loc[1]))
@@ -76,6 +78,21 @@ class Avoidance:
 			senarioFile.write(str(' '))
 			senarioFile.write(str(self.cs.wp_dist))
 			senarioFile.close()
+
+			senarioFile = open('Path_Planning/Gui/moving_obstacles.txt',"w")
+			for k in range(len(self.localizer.moving_Obstacles)):
+				temp = self.localizer.moving_Obstacles[k].loc
+				senarioFile.write(str(temp[0]))
+				senarioFile.write(str(' '))
+				senarioFile.write(str(temp[1]))
+				senarioFile.write(str(' '))
+				senarioFile.write(str(temp[2]))
+				senarioFile.write(str(' '))
+				senarioFile.write(str(self.localizer.moving_Obstacles[k].Radius))
+			senarioFile.close()
+
+
+			
 			
 	def addLogger(self,loger):
 		self.logger = loger
@@ -100,39 +117,40 @@ class Avoidance:
 			self.logger.assuption = temp
 
 	def checkbreak(self):
-		OFile = open('Path_Planning/GUI/static_bool.txt',"r")
+		OFile = open('Path_Planning/Gui/static_bool.txt',"r")
 		dat = OFile.readline().split(" ")
-		stat = False
 		print dat
+		stat = False
 		if(str(dat[0]) == '1'):
 			stat = True
 			print 'break returning true'
 		
 		OFile.close()
-		OFile = open('Path_Planning/GUI/static_bool.txt',"w")
+		OFile = open('Path_Planning/Gui/static_bool.txt',"w")
 		OFile.write('0 ')
 		OFile.close()
 
 		return stat
 
-	def addStaticObstacles(self,static_file):
+	def addStaticObstacles(self):
 
-		OFile = open(static_file,"r")
+		OFile = open('Path_Planning/data/static_obstacles.txt',"r")
 		dat = OFile.readline().split(" ")
 		# print dat
 		while(len(dat) > 3):
 
-			temp = [float(dat[0]),float(dat[1]),float(dat[2])]
 			temp = self.cord_System.toMeters([float(dat[0]),float(dat[1]),float(dat[2])])
 			temp.append(float(dat[3]))
 			self.StaticObstacles.append(temp)
 
 			dat = OFile.readline().split(" ")
 			# print dat
+			# print dat
 		
 		OFile.close()
+		print self.StaticObstacles
 
-		OFile = open('Path_Planning/GUI/static_obstacles.txt',"w")
+		OFile = open('Path_Planning/Gui/static_obstacles.txt',"w")
 		for i in range(len(self.StaticObstacles)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -189,7 +207,7 @@ class Avoidance:
 
 
 
-		OFile = open('Path_Planning/GUI/boundry.txt',"w")
+		OFile = open('Path_Planning/Gui/boundry.txt',"w")
 		for i in range(len(self.Bounds)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -249,7 +267,7 @@ class Avoidance:
 			# add time based off angle and time it takes turn
 			# could be like turn radius/cruise_speed time sin angle
 
-		OFile = open('Path_Planning/GUI/moving_obstacles_predicted.txt',"w")
+		OFile = open('Path_Planning/Gui/moving_obstacles_predicted.txt',"w")
 		for i in range(len(Important_moving_Obs)):
 			if(i != 0):
 				OFile.write(str('\n'))
@@ -482,7 +500,7 @@ class Avoidance:
 	# start,goal,current,static,moving,timeout,expanded 
 	def DL(self,start,goal,staticObstacles,movingObstacles,timeouttaken):
 		# currentGPS = startGPS
-		return [[(start[0]+goal[0])/2,(start[1]+goal[1])/2,(start[2]+goal[2])/2]]
+		# return [[(start[0]+goal[0])/2,(start[1]+goal[1])/2,(start[2]+goal[2])/2]]
 
 		current = start
 		with open('Path_Planning/dlite/flight_information.txt',"w") as flightFile:
@@ -565,8 +583,10 @@ class Avoidance:
 			
 			with open('Path_Planning/dlite/intermediate_waypoints.txt',"r") as intermediate_file:
 				firstline = intermediate_file.readline()
-				# print 'first line is', firstline
+				print 'first line is', firstline
+
 				if (firstline == 'Changed 1\n'):
+					print 'changed 1'
 					# print 'first line is: ', firstline
 
 					dat = intermediate_file.readline().split(" ")
@@ -574,14 +594,14 @@ class Avoidance:
 						nodes.append([float(dat[0]),float(dat[1]),float(dat[2])])
 						dat = intermediate_file.readline().split(" ")	
 
-					with open('dlite/flight_information.txt',"w") as shortfile:
-						shortfile.write(str("Update 2 "))
+					# with open('Path_Planning/dlite/flight_information.txt',"w") as shortfile:
+					# 	shortfile.write(str("Update 2 "))
 					return nodes
 
 			time.sleep(.02)
 
-		with open('Path_Planning/dlite/flight_information.txt',"w") as shortfile:
-			shortfile.write(str("Update 2 "))
+		# with open('Path_Planning/dlite/flight_information.txt',"w") as shortfile:
+			# shortfile.write(str("Update 2 "))
 
 		print 'Failed to run'
 		return []
@@ -794,7 +814,7 @@ class Avoidance:
 				if(k == 1):
 					while(self.cs.wpno < k):
 						print 'waiting for ', k+1
-						time.sleep(.05)
+						time.sleep(.25)
 					wp1 = self.currentLoc()
 
 
@@ -817,11 +837,11 @@ class Avoidance:
 				staticPath.extend(temp_points)
 				staticPath.append(wp2)
 
-				print 'static path: ',staticPath
+				print 'static path length: ',len(staticPath)-2
 
 				while(self.cs.wpno < k+1):
 					print 'waiting for ', k
-					time.sleep(.05)
+					time.sleep(.2)
 
 				print 'done waiting for arrival'
 
@@ -836,14 +856,14 @@ class Avoidance:
 				else:
 					print 'no dynamic needed'
 
-				print 'final path is ',finalPath
+				print 'final path length: ', len(finalPath)
 				for wp in finalPath:
 					wptemp = [wp[0],wp[1],wp[2]*.3048]
 					self.MAV.setGuidedModeWP(self.cord_System.MetertoWp(wptemp))
 					self.MAV.setMode('Guided')
 					print 'heading toward wp'
 					while(True):
-						time.sleep(.05)
+						time.sleep(.2)
 						tempwp_dist = self.cs.wp_dist
 						tempcheck = self.checkbreak()
 						print 'waiting for break, dist = ',tempwp_dist, 'check = ',tempcheck

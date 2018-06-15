@@ -8,10 +8,6 @@ import clr
 sys.path.append('C:\\Program Files (x86)\\Mission Planner\\Path_Planning')
 sys.path.append('C:\\Python27\\Lib')
 
-# import threading
-
-
-
 
 clr.AddReference("MissionPlanner")
 import MissionPlanner
@@ -19,8 +15,6 @@ clr.AddReference("MissionPlanner.Utilities") #includes the Utilities class
 from MissionPlanner.Utilities import Locationwp
 clr.AddReference("MAVLink") # includes the Utilities class
 import MAVLink
-MissionPlanner.MainV2.speechEnable = True
-
 
 
 import Avoider
@@ -28,26 +22,23 @@ import Cord_System
 import missionFunctions
 
 
-def speak(strin):
-	print strin
-	MissionPlanner.MainV2.speechEngine.SpeakAsync(strin)
-
-
 # Competition
 Home = [38.1447163,-76.4279848,60]
 
 
 # mission waypoints
-# competition
-missionGPS = [[38.145314,-76.429119,200],
-			[38.149222,-76.429483,300],
-			[38.150433,-76.430856,300],
-			[38.148950,-76.432286,300],
-			[38.147011,-76.430642,400],
-			[38.143783,-76.431994,200]]
+missionGPS = [[38.145314,-76.429119,200.0],
+			# [38.140,-76.43,250.0],
+			[38.149222,-76.429483,300.0],
+			# [38.140,-76.43,250.0],
+			[38.150433,-76.430856,300.0],
+			# [38.140,-76.43,250.0],
+			[38.148950,-76.432286,300.0],
+			# [38.140,-76.43,250.0],
+			[38.147011,-76.430642,400.0],
+			# [38.140,-76.43,250.0],
+			[38.143783,-76.431994,200.0]]
 
-# southern maryland
-# missionGPS = [LeftPoint, RightPoint]
 
 missionWpsPlan = [True]*len(missionGPS)
 
@@ -61,10 +52,6 @@ missionFunc = missionFunctions.missionTasks(cs,MAV,cordSystem)
 
 # create avoidance class to control vehicle during obstacle avoidance
 avoider = Avoider.Avoidance(cs,MAV,cordSystem)
-
-
-
-
 
 
 
@@ -135,9 +122,7 @@ print 'Mission length: ', len(total_List), ' ',len(total_Plan)
 
 # missionFunc.set_MP_wps(total_List)
 
-missionFunc.set_MP_wps(missionFunc.offAxiswps)
 
-'''
 MAV.setMode('Auto')
 # print total_List
 while cs.wpno < len(total_List):
@@ -145,4 +130,3 @@ while cs.wpno < len(total_List):
 	avoider.totalreplan(total_List,total_Plan)
 	# except:
 		# print 'something failed trying again'
-'''

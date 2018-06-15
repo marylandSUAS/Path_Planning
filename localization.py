@@ -5,8 +5,9 @@ import threading
 
 
 class movingObs:
-	def __init__(self,fileReadLoc):
+	def __init__(self,fileReadLoc,cord):
 		self.fileLoc = fileReadLoc
+		self.cord_system = cord
 		self.loger = threading.Thread(target=self.run)
 		self.Reading = False
 		self.hz = 4.0
@@ -17,18 +18,19 @@ class movingObs:
 
 		ob_File = open(self.fileLoc,"r")
 		Ob_data = ob_File.readline().split(" ")
-		while(len(Ob_data) == 7):
+		while(len(Ob_data) > 3):
 			self.num = self.num+1
 			temp = dynamics_Ob(self.hz)
-			temp.addRadius(float(Ob_data[6]))
+			temp.addRadius(float(Ob_data[3]))
 			self.moving_Obstacles.append(temp)
 			
 			Ob_data = ob_File.readline().split(" ")
 
 		ob_File.close()
+		# print 
 		
 		# make new objects for each file
-			
+
 
 	def start(self):
 		self.Reading = True
@@ -40,18 +42,19 @@ class movingObs:
 
 	# fix this
 	def run(self):
-		
-		while(self.Reading):
+		timestart = time.time()
+		while(self.Reading and time.time()-timestart < 30):
 
 			ob_File = open(self.fileLoc,"r")
 			for i in range(len(self.moving_Obstacles)):
 				Ob_data = ob_File.readline().split(" ")
 				if(len(Ob_data) > 1):
-					self.moving_Obstacles[i].addLoc( float(Ob_data[0]), float(Ob_data[1]), float(Ob_data[2]))
+					temp =  self.cord_system.toMeters([float(Ob_data[0]), float(Ob_data[1]), float(Ob_data[2])])
+					self.moving_Obstacles[i].addLoc(temp[0],temp[1],temp[2])
 			ob_File.close()
 
 			sleeptime = 1/self.hz
-			print 'sleep: ',sleeptime
+			# print 'sleep: ',sleeptime
 			time.sleep(sleeptime)
 
 	def file_len(self):
@@ -116,7 +119,7 @@ class dynamics_Ob:
 		self.zVels.insert(0,(Z-self.loc[2])*self.hz)
 
 		temp_V = math.sqrt(((X-self.loc[0])*self.hz)**2 + ((Y-self.loc[1])*self.hz)**2 + ((Z-self.loc[2])*self.hz)**2)
-		print 'Vel: ',temp_V
+		# print 'Vel: ',temp_V
 		self.Vels.pop()
 		self.Vels.insert(0,temp_V)
 		
