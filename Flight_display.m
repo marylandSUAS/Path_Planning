@@ -1,0 +1,3 @@
+mis = mission(' ');
+
+mis.visualize()
