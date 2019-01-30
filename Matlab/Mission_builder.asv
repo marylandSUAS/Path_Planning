@@ -1,0 +1,13 @@
+miss = mission(' ');
+
+
+%%
+
+miss.visualize()
+
+%%
+
+takeoff_wp = WP(22,15,0,0,0,0,0,100);
+
+wps = WPMission(miss.waypoints,miss.bounds,miss.obstacles)
+

@@ -65,9 +65,10 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
 %     collision_overshoot
 %     collision_path
 
+    
+
     total_wps = wps(1,:);
-    
-    
+        
     for k = 1:length(wps)-1
         
         temp_points = [];
@@ -83,6 +84,7 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
             hold on
             scatter(wps(bg:en,1),wps(bg:en,2),'b')
             scatter(wps(k,1),wps(k,2),'g','filled')
+            plot(bounds(:,1),bounds(:,1),'r--')
             
             if ~isempty(temp_points)
                 scatter(temp_points(:,1),temp_points(:,2),'b')
