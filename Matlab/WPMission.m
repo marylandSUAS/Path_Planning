@@ -84,7 +84,7 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
             hold on
             scatter(wps(bg:en,1),wps(bg:en,2),'b')
             scatter(wps(k,1),wps(k,2),'g','filled')
-            plot(bounds(:,1),bounds(:,1),'r--')
+            plot(bounds(:,1),bounds(:,2),'r--')
             
             if ~isempty(temp_points)
                 scatter(temp_points(:,1),temp_points(:,2),'b')
@@ -129,6 +129,12 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
         end
         
     end
-    final_wps = total_wps;
+    
+    wp_list = [];
+    for k = 1:length(total_wps)
+        wp_list = [wp_list; WP(16,0,0,0,0,total_wps(1),total_wps(2),total_wps(3))];
+    end
+    
+    final_wps = wp_list;
 end
 

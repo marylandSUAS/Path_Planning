@@ -24,6 +24,22 @@ def speak(strin):
 	MissionPlanner.MainV2.speechEngine.SpeakAsync(strin)
 
 
+
+data_loaction = 'test.txt'
+
+
+
+while True:
+	with open(data_loaction,'w') as write_file:
+		write_file.write(str(cs.lat))
+		write_file.write(' ')
+		write_file.write(str(cs.lng))
+		write_file.write(' ')
+		write_file.write(str(cs.alt))
+		write_file.write(' ')
+		write_file.write(str(cs.wpno))
+
+'''
 cs.lat
 cs.lng
 cs.alt
@@ -43,3 +59,4 @@ cs.landed
 cs.connected
 cs.messages
 cs.messages.Clear
+'''

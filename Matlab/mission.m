@@ -60,6 +60,7 @@ classdef mission
             for a = 1:size(temp)
                 temp2 = [temp2;cellfun(@str2num,strsplit(temp{a},' '))];
             end
+            temp2 = [temp2; temp2(1,:)];
             obj.bounds_gps = temp2;
             
             temp = string(cell2mat(split(data{6},',')));
