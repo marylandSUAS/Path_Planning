@@ -5,6 +5,9 @@ classdef mission
         launch_wps
         launch_gps
         
+        landing_point
+        landing_gps
+        
         waypoints
         bounds
         searchGrid
@@ -36,13 +39,16 @@ classdef mission
             end
             
             data = importdata(file);
-%             cellfun(@str2num,strsplit(data{k}{1},', '))
+
             obj.dropPoint_gps = cellfun(@str2num,strsplit(data{1},' '));
             obj.offAxis_gps = cellfun(@str2num,strsplit(data{2},' '));
             obj.emergent_gps = cellfun(@str2num,strsplit(data{3},' '));
             
             obj.launch_gps = [38.1451213 -76.4282048];
+            obj.landing_gps = obj.launch_gps;
             obj.launch_wps = obj.toMeters(obj.launch_gps);
+            obj.landing_point = obj.launch_wps;
+            
             launch_dist = 60;
             launch_theta = 0;
             obj.launch_wps = [obj.launch_wps; [obj.launch_wps(1)+launch_dist*cos(launch_theta) obj.launch_wps(2)+launch_dist*sin(launch_theta) 0]];
@@ -107,6 +113,23 @@ classdef mission
             
             
             
+        end
+        
+        function visualize_current(obj, final_wps)
+            obj.visualize()
+            hold on
+            temp_plot = [];
+%             temp_scatter = [];
+            for i = 1:length(final_wps)
+                if(final_wps(i).id == 16)
+                    temp_plot = [temp_plot; final_wps(i).lat final_wps(i).lng final_wps(i).alt];
+            %     elseif(final_wps(i).id == 16)
+            %         temp_scatter = [temp_scatter; final_wps(i).lat final_wps(i).lng final_wps(i).alt];
+                end
+            end
+            plot(temp_plot(:,1),temp_plot(:,2))
+            % scatter(temp_scatter(:,1),temp_scatter(:,2))
+            axis([min(obj.bounds(:,1)) max(obj.bounds(:,1)) min(obj.bounds(:,2)) max(obj.bounds(:,2))])
         end
         
         function meters = toMeters(obj,GPS)

@@ -84,25 +84,32 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
             hold on
             scatter(wps(bg:en,1),wps(bg:en,2),'b')
             scatter(wps(k,1),wps(k,2),'g','filled')
+            text(wps(bg:en,1),wps(bg:en,2),string(round(wps(bg:en,3))))
+                
             plot(bounds(:,1),bounds(:,2),'r--')
             
             if ~isempty(temp_points)
                 scatter(temp_points(:,1),temp_points(:,2),'b')
+                text(temp_points(:,1),temp_points(:,2),string(round(temp_points(:,3))))
                 temp = [wps(k,1:3); temp_points; wps(k+1,1:3)];
                 plot(temp(:,1),temp(:,2),'r')
             end
             
+            
+%             for l = 1:size(obstacles,1)
+%                 [pnt,t] = dist_line(wps(i-1,:),wps(i,:),obstacles(l,1:2));
+%                 if (norm(pnt(1:2)-obstacles(l,1:2)) < obstacles(l,3) && t > 0 && t < 1 && pnt(3) < obstacles(l,3))
+%                     scatter(pnt(1),pnt(2),'r','filled')
+%                     text(pnt(1),pnt(2),string(round(pnt(3))))
+%                 end        
+%             end
+            
+            
             midpoint = (wps(k,1:2)+wps(k+1,1:2))/2;
             maxdist = norm(wps(k,1:2)-wps(k+1,1:2));
-            t = -.1:.1:2*pi;
-            for i = 1:size(obstacles,1)
-%                 if (norm(midpoint-obstacles(i,1:2)) < maxdist)
-                x = obstacles(i,1)+obstacles(i,3)*cos(t);
-                y = obstacles(i,2)+obstacles(i,3)*sin(t);
-                plot(x,y,'r')
-                scatter(obstacles(i,1),obstacles(i,2),'r')
-%                 end
-            end
+
+            plot_obs(obstacles)
+            
             axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
 
         
@@ -132,7 +139,7 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
     
     wp_list = [];
     for k = 1:length(total_wps)
-        wp_list = [wp_list; WP(16,0,0,0,0,total_wps(1),total_wps(2),total_wps(3))];
+        wp_list = [wp_list; WP(16,0,0,0,0,total_wps(k,1),total_wps(k,2),total_wps(k,3))];
     end
     
     final_wps = wp_list;

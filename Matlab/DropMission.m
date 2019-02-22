@@ -116,7 +116,7 @@ function final_wps = DropMission(wps,bounds,obstacles,wind,dir)
     
     wp_list = [];
     for k = 1:length(total_wps)
-        wp_list = [wp_list; WP(16,0,0,0,0,total_wps(1),total_wps(2),total_wps(3))];
+        wp_list = [wp_list; WP(16,0,0,0,0,total_wps(k,1),total_wps(k,2),total_wps(k,3))];
     end
     
     final_wps = wp_list;

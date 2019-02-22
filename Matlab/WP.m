@@ -45,6 +45,20 @@ classdef WP
             temp.lng = y;
             meters_obj = temp;
         end
+        
+        function meters_obj = toGPS(obj,GPS)
+            start = GPS;
+            rad_Earth = 20909000.0;
+            dlng = (pi/180)*rad_Earth*cos(38.1459*pi/180);
+            dlat = (pi/180)*rad_Earth;
+            
+            temp = obj;
+            x = obj.lat/dlng+start(1);
+            y = obj.lng/dlat+start(2);
+            temp.lat = x;
+            temp.lng = y;
+            meters_obj = temp;
+        end
                     
     end
 end
