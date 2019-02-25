@@ -104,7 +104,7 @@ function final_wps = Landing(land_point,last_wp,bounds,obstacles)
         end
 
         if cmd == 'n'
-%             total_wps = [wps(1,:); temp_points; wp1; wp2; wp3];
+
         end
     end
     
