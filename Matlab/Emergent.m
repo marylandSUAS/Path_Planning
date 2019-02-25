@@ -52,9 +52,8 @@ function final_wps = Emergent(emergent_wp,last_wp,bounds,obstacles)
     
     
     
-    
     wp_list = [];
-    for k = 1:length(total_wps)
+    for k = 1:size(total_wps,1)
         wp_list = [wp_list; WP(16,0,0,0,0,total_wps(1),total_wps(2),total_wps(3))];
     end
     

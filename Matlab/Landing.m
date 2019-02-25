@@ -112,7 +112,7 @@ function final_wps = Landing(land_point,last_wp,bounds,obstacles)
     
     
     wp_list = [];
-    for k = 1:length(temp_points)
+    for k = 1:size(temp_points,1)
         wp_list = [wp_list; WP(16,0,0,0,0,temp_points(k,1),temp_points(k,2),temp_points(k,3))];
     end
     

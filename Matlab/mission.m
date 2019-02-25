@@ -132,6 +132,7 @@ classdef mission
             axis([min(obj.bounds(:,1)) max(obj.bounds(:,1)) min(obj.bounds(:,2)) max(obj.bounds(:,2))])
         end
         
+        
         function meters = toMeters(obj,GPS)
             start = obj.dropPoint_gps;
             rad_Earth = 20909000.0;
@@ -172,11 +173,16 @@ classdef mission
         function visualize(obj)
             figure;
             
+            scatter(obj.dropPoint(1),obj.dropPoint(2),'y','filled')
+            hold on
+            scatter(obj.offAxis(1),obj.offAxis(2),'b','filled')
+            scatter(obj.emergent(1),obj.emergent(2),'or','filled')
+            
+            
             temp = obj.bounds;
             temp = [temp; temp(1,:)];
             plot(temp(:,1),temp(:,2),'r')
-            hold on
-%             scatter(obj.bounds(:,1),obj.bounds(:,2),'ro')
+              scatter(obj.bounds(:,1),obj.bounds(:,2),'ro')
             
             plot(obj.waypoints(:,1),obj.waypoints(:,2),'b')
             scatter(obj.waypoints(:,1),obj.waypoints(:,2),'bo')
@@ -186,11 +192,6 @@ classdef mission
             temp = [temp; temp(1,:)];
             plot(temp(:,1),temp(:,2),'g')
             
-            scatter(obj.dropPoint(1),obj.dropPoint(2),'y','filled')
-            
-            scatter(obj.offAxis(1),obj.offAxis(2),'b','filled')
-            
-            scatter(obj.emergent(1),obj.emergent(2),'or','filled')
             
             
             th = 0:pi/50:2*pi;
@@ -201,7 +202,9 @@ classdef mission
             end
             
 %             axis([center(1)+sizing(1)/2 center(1)-sizing(1)/2 center(2)+sizing(2)/2 center(2)-sizing(2)/2])
+            legend('Drop Point','Off Axis','Emergent')
             hold off
+            
         end
     end
 end
