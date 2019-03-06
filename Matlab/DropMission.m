@@ -37,7 +37,8 @@ function final_wps = DropMission(drop_point,last_wp,bounds,obstacles,wind,dir)
         maxdist = 300;
        
         axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
-
+%         axis equal
+            
 
 
 
@@ -91,7 +92,8 @@ function final_wps = DropMission(drop_point,last_wp,bounds,obstacles,wind,dir)
         maxdist = norm(last_wp(1:2)-wp1(1:2))*.75;
         
         axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
-        
+%         axis equal
+            
 
         w = waitforbuttonpress;
         cmd = get(gcf, 'CurrentCharacter');

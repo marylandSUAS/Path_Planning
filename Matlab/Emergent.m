@@ -30,7 +30,8 @@ function final_wps = Emergent(emergent_wp,last_wp,bounds,obstacles)
         maxdist = norm(emergent_wp(1:2)-last_wp(1:2))*.75;
         
         axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
-
+%         axis equal
+            
 
         w = waitforbuttonpress;
         cmd = get(gcf, 'CurrentCharacter');

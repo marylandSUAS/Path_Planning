@@ -35,7 +35,8 @@ function final_wps = OffAxis(offAxis_point,last_wp,bounds,obstacles)
         maxdist = 300;
         
         axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
-
+%         axis equal
+            
 
         w = waitforbuttonpress;
         cmd = get(gcf, 'CurrentCharacter');
@@ -91,7 +92,8 @@ function final_wps = OffAxis(offAxis_point,last_wp,bounds,obstacles)
         maxdist = norm(last_wp(1:2)-wp1(1:2))*.75;
        
         axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
-        
+%         axis equal
+            
         
         w = waitforbuttonpress;
         cmd = get(gcf, 'CurrentCharacter');

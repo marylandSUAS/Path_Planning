@@ -11,6 +11,7 @@ classdef WP
         lat
         lng
         alt
+        state
     end
     
     methods
@@ -24,39 +25,43 @@ classdef WP
             obj.lat = lat;
             obj.lng = lng;
             obj.alt = alt;
+            obj.state = 0; %0 = Meters, 1 = GPS
         end
         
         function strng = toString(obj)            
-            strng = string(id)+" "+string(p1)+" "+string(p2)+" "+string(p3)
-            +" "+string(p4)+" "+string(lat)+" "+string(lng)+" "+string(alt)
+            strng = string(obj.id)+" "+string(obj.p1)+" "+string(obj.p2)+" "+string(obj.p3)+" "+string(obj.p4)+" "+string(obj.lat)+" "+string(obj.lng)+" "+string(obj.alt);
         end
         
-        
         function meters_obj = toMeters(obj,GPS)
-            start = GPS;
-            rad_Earth = 20909000.0;
-            dlng = (pi/180)*rad_Earth*cos(38.1459*pi/180);
+            rad_Earth = 6371000;
+            dlng = (pi/180)*rad_Earth*cos(GPS(1)*pi/180);
             dlat = (pi/180)*rad_Earth;
             
             temp = obj;
-            x = (obj.lat-start(2))*dlng;
-            y = (obj.lng-start(1))*dlat;
-            temp.lat = x;
-            temp.lng = y;
+            if obj.state == 1
+                x = (obj.lat-GPS(1))*dlng;
+                y = (obj.lng-GPS(2))*dlat;
+                temp.lat = x;
+                temp.lng = y;
+                temp.state = 0;
+            end
             meters_obj = temp;
         end
         
         function meters_obj = toGPS(obj,GPS)
-            start = GPS;
-            rad_Earth = 20909000.0;
-            dlng = (pi/180)*rad_Earth*cos(38.1459*pi/180);
+            
+            rad_Earth = 6371000;
+            dlng = (pi/180)*rad_Earth*cos(GPS(1)*pi/180);
             dlat = (pi/180)*rad_Earth;
             
             temp = obj;
-            x = obj.lat/dlng+start(1);
-            y = obj.lng/dlat+start(2);
-            temp.lat = x;
-            temp.lng = y;
+            if obj.state == 0
+                x = obj.lng/dlat;
+                y = obj.lat/dlng;
+                temp.lat = x+GPS(1);
+                temp.lng = y+GPS(2);
+                temp.state = 1;
+            end
             meters_obj = temp;
         end
                     

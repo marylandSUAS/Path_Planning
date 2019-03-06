@@ -96,22 +96,14 @@ function [final_wps] = WPMission(wps,bounds,obstacles)
             end
             
             
-%             for l = 1:size(obstacles,1)
-%                 [pnt,t] = dist_line(wps(i-1,:),wps(i,:),obstacles(l,1:2));
-%                 if (norm(pnt(1:2)-obstacles(l,1:2)) < obstacles(l,3) && t > 0 && t < 1 && pnt(3) < obstacles(l,3))
-%                     scatter(pnt(1),pnt(2),'r','filled')
-%                     text(pnt(1),pnt(2),string(round(pnt(3))))
-%                 end        
-%             end
-            
-            
             midpoint = (wps(k,1:2)+wps(k+1,1:2))/2;
             maxdist = norm(wps(k,1:2)-wps(k+1,1:2));
 
             plot_obs(obstacles)
             
             axis([midpoint(1)-maxdist midpoint(1)+maxdist midpoint(2)-maxdist midpoint(2)+maxdist])
-
+%             axis equal
+            
         
             
             

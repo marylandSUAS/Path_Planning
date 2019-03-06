@@ -54,14 +54,16 @@ classdef mission
             obj.launch_wps = [obj.launch_wps; [obj.launch_wps(1)+launch_dist*cos(launch_theta) obj.launch_wps(2)+launch_dist*sin(launch_theta) 0]];
             
             
-            temp = string(cell2mat(split(data{4},',')));
+%             temp = string(cell2mat(split(data{4},',')));
+            temp = split(data{4},',');
             temp2 = [];
             for a = 1:size(temp)
                 temp2 = [temp2;cellfun(@str2num,strsplit(temp{a},' '))];
             end
             obj.waypoints_gps = temp2;
             
-            temp = string(cell2mat(split(data{5},',')));
+%             temp = string(cell2mat(split(data{5},',')));
+            temp = split(data{5},',');
             temp2 = [];
             for a = 1:size(temp)
                 temp2 = [temp2;cellfun(@str2num,strsplit(temp{a},' '))];
@@ -69,16 +71,18 @@ classdef mission
             temp2 = [temp2; temp2(1,:)];
             obj.bounds_gps = temp2;
             
-            temp = string(cell2mat(split(data{6},',')));
+%             temp = string(cell2mat(split(data{6},',')));
+            temp = split(data{6},',');
             temp2 = [];
             for a = 1:size(temp)
                 temp2 = [temp2;cellfun(@str2num,strsplit(temp{a},' '))];
             end
             obj.searchGrid_gps = temp2;
             
-            temp = string(cell2mat(split(data{7},',')));
+%             temp = string(cell2mat(split(data{7},',')));
+            temp = split(data{7},',');
             temp2 = [];
-            for a = 1:size(temp)
+            for a = 1:size(temp,1)
                 temp2 = [temp2;cellfun(@str2num,strsplit(temp{a},' '))];
             end
             obj.obstacles_gps = temp2;
@@ -104,13 +108,16 @@ classdef mission
             
             obj.obstacles = [];
             ob_bnd = [min(obj.bounds(:,1)) max(obj.bounds(:,1)) min(obj.bounds(:,2)) max(obj.bounds(:,2))];
-            for k = 1:10
-                obj.obstacles = [obj.obstacles; ob_bnd(1)+rand()*(ob_bnd(2)-ob_bnd(1)) ob_bnd(3)+rand()*(ob_bnd(4)-ob_bnd(3)) 100+650*rand() rand()*270+30];
+            randomize_obs = 1;
+            if randomize_obs
+                for k = 1:10
+                    obj.obstacles = [obj.obstacles; ob_bnd(1)+rand()*(ob_bnd(2)-ob_bnd(1)) ob_bnd(3)+rand()*(ob_bnd(4)-ob_bnd(3)) 100+650*rand() rand()*150+30];%270+30];
+                end
+            else
+                for a = 1:size(obj.obstacles_gps,1)
+                    obj.obstacles = [obj.obstacles; obj.toMeters(obj.obstacles_gps(a,:))];
+                end
             end
-%             for a = 1:size(obj.obstacles_gps,1)
-%                 obj.obstacles = [obj.obstacles; obj.toMeters(obj.obstacles_gps(a,:))];
-%             end
-            
             
             
         end
@@ -119,9 +126,14 @@ classdef mission
             obj.visualize()
             hold on
             temp_plot = [];
-%             temp_scatter = [];
             for i = 1:length(final_wps)
-                if(final_wps(i).id == 16)
+                if(final_wps(i).id == 16 || final_wps(i).id == 21)
+                    final_wps(i) = final_wps(i).toMeters(obj.dropPoint_gps);
+                end
+            end
+            
+            for i = 1:length(final_wps)
+                if(final_wps(i).id == 16 || final_wps(i).id == 21)
                     temp_plot = [temp_plot; final_wps(i).lat final_wps(i).lng final_wps(i).alt];
             %     elseif(final_wps(i).id == 16)
             %         temp_scatter = [temp_scatter; final_wps(i).lat final_wps(i).lng final_wps(i).alt];
@@ -130,13 +142,15 @@ classdef mission
             plot(temp_plot(:,1),temp_plot(:,2))
             % scatter(temp_scatter(:,1),temp_scatter(:,2))
             axis([min(obj.bounds(:,1)) max(obj.bounds(:,1)) min(obj.bounds(:,2)) max(obj.bounds(:,2))])
+            axis equal
+            
         end
         
         
         function meters = toMeters(obj,GPS)
             start = obj.dropPoint_gps;
-            rad_Earth = 20909000.0;
-            dlng = (pi/180)*rad_Earth*cos(38.1459*pi/180);
+            rad_Earth = 6371000;
+            dlng = (pi/180)*rad_Earth*cos(start(1)*pi/180);
             dlat = (pi/180)*rad_Earth;
 
             x = (GPS(2)-start(2))*dlng;
@@ -154,13 +168,14 @@ classdef mission
         
         function GPS = toGPS(obj,Meters) 
             start = obj.dropPoint_gps;
-            rad_Earth = 20909000.0;
-            dlng = (pi/180)*rad_Earth*cos(38.1459*pi/180);
+            rad_Earth = 6371000;
+            dlng = (pi/180)*rad_Earth*cos(start(1)*pi/180);
             dlat = (pi/180)*rad_Earth;
 
-            lng = (Meters(1)/dlng)+start(2);
-            lat = (Meters(2)/dlat)+start(1);
-            if length(Meters) < 3
+            lat = Meters(2)/dlat+start(1);
+            lng = Meters(1)/dlng+start(2);
+
+                if length(Meters) < 3
                 GPS = [lat,lng,0];
             elseif length(Meters) > 3
                 GPS = [lat,lng,Meters(3:length(Meters))];
@@ -182,7 +197,7 @@ classdef mission
             temp = obj.bounds;
             temp = [temp; temp(1,:)];
             plot(temp(:,1),temp(:,2),'r')
-              scatter(obj.bounds(:,1),obj.bounds(:,2),'ro')
+            scatter(obj.bounds(:,1),obj.bounds(:,2),'ro')
             
             plot(obj.waypoints(:,1),obj.waypoints(:,2),'b')
             scatter(obj.waypoints(:,1),obj.waypoints(:,2),'bo')
@@ -192,18 +207,12 @@ classdef mission
             temp = [temp; temp(1,:)];
             plot(temp(:,1),temp(:,2),'g')
             
-            
-            
-            th = 0:pi/50:2*pi;
-            for a = 1:size(obj.obstacles,1)
-                xunit = obj.obstacles(a,4) * cos(th) + obj.obstacles(a,1);
-                yunit = obj.obstacles(a,4) * sin(th) + obj.obstacles(a,2);
-                plot(xunit, yunit,'r');
-            end
+            plot_obs(obj.obstacles)
             
 %             axis([center(1)+sizing(1)/2 center(1)-sizing(1)/2 center(2)+sizing(2)/2 center(2)-sizing(2)/2])
             legend('Drop Point','Off Axis','Emergent')
             hold off
+            axis equal
             
         end
     end
