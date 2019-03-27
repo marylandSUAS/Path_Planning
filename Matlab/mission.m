@@ -215,6 +215,30 @@ classdef mission
             axis equal
             
         end
+        
+        function visualize_live(obj)            
+            
+            scatter(obj.dropPoint(1),obj.dropPoint(2),'y','filled')
+            scatter(obj.offAxis(1),obj.offAxis(2),'b','filled')
+            scatter(obj.emergent(1),obj.emergent(2),'or','filled')
+            
+            
+            temp = obj.bounds;
+            temp = [temp; temp(1,:)];
+            plot(temp(:,1),temp(:,2),'r')
+%             scatter(obj.bounds(:,1),obj.bounds(:,2),'ro')
+            
+            plot(obj.waypoints(:,1),obj.waypoints(:,2),'b')
+%             scatter(obj.waypoints(:,1),obj.waypoints(:,2),'bo')
+            scatter(obj.waypoints(1,1),obj.waypoints(1,2),'g','filled')
+            
+            temp = obj.searchGrid;
+            temp = [temp; temp(1,:)];
+            plot(temp(:,1),temp(:,2),'g')
+            
+            plot_obs(obj.obstacles)
+            
+        end
     end
 end
 
