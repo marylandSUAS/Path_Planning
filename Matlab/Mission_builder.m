@@ -85,7 +85,7 @@ final_wps = [final_wps;offAxis_wps];
 
 
 %% Landing
-landing_wps = Landing(miss.landing_point, last_wp, miss.bounds, miss.obstacles);
+landing_wps = Landing(last_wp,miss.dropPoint_gps, miss.bounds, miss.obstacles);
 final_wps = [final_wps;landing_wps];
 
 

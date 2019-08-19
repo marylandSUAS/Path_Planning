@@ -1,13 +1,13 @@
 function final_wps = DropMission(drop_point,last_wp,bounds,obstacles,wind,dir)
 
-    drop_alt = 100;
+    drop_alt = 35;
     cruise_speed = 16;
     
 %     calculate drop distance away
     
     
     
-    calc_dist = 50;
+    calc_dist = 20;
     
     drop_dir = 0;
     drop_dist1 = 80+calc_dist;

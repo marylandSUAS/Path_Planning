@@ -1,23 +1,32 @@
-function final_wps = Landing(land_point,last_wp,bounds,obstacles)
+function final_wps = Landing(last_wp,miss,bounds,obstacles)
 %LANDING takes in landing point(x/y) and last_wp(x/y)
     % returns landing waypoints(WP)
     
-    land_dir = 0;
     
-    land_dist1 = 130;
-    land_dist2 = 50;
-
-    land_slope = 100;
+    landing_gps = [38.1446910 -76.4279902,0];
+    landing_case = 1;
+    land_dir = [-52 128 24 -156;];
     
-    landWP = WP(21,0,0,0,0,land_point(1),land_point(2),0);
+%     land_temp = miss.landing_point;
     
+    landWP = WP(21,0,0,0,0,miss.landing_point(1),miss.landing_point(2),0);
+%     landWP_final = WP(21,0,0,0,0,landing_gps(1),landing_gps(2),0);
+%     landWP.state = 1;
+%     landWP.toMeters(miss.dropPoint_gps);
+    
+%     land_point = [-landWP.lat, landWP.lng, 0];
+    land_point = [miss.landing_point(1),miss.landing_point(2),0];
     temp_points = [];
+    
+    land_dist1 = 300;
+    land_dist2 = 200;
+    land_slope = 15;
     
     cmd = 'v';
     while cmd ~= 'n'
         
-        wp1 = land_point+[land_dist1*cosd(land_dir) land_dist1*sind(land_dir) land_dist1*sind(land_slope)];
-        wp2 = land_point+[land_dist2*cosd(land_dir) land_dist2*sind(land_dir) land_dist2*sind(land_slope)];
+        wp1 = land_point+[land_dist1*cosd(land_dir(landing_case)) land_dist1*sind(land_dir(landing_case)) land_dist1*sind(land_slope)];
+        wp2 = land_point+[land_dist2*cosd(land_dir(landing_case)) land_dist2*sind(land_dir(landing_case)) land_dist2*sind(land_slope)];
         
         landing_wps = [last_wp; wp1; wp2; land_point];
         
@@ -43,22 +52,22 @@ function final_wps = Landing(land_point,last_wp,bounds,obstacles)
         cmd = get(gcf, 'CurrentCharacter');
 
         if cmd == 'a'
-            land_dir = land_dir+5;
-            if land_dir > 359
-                land_dir = land_dir-360;
+            landing_case = landing_case-1;
+            if landing_case <= 0
+                landing_case = 4;
             end
         end
 
         if cmd == 'd'
-            land_dir = land_dir-5;
-            if land_dir <= 0
-                land_dir = land_dir+360;
+            landing_case = landing_case+1;
+            if landing_case > 4
+                landing_case = 1;
             end
         end
 
-        if cmd == 'n'
-
-        end
+%         if cmd == 'n'
+%             
+%         end
 
     end
     
@@ -109,7 +118,6 @@ function final_wps = Landing(land_point,last_wp,bounds,obstacles)
 
         end
     end
-    
     
     
     

@@ -14,7 +14,6 @@ MissionPlanner.MainV2.speechEnable = True
 
 
 
-
 wp_file_loc = 'C:/Users/derek/Documents/Documents/MUAS/Path_Planning/2019/Path_Planning/MissionPlanner/mission_File_1.txt'
 
 file_ob = open(wp_file_loc,"r")

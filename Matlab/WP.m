@@ -48,6 +48,8 @@ classdef WP
             meters_obj = temp;
         end
         
+        
+        
         function meters_obj = toGPS(obj,GPS)
             
             rad_Earth = 6371000;
